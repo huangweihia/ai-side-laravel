@@ -13,8 +13,7 @@ class GitHubServiceTest extends TestCase
     {
         $service = new GitHubService();
         
-        // 这个测试会真实调用 GitHub API，如果没有 token 可能会限流
-        // 实际开发中应该用 Mock
+        // 鏉╂瑤閲滃ù瀣槸娴兼氨婀＄€圭偠鐨熼悽?GitHub API閿涘苯顩ч弸婊勭梾閺?token 閸欘垵鍏樻导姘舵濞?        // 鐎圭偤妾鈧崣鎴滆厬鎼存棁顕氶悽?Mock
         $projects = $service->searchPopularProjects('AI agent', 5);
         
         $this->assertIsArray($projects);
@@ -79,8 +78,8 @@ class GitHubServiceTest extends TestCase
         
         $methods = $method->invoke($service, $data);
         
-        $this->assertStringContainsString('SaaS 订阅', $methods);
-        $this->assertStringContainsString('企业定制', $methods);
+        $this->assertStringContainsString('SaaS 鐠併垽妲?, $methods);
+        $this->assertStringContainsString('娴间椒绗熺€规艾鍩?, $methods);
     }
 
     /** @test */

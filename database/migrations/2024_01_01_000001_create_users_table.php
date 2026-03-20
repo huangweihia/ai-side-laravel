@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // 用户表
+        // 创建用户表
         Schema::create('users', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -30,14 +30,14 @@ return new class extends Migration
             $table->index('role');
         });
 
-        // 密码重置表
+        // 创建密码重置表
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();
             $table->string('token');
             $table->timestamp('created_at')->nullable();
         });
 
-        // 会话表
+        // 创建会话表
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->foreignId('user_id')->nullable()->index();

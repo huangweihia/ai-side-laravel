@@ -4,11 +4,12 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new
+class extends Migration
 {
     public function up(): void
     {
-        // 会员订阅表
+        // 创建会员订阅表
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
@@ -25,7 +26,7 @@ return new class extends Migration
             $table->index('status');
         });
 
-        // 订单表
+        // 创建订单表
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->string('order_no')->unique();
@@ -45,7 +46,7 @@ return new class extends Migration
             $table->index('status');
         });
 
-        // 分类表
+        // 创建分类表
         Schema::create('categories', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -56,7 +57,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 文章表
+        // 创建文章表
         Schema::create('articles', function (Blueprint $table) {
             $table->id();
             $table->foreignId('category_id')->nullable()->constrained()->onDelete('set null');
@@ -82,7 +83,7 @@ return new class extends Migration
             $table->index('is_premium');
         });
 
-        // 项目表
+        // 创建项目表
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -106,7 +107,7 @@ return new class extends Migration
             $table->index('is_featured');
         });
 
-        // 邮件订阅表
+        // 创建邮件订阅表
         Schema::create('email_subscribers', function (Blueprint $table) {
             $table->id();
             $table->string('email')->unique();
@@ -116,7 +117,7 @@ return new class extends Migration
             $table->timestamp('unsubscribed_at')->nullable();
         });
 
-        // 系统设置表
+        // 创建系统设置表
         Schema::create('settings', function (Blueprint $table) {
             $table->id();
             $table->string('key')->unique();
@@ -126,7 +127,7 @@ return new class extends Migration
             $table->timestamps();
         });
 
-        // 任务调度日志表
+        // 创建任务批处理表
         Schema::create('job_batches', function (Blueprint $table) {
             $table->string('id')->primary();
             $table->string('name');

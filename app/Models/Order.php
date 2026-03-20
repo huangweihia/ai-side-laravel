@@ -53,10 +53,10 @@ class Order extends Model
     public function getStatusLabel(): string
     {
         return [
-            'pending' => '待支付',
-            'paid' => '已支付',
-            'cancelled' => '已取消',
-            'refunded' => '已退款',
+            'pending' => '瀵板懏鏁禒?,
+            'paid' => '瀹稿弶鏁禒?,
+            'cancelled' => '瀹告彃褰囧☉?,
+            'refunded' => '瀹告煡鈧偓濞?,
         ][$this->status] ?? $this->status;
     }
 }

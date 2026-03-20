@@ -1,0 +1,69 @@
+﻿version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: ai_side_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456
+      MYSQL_DATABASE: ai_side
+      MYSQL_USER: ai_side
+      MYSQL_PASSWORD: aiside123456
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - ai_side_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ai_side_redis
+    ports:
+      - "6379:6379"
+    networks:
+      - ai_side_network
+
+  php:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: ai_side_php
+    volumes:
+      - /home/node/.openclaw/workspace/ai-side-laravel:/var/www/html:cached
+      - /var/www/html/vendor
+    ports:
+      - "8081:80"
+    environment:
+      APP_URL: http://localhost:8081
+      APP_DEBUG: "true"
+      DB_HOST: mysql
+      DB_DATABASE: ai_side
+      DB_USERNAME: ai_side
+      DB_PASSWORD: aiside123456
+      REDIS_HOST: redis
+    networks:
+      - ai_side_network
+
+  worker:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: ai_side_worker
+    volumes:
+      - /home/node/.openclaw/workspace/ai-side-laravel:/var/www/html:cached
+      - /var/www/html/vendor
+    command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
+    networks:
+      - ai_side_network
+
+volumes:
+  mysql_data:
+
+networks:
+  ai_side_network:
+    driver: bridge
+services:
+  php:
+    ports:
+      - "8081:80"

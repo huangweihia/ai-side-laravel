@@ -40,9 +40,9 @@ class Subscription extends Model
     public function getPlanLabel(): string
     {
         return [
-            'monthly' => '月度会员',
-            'yearly' => '年度会员',
-            'lifetime' => '终身会员',
+            'monthly' => '閺堝牆瀹虫导姘喅',
+            'yearly' => '楠炴潙瀹虫导姘喅',
+            'lifetime' => '缂佸牐闊╂导姘喅',
         ][$this->plan] ?? $this->plan;
     }
 }

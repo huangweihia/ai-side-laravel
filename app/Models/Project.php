@@ -50,7 +50,7 @@ class Project extends Model
     }
 
     /**
-     * 计算推荐分数
+     * 计算项目评分
      */
     public static function calculateScore($stars, $growth = 0, $monetizationPotential = 'medium')
     {

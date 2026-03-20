@@ -1,13 +1,12 @@
 #!/usr/bin/env php
 <?php
 /**
- * Laravel 核心文件创建脚本
+ * Laravel 閺嶇绺鹃弬鍥︽閸掓稑缂撻懘姘拱
  */
 
 $root = __DIR__;
 
-// 创建目录结构
-$dirs = [
+// 閸掓稑缂撻惄顔肩秿缂佹挻鐎?$dirs = [
     'bootstrap/cache',
     'storage/app',
     'storage/app/public',
@@ -26,12 +25,11 @@ $dirs = [
 foreach ($dirs as $dir) {
     if (!is_dir("$root/$dir")) {
         mkdir("$root/$dir", 0755, true);
-        echo "✅ Created directory: $dir\n";
+        echo "閴?Created directory: $dir\n";
     }
 }
 
-// 创建 artisan 文件
-file_put_contents("$root/artisan", <<<'PHP'
+// 閸掓稑缂?artisan 閺傚洣娆?file_put_contents("$root/artisan", <<<'PHP'
 #!/usr/bin/env php
 <?php
 
@@ -54,9 +52,9 @@ exit($status);
 PHP
 );
 chmod("$root/artisan", 0755);
-echo "✅ Created artisan\n";
+echo "閴?Created artisan\n";
 
-// 创建 bootstrap/app.php
+// 閸掓稑缂?bootstrap/app.php
 file_put_contents("$root/bootstrap/app.php", <<<'PHP'
 <?php
 
@@ -79,10 +77,9 @@ return Application::configure(basePath: dirname(__DIR__))
     })->create();
 PHP
 );
-echo "✅ Created bootstrap/app.php\n";
+echo "閴?Created bootstrap/app.php\n";
 
-// 创建路由文件
-file_put_contents("$root/routes/web.php", <<<'PHP'
+// 閸掓稑缂撶捄顖滄暠閺傚洣娆?file_put_contents("$root/routes/web.php", <<<'PHP'
 <?php
 
 use Illuminate\Support\Facades\Route;
@@ -92,7 +89,7 @@ Route::get('/', function () {
 });
 PHP
 );
-echo "✅ Created routes/web.php\n";
+echo "閴?Created routes/web.php\n";
 
 file_put_contents("$root/routes/api.php", <<<'PHP'
 <?php
@@ -105,7 +102,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 PHP
 );
-echo "✅ Created routes/api.php\n";
+echo "閴?Created routes/api.php\n";
 
 file_put_contents("$root/routes/console.php", <<<'PHP'
 <?php
@@ -118,9 +115,9 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 PHP
 );
-echo "✅ Created routes/console.php\n";
+echo "閴?Created routes/console.php\n";
 
-// 创建 public/index.php
+// 閸掓稑缂?public/index.php
 file_put_contents("$root/public/index.php", <<<'PHP'
 <?php
 
@@ -141,9 +138,9 @@ $response = $kernel->handle(
 $kernel->terminate($request, $response);
 PHP
 );
-echo "✅ Created public/index.php\n";
+echo "閴?Created public/index.php\n";
 
-// 创建 .gitignore
+// 閸掓稑缂?.gitignore
 file_put_contents("$root/.gitignore", <<<'GITIGNORE'
 /node_modules
 /public/hot
@@ -169,7 +166,7 @@ Thumbs.db
 docker-compose.override.yml
 GITIGNORE
 );
-echo "✅ Created .gitignore\n";
+echo "閴?Created .gitignore\n";
 
-echo "\n🎉 Laravel core files created successfully!\n";
+echo "\n棣冨竴 Laravel core files created successfully!\n";
 echo "Now run: composer install\n";

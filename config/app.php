@@ -1,10 +1,10 @@
-﻿<?php
+<?php
 
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
 return [
-    'name' => env('APP_NAME', 'AI 鍓笟鎯呮姤灞€'),
+    'name' => env('APP_NAME', 'AI 副业情报局'),
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),
     'url' => env('APP_URL', 'http://localhost'),
@@ -17,6 +17,8 @@ return [
     'maintenance' => ['driver' => 'file'],
     'providers' => ServiceProvider::defaultProviders()->merge([
         App\Providers\AppServiceProvider::class,
+        App\Providers\Filament\AdminPanelProvider::class,
+        App\Providers\RouteServiceProvider::class,
     ])->toArray(),
-    'aliases' => Facade::defaultAliases()->merge([])->toArray(),
+    'aliases' => Facade::defaultAliases()->merge([])->toArray()
 ];

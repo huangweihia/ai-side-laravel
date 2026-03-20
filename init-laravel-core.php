@@ -1,9 +1,7 @@
 #!/usr/bin/env php
 <?php
 /**
- * Laravel 项目初始化脚本
- * 创建必要的核心文件
- */
+ * Laravel 妞ゅ湱娲伴崚婵嗩潗閸栨牞鍓奸張? * 閸掓稑缂撹箛鍛邦洣閻ㄥ嫭鐗宠箛鍐╂瀮娴? */
 
 $files = [
     'artisan' => <<<'PHP'
@@ -159,7 +157,7 @@ PHP
 <?php
 
 return [
-    'name' => env('APP_NAME', 'AI 副业情报局'),
+    'name' => env('APP_NAME', 'AI 閸擃垯绗熼幆鍛Г鐏炩偓'),
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),
     'url' => env('APP_URL', 'http://localhost'),
@@ -232,7 +230,7 @@ foreach ($files as $path => $content) {
         mkdir($dir, 0755, true);
     }
     file_put_contents($path, $content);
-    echo "✅ Created: $path\n";
+    echo "閴?Created: $path\n";
 }
 
-echo "\n🎉 Laravel core files created!\n";
+echo "\n棣冨竴 Laravel core files created!\n";

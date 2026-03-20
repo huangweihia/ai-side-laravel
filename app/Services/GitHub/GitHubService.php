@@ -17,8 +17,7 @@ class GitHubService
     }
 
     /**
-     * 搜索热门 AI 项目
-     */
+     * 閹兼粎鍌ㄩ悜顓㈡， AI 妞ゅ湱娲?     */
     public function searchPopularProjects(string $query = 'AI agent', int $perPage = 20): array
     {
         $url = "{$this->baseUrl}/search/repositories";
@@ -47,12 +46,10 @@ class GitHubService
     }
 
     /**
-     * 获取 trending 项目
-     */
+     * 閼惧嘲褰?trending 妞ゅ湱娲?     */
     public function getTrending(string $since = 'daily'): array
     {
-        // GitHub API 没有直接的 trending 接口，需要搜索最近创建的高 star 项目
-        $date = now()->subDay()->format('Y-m-d');
+        // GitHub API 濞屸剝婀侀惄瀛樺复閻?trending 閹恒儱褰涢敍宀勬付鐟曚焦鎮崇槐銏℃付鏉╂垵鍨卞铏规畱妤?star 妞ゅ湱娲?        $date = now()->subDay()->format('Y-m-d');
         
         return $this->searchPopularProjects(
             "stars:>100 created:>{$date}",
@@ -61,7 +58,7 @@ class GitHubService
     }
 
     /**
-     * 保存项目到数据库
+     * 娣囨繂鐡ㄦい鍦窗閸掔増鏆熼幑顔肩氨
      */
     public function saveProject(array $data): ?Project
     {
@@ -101,8 +98,7 @@ class GitHubService
     }
 
     /**
-     * 批量收集项目
-     */
+     * 閹靛綊鍣洪弨鍫曟肠妞ゅ湱娲?     */
     public function collectProjects(array $keywords = []): int
     {
         $keywords = $keywords ?: [
@@ -127,12 +123,10 @@ class GitHubService
                     $collected++;
                 }
 
-                // 避免 API 限流
-                usleep(500000); // 500ms
+                // 闁灝鍘?API 闂勬劖绁?                usleep(500000); // 500ms
             }
 
-            // 每个关键词之间等待 2 秒
-            sleep(2);
+            // 濮ｅ繋閲滈崗鎶芥暛鐠囧秳绠ｉ梻瀵哥搼瀵?2 缁?            sleep(2);
         }
 
         Log::info("Collection completed", ['total' => $collected]);
@@ -141,8 +135,7 @@ class GitHubService
     }
 
     /**
-     * 计算推荐分数
-     */
+     * 鐠侊紕鐣婚幒銊ㄥ礃閸掑棙鏆?     */
     protected function calculateScore(array $data): float
     {
         $stars = $data['stargazers_count'] ?? 0;
@@ -150,15 +143,13 @@ class GitHubService
         $hasDiscussions = $data['has_discussions'] ?? false;
 
         $starScore = min($stars / 10000, 10);
-        $growthScore = 5; // 默认中等增长
-        $monetizationScore = $this->assessMonetizationPotential($data);
+        $growthScore = 5; // 姒涙顓绘稉顓犵搼婢х偤鏆?        $monetizationScore = $this->assessMonetizationPotential($data);
 
         return round($starScore * 0.3 + $growthScore * 0.3 + $monetizationScore * 0.4, 2);
     }
 
     /**
-     * 评估变现潜力
-     */
+     * 鐠囧嫪鍙婇崣妯煎箛濞兼粌濮?     */
     protected function assessMonetizationPotential(array $data): float
     {
         $stars = $data['stargazers_count'] ?? 0;
@@ -175,36 +166,35 @@ class GitHubService
     }
 
     /**
-     * 分析变现方式
-     */
+     * 閸掑棙鐎介崣妯煎箛閺傜懓绱?     */
     protected function analyzeMonetization(array $data): ?string
     {
         $description = strtolower($data['description'] ?? '');
         $methods = [];
 
         if (str_contains($description, 'platform') || str_contains($description, 'saas')) {
-            $methods[] = 'SaaS 订阅';
+            $methods[] = 'SaaS 鐠併垽妲?;
         }
         if (str_contains($description, 'tool') || str_contains($description, 'library')) {
-            $methods[] = '企业定制';
+            $methods[] = '娴间椒绗熺€规艾鍩?;
         }
         if (str_contains($description, 'template') || str_contains($description, 'boilerplate')) {
-            $methods[] = '模板销售';
+            $methods[] = '濡剝婢橀柨鈧崬?;
         }
         if (str_contains($description, 'course') || str_contains($description, 'tutorial')) {
-            $methods[] = '培训课程';
+            $methods[] = '閸╃顔勭拠鍓р柤';
         }
 
         if (empty($methods)) {
-            $methods[] = '技术咨询';
-            $methods[] = '开源赞助';
+            $methods[] = '閹垛偓閺堫垰鎸╃拠?;
+            $methods[] = '瀵偓濠ф劘绂愰崝?;
         }
 
         return implode(', ', $methods);
     }
 
     /**
-     * 评估难度
+     * 鐠囧嫪鍙婇梾鎯у
      */
     protected function assessDifficulty(array $data): string
     {
@@ -221,7 +211,7 @@ class GitHubService
     }
 
     /**
-     * 提取标签
+     * 閹绘劕褰囬弽鍥╊劮
      */
     protected function extractTags(array $data): array
     {

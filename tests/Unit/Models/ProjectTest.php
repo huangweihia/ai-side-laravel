@@ -82,13 +82,13 @@ class ProjectTest extends TestCase
     public function it_returns_correct_difficulty_label()
     {
         $project = new Project(['difficulty' => 'easy']);
-        $this->assertEquals('简单', $project->getDifficultyLabel());
+        $this->assertEquals('缁犫偓閸?, $project->getDifficultyLabel());
 
         $project->difficulty = 'medium';
-        $this->assertEquals('中等', $project->getDifficultyLabel());
+        $this->assertEquals('娑擃厾鐡?, $project->getDifficultyLabel());
 
         $project->difficulty = 'hard';
-        $this->assertEquals('困难', $project->getDifficultyLabel());
+        $this->assertEquals('閸ヤ即姣?, $project->getDifficultyLabel());
     }
 
     /** @test */

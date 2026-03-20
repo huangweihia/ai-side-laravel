@@ -1,7 +1,5 @@
 ﻿<?php
-
 namespace App\Filament\Resources;
-
 use App\Filament\Resources\UserResource\Pages;
 use App\Models\User;
 use Filament\Forms;

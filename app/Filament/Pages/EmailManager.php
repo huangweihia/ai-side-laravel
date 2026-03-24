@@ -28,6 +28,13 @@ class EmailManager extends Page implements HasForms
     public array $recipients = [];
     public ?string $bulkEmails = '';
     public array $selectedForBulk = [];
+    
+    // 模态窗相关
+    public ?string $modalAction = null;
+    public ?string $modalEmail = null;
+    public ?string $modalType = null;
+    public bool $showModal = false;
+    public bool $isLoading = false;
 
     public function mount(): void
     {
@@ -125,6 +132,213 @@ class EmailManager extends Page implements HasForms
             'notifications' => $subscription->subscribed_to_notifications && !$subscription->unsubscribed_at,
             'exists' => true,
         ];
+    }
+
+    /**
+     * 打开确认模态窗
+     */
+    public function confirmAction(string $action, string $email = null, string $type = null): void
+    {
+        $this->modalAction = $action;
+        $this->modalEmail = $email;
+        $this->modalType = $type;
+        $this->showModal = true;
+    }
+
+    /**
+     * 切换订阅类型
+     */
+    public function toggleSubscription(string $email, string $type): void
+    {
+        try {
+            $subscription = EmailSubscription::updateOrCreate(
+                ['email' => $email],
+                [
+                    'subscribed_to_daily' => $type === 'daily' ? null : EmailSubscription::where('email', $email)->value('subscribed_to_daily'),
+                    'subscribed_to_weekly' => $type === 'weekly' ? null : EmailSubscription::where('email', $email)->value('subscribed_to_weekly'),
+                    'subscribed_to_notifications' => $type === 'notifications' ? null : EmailSubscription::where('email', $email)->value('subscribed_to_notifications'),
+                ]
+            );
+            
+            // 重新获取当前值并切换
+            $subscription = EmailSubscription::where('email', $email)->first();
+            $currentValue = $subscription->{$type};
+            $subscription->update([$type => !$currentValue]);
+            
+            Notification::make()
+                ->title('✅ 已更新')
+                ->body('订阅偏好已保存')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('❌ 更新失败')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        }
+    }
+
+    /**
+     * 执行模态窗中的操作
+     */
+    public function executeModalAction(): void
+    {
+        $this->isLoading = true;
+        
+        try {
+            match ($this->modalAction) {
+                'delete' => $this->removeRecipient($this->modalEmail),
+                'send_test' => $this->sendTestEmailToSingle($this->modalEmail),
+                'bulk_delete' => $this->bulkDelete(),
+                default => null,
+            };
+            
+            $this->showModal = false;
+            $this->modalAction = null;
+            $this->modalEmail = null;
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('❌ 操作失败')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        } finally {
+            $this->isLoading = false;
+        }
+    }
+
+    /**
+     * 发送测试邮件（所有收件人或指定邮箱）
+     */
+    public function sendTestEmail(): void
+    {
+        // 如果没有指定收件人，发送给所有收件人
+        $emails = !empty($this->recipient) 
+            ? [$this->recipient] 
+            : $this->recipients;
+        
+        if (empty($emails)) {
+            Notification::make()
+                ->title('⚠️ 请先添加收件人')
+                ->body('在收件人列表中添加邮箱后再发送测试')
+                ->warning()
+                ->send();
+            return;
+        }
+        
+        $success = 0;
+        $failed = 0;
+        $errors = [];
+        
+        foreach ($emails as $email) {
+            try {
+                // 创建简单的测试邮件
+                $subject = '🧪 邮件测试 - AI 副业情报局';
+                $content = "这是一封测试邮件，用于验证邮件发送功能是否正常。\n\n" .
+                           "发送时间：" . now()->format('Y-m-d H:i:s') . "\n" .
+                           "接收邮箱：{$email}\n\n" .
+                           "如果你收到这封邮件，说明邮件发送功能正常工作！\n\n" .
+                           "AI 副业情报局";
+                
+                // 记录邮件日志
+                $emailLog = EmailLog::create([
+                    'recipient' => $email,
+                    'subject' => $subject,
+                    'content' => $content,
+                    'type' => 'test',
+                    'status' => 'pending',
+                ]);
+                
+                // 发送邮件
+                \Illuminate\Support\Facades\Mail::raw($content, function ($message) use ($email, $subject) {
+                    $message->to($email)
+                            ->subject($subject);
+                });
+                
+                $emailLog->update([
+                    'status' => 'sent',
+                    'sent_at' => now(),
+                ]);
+                
+                $success++;
+            } catch (\Exception $e) {
+                // 记录错误
+                if (isset($emailLog)) {
+                    $emailLog->update([
+                        'status' => 'failed',
+                        'error_message' => $e->getMessage(),
+                    ]);
+                }
+                
+                $failed++;
+                $errors[] = "{$email}: " . $e->getMessage();
+            }
+        }
+        
+        // 显示结果
+        if ($success > 0 && $failed === 0) {
+            Notification::make()
+                ->title('✅ 邮件已发送')
+                ->body("成功发送 {$success} 封测试邮件")
+                ->success()
+                ->send();
+        } elseif ($success > 0 && $failed > 0) {
+            Notification::make()
+                ->title('⚠️ 部分发送成功')
+                ->body("成功：{$success} 封，失败：{$failed} 封\n" . implode("\n", $errors))
+                ->warning()
+                ->send();
+        } else {
+            Notification::make()
+                ->title('❌ 发送失败')
+                ->body("所有邮件发送失败\n" . implode("\n", $errors))
+                ->danger()
+                ->send();
+        }
+    }
+
+    /**
+     * 发送测试邮件到单个邮箱（私有方法）
+     */
+    private function sendTestEmailToSingle(string $email): void
+    {
+        try {
+            $subject = '🧪 邮件测试 - AI 副业情报局';
+            $content = "这是一封测试邮件，用于验证邮件发送功能是否正常。\n\n" .
+                       "发送时间：" . now()->format('Y-m-d H:i:s') . "\n" .
+                       "接收邮箱：{$email}\n\n" .
+                       "如果你收到这封邮件，说明邮件发送功能正常工作！\n\n" .
+                       "AI 副业情报局";
+            
+            $emailLog = EmailLog::create([
+                'recipient' => $email,
+                'subject' => $subject,
+                'content' => $content,
+                'type' => 'test',
+                'status' => 'pending',
+            ]);
+            
+            \Illuminate\Support\Facades\Mail::raw($content, function ($message) use ($email, $subject) {
+                $message->to($email)->subject($subject);
+            });
+            
+            $emailLog->update([
+                'status' => 'sent',
+                'sent_at' => now(),
+            ]);
+            
+            Notification::make()
+                ->title('✅ 邮件已发送')
+                ->body("测试邮件已发送至：{$email}")
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            if (isset($emailLog)) {
+                $emailLog->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+            }
+            throw $e;
+        }
     }
 
     /**

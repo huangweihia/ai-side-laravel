@@ -1,5 +1,5 @@
 <x-filament-panels::page>
-    <div style="display: grid; gap: 32px;">
+    <div style="display: grid; gap: 32px;" wire:poll.5s>
         
         <!-- 收件人管理 -->
         <x-filament::section>
@@ -56,31 +56,43 @@
                             <div style="flex: 1;">
                                 <div style="color: white; font-weight: 500; margin-bottom: 4px;">{{ $email }}</div>
                                 <div style="display: flex; gap: 8px; font-size: 12px;">
-                                    <span style="color: {{ $status['daily'] ? '#10b981' : '#64748b' }};">
+                                    <button 
+                                        wire:click="toggleSubscription('{{ $email }}', 'subscribed_to_daily')"
+                                        style="background: none; border: none; padding: 4px 8px; cursor: pointer; color: {{ $status['daily'] ? '#10b981' : '#64748b' }}; display: flex; align-items: center; gap: 4px;"
+                                        title="点击切换日报订阅"
+                                    >
                                         {{ $status['daily'] ? '✅' : '❌' }} 日报
-                                    </span>
-                                    <span style="color: {{ $status['weekly'] ? '#10b981' : '#64748b' }};">
+                                    </button>
+                                    <button 
+                                        wire:click="toggleSubscription('{{ $email }}', 'subscribed_to_weekly')"
+                                        style="background: none; border: none; padding: 4px 8px; cursor: pointer; color: {{ $status['weekly'] ? '#10b981' : '#64748b' }}; display: flex; align-items: center; gap: 4px;"
+                                        title="点击切换周报订阅"
+                                    >
                                         {{ $status['weekly'] ? '✅' : '❌' }} 周报
-                                    </span>
-                                    <span style="color: {{ $status['notifications'] ? '#10b981' : '#64748b' }};">
+                                    </button>
+                                    <button 
+                                        wire:click="toggleSubscription('{{ $email }}', 'subscribed_to_notifications')"
+                                        style="background: none; border: none; padding: 4px 8px; cursor: pointer; color: {{ $status['notifications'] ? '#10b981' : '#64748b' }}; display: flex; align-items: center; gap: 4px;"
+                                        title="点击切换通知订阅"
+                                    >
                                         {{ $status['notifications'] ? '✅' : '❌' }} 通知
-                                    </span>
+                                    </button>
                                 </div>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
                             <button 
-                                wire:click="removeRecipient('{{ $email }}')"
-                                style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;"
+                                wire:click="confirmAction('send_test', '{{ $email }}')"
+                                wire:loading.attr="disabled"
+                                style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
                             >
-                                删除
+                                📧 测试
                             </button>
                             <button 
-                                wire:click="sendTestEmail"
-                                wire:loading.attr="disabled"
-                                style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;"
+                                wire:click="confirmAction('delete', '{{ $email }}')"
+                                style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
                             >
-                                发送测试
+                                🗑️ 删除
                             </button>
                         </div>
                     </div>
@@ -223,4 +235,72 @@
             </div>
         </x-filament::section>
     </div>
+
+    {{-- 确认模态窗 --}}
+    @if($showModal)
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+            <div style="background: #1e293b; border-radius: 12px; padding: 30px; max-width: 450px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <span style="font-size: 32px;">
+                        @if($modalAction === 'delete') 🗑️
+                        @elseif($modalAction === 'send_test') 📧
+                        @elseif($modalAction === 'bulk_delete') ⚠️
+                        @endif
+                    </span>
+                    <h3 style="color: white; font-size: 20px; font-weight: 600; margin: 0;">
+                        @if($modalAction === 'delete') 确认删除
+                        @elseif($modalAction === 'send_test') 发送测试邮件
+                        @elseif($modalAction === 'bulk_delete') 批量删除
+                        @endif
+                    </h3>
+                </div>
+
+                <div style="color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 25px;">
+                    @if($modalAction === 'delete')
+                        确定要删除邮箱 <strong style="color: white;">{{ $modalEmail }}</strong> 吗？
+                        <br>删除后将不再收到任何邮件。
+                    @elseif($modalAction === 'send_test')
+                        将发送测试邮件到：
+                        <br><strong style="color: white;">{{ $modalEmail }}</strong>
+                        <br>请检查收件箱确认是否收到。
+                    @elseif($modalAction === 'bulk_delete')
+                        确定要删除选中的 <strong style="color: white;">{{ count($selectedForBulk) }}</strong> 个邮箱吗？
+                        <br>此操作不可恢复。
+                    @endif
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button 
+                        wire:click="$set('showModal', false)"
+                        wire:loading.attr="disabled"
+                        style="padding: 10px 20px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;"
+                    >
+                        取消
+                    </button>
+                    <button 
+                        wire:click="executeModalAction"
+                        wire:loading.attr="disabled"
+                        style="padding: 10px 20px; background: {{ $modalAction === 'delete' || $modalAction === 'bulk_delete' ? '#ef4444' : '#10b981' }}; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+                    >
+                        @if($isLoading)
+                            <span style="display: inline-block; animation: spin 1s linear infinite;">⏳</span>
+                            处理中...
+                        @else
+                            @if($modalAction === 'delete') 🗑️ 确认删除
+                            @elseif($modalAction === 'send_test') 📧 发送
+                            @elseif($modalAction === 'bulk_delete') ⚠️ 确认删除
+                            @endif
+                        @endif
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        </style>
+    @endif
 </x-filament-panels::page>

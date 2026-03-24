@@ -41,8 +41,11 @@
             
             <div style="display: grid; gap: 12px;">
                 @foreach($this->recipients as $email)
+                    @php
+                        $status = $this->getSubscriptionStatus($email);
+                    @endphp
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #1e293b; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
                             <input 
                                 type="checkbox" 
                                 wire:click="toggleBulkSelect('{{ $email }}')"
@@ -50,7 +53,20 @@
                                 style="width: 18px; height: 18px; cursor: pointer;"
                             />
                             <span style="font-size: 20px;">📧</span>
-                            <span style="color: white; font-weight: 500;">{{ $email }}</span>
+                            <div style="flex: 1;">
+                                <div style="color: white; font-weight: 500; margin-bottom: 4px;">{{ $email }}</div>
+                                <div style="display: flex; gap: 8px; font-size: 12px;">
+                                    <span style="color: {{ $status['daily'] ? '#10b981' : '#64748b' }};">
+                                        {{ $status['daily'] ? '✅' : '❌' }} 日报
+                                    </span>
+                                    <span style="color: {{ $status['weekly'] ? '#10b981' : '#64748b' }};">
+                                        {{ $status['weekly'] ? '✅' : '❌' }} 周报
+                                    </span>
+                                    <span style="color: {{ $status['notifications'] ? '#10b981' : '#64748b' }};">
+                                        {{ $status['notifications'] ? '✅' : '❌' }} 通知
+                                    </span>
+                                </div>
+                            </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
                             <button 

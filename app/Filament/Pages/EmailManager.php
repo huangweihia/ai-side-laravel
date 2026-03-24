@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\EmailSetting;
 use App\Models\EmailLog;
+use App\Models\EmailSubscription;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -61,13 +62,26 @@ class EmailManager extends Page implements HasForms
             return;
         }
 
+        // 添加到收件人列表
         $this->recipients[] = $this->recipient;
         EmailSetting::set('email_recipients', json_encode($this->recipients), '邮件接收人列表');
+        
+        // 同时创建订阅记录（默认全选）
+        EmailSubscription::updateOrCreate(
+            ['email' => $this->recipient],
+            [
+                'subscribed_to_daily' => true,
+                'subscribed_to_weekly' => true,
+                'subscribed_to_notifications' => true,
+                'unsubscribed_at' => null,
+            ]
+        );
         
         $this->recipient = '';
         
         Notification::make()
-            ->title('添加成功')
+            ->title('✅ 添加成功')
+            ->body('已添加到收件人列表，默认订阅所有类型邮件')
             ->success()
             ->send();
     }
@@ -77,10 +91,40 @@ class EmailManager extends Page implements HasForms
         $this->recipients = array_values(array_filter($this->recipients, fn($e) => $e !== $email));
         EmailSetting::set('email_recipients', json_encode($this->recipients), '邮件接收人列表');
         
+        // 同时删除订阅记录
+        $subscription = EmailSubscription::where('email', $email)->first();
+        if ($subscription) {
+            $subscription->delete();
+        }
+        
         Notification::make()
-            ->title('删除成功')
+            ->title('✅ 删除成功')
             ->success()
             ->send();
+    }
+
+    /**
+     * 获取收件人的订阅状态
+     */
+    public function getSubscriptionStatus(string $email): array
+    {
+        $subscription = EmailSubscription::where('email', $email)->first();
+        
+        if (!$subscription) {
+            return [
+                'daily' => true,
+                'weekly' => true,
+                'notifications' => true,
+                'exists' => false,
+            ];
+        }
+        
+        return [
+            'daily' => $subscription->subscribed_to_daily && !$subscription->unsubscribed_at,
+            'weekly' => $subscription->subscribed_to_weekly && !$subscription->unsubscribed_at,
+            'notifications' => $subscription->subscribed_to_notifications && !$subscription->unsubscribed_at,
+            'exists' => true,
+        ];
     }
 
     /**

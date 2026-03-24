@@ -158,19 +158,24 @@ class EmailManager extends Page implements HasForms
     public function toggleSubscription(string $email, string $type): void
     {
         try {
-            $subscription = EmailSubscription::updateOrCreate(
+            // 先获取或创建订阅记录
+            $subscription = EmailSubscription::firstOrCreate(
                 ['email' => $email],
                 [
-                    'subscribed_to_daily' => $type === 'daily' ? null : EmailSubscription::where('email', $email)->value('subscribed_to_daily'),
-                    'subscribed_to_weekly' => $type === 'weekly' ? null : EmailSubscription::where('email', $email)->value('subscribed_to_weekly'),
-                    'subscribed_to_notifications' => $type === 'notifications' ? null : EmailSubscription::where('email', $email)->value('subscribed_to_notifications'),
+                    'subscribed_to_daily' => true,
+                    'subscribed_to_weekly' => true,
+                    'subscribed_to_notifications' => true,
+                    'unsubscribe_token' => \Illuminate\Support\Str::random(32),
                 ]
             );
             
-            // 重新获取当前值并切换
-            $subscription = EmailSubscription::where('email', $email)->first();
-            $currentValue = $subscription->{$type};
-            $subscription->update([$type => !$currentValue]);
+            // 切换指定的订阅类型
+            $subscription->update([
+                $type => !$subscription->{$type},
+            ]);
+            
+            // 强制刷新收件人列表
+            $this->recipients = EmailSetting::getRecipients();
             
             Notification::make()
                 ->title('✅ 已更新')
@@ -388,6 +393,17 @@ class EmailManager extends Page implements HasForms
 
             $this->recipients[] = $email;
             $added++;
+            
+            // 同时创建订阅记录
+            EmailSubscription::firstOrCreate(
+                ['email' => $email],
+                [
+                    'subscribed_to_daily' => true,
+                    'subscribed_to_weekly' => true,
+                    'subscribed_to_notifications' => true,
+                    'unsubscribe_token' => \Illuminate\Support\Str::random(32),
+                ]
+            );
         }
 
         EmailSetting::set('email_recipients', json_encode($this->recipients), '邮件接收人列表');

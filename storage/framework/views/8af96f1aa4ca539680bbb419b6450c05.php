@@ -6,6 +6,7 @@
     <meta name="description" content="AI 副业情报局 - 用 AI 赋能副业，让赚钱变得更简单">
     <title><?php echo $__env->yieldContent('title', config('app.name', 'AI 副业情报局')); ?></title>
     
+    <script src="<?php echo e(asset('js/ui-components.js')); ?>" defer></script>
     <style>
         :root {
             --primary: #6366f1;
@@ -544,23 +545,23 @@
                     <div class="footer-links">
                         <a href="<?php echo e(route('projects.index')); ?>" class="footer-link">项目库</a>
                         <a href="<?php echo e(route('articles.index')); ?>" class="footer-link">文章</a>
-                        <a href="#" class="footer-link">VIP 会员</a>
+                        <a href="<?php echo e(route('vip')); ?>" class="footer-link">VIP 会员</a>
                     </div>
                 </div>
                 <div>
                     <div class="footer-title">资源</div>
                     <div class="footer-links">
-                        <a href="#" class="footer-link">学习指南</a>
-                        <a href="#" class="footer-link">工具推荐</a>
+                        <a href="<?php echo e(route('learning')); ?>" class="footer-link">学习指南</a>
+                        <a href="<?php echo e(route('tools')); ?>" class="footer-link">工具推荐</a>
                         <a href="#" class="footer-link">社群</a>
                     </div>
                 </div>
                 <div>
                     <div class="footer-title">关于</div>
                     <div class="footer-links">
-                        <a href="#" class="footer-link">关于我们</a>
-                        <a href="#" class="footer-link">联系方式</a>
-                        <a href="#" class="footer-link">隐私政策</a>
+                        <a href="<?php echo e(route('about')); ?>" class="footer-link">关于我们</a>
+                        <a href="<?php echo e(route('contact')); ?>" class="footer-link">联系方式</a>
+                        <a href="<?php echo e(route('privacy')); ?>" class="footer-link">隐私政策</a>
                     </div>
                 </div>
             </div>

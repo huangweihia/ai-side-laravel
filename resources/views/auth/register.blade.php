@@ -21,7 +21,7 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('register') }}">
+        <form method="POST" action="{{ route('register') }}" id="registerForm">
             @csrf
             
             <div class="form-group">
@@ -44,10 +44,47 @@
                 <input class="form-input" id="password_confirmation" type="password" name="password_confirmation" required placeholder="再次输入密码">
             </div>
 
-            <button class="btn btn-primary" type="submit" style="width: 100%; padding: 14px; font-size: 15px;">
+            <button class="btn btn-primary" type="button" onclick="confirmRegister()" style="width: 100%; padding: 14px; font-size: 15px;">
                 免费注册
             </button>
         </form>
+
+        <script>
+        function confirmRegister() {
+            const form = document.getElementById('registerForm');
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const passwordConfirm = document.getElementById('password_confirmation').value;
+
+            if (!name || !email || !password || !passwordConfirm) {
+                showToast('请填写所有必填字段', 'error');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                showToast('两次输入的密码不一致', 'error');
+                return;
+            }
+
+            if (password.length < 8) {
+                showToast('密码长度至少 8 位', 'error');
+                return;
+            }
+
+            showConfirm({
+                icon: '🎉',
+                title: '确认注册',
+                content: '注册后即表示你同意我们的服务条款和隐私政策。<br>注册成功后将自动订阅每日资讯日报。',
+                confirmText: '确认注册',
+                confirmColor: '#6366f1',
+                onConfirm: async () => {
+                    showLoading('正在创建账号...');
+                    form.submit();
+                }
+            });
+        }
+        </script>
 
         <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
             <p style="color: var(--gray-light); font-size: 14px;">

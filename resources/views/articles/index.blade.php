@@ -1,25 +1,214 @@
 @extends('layouts.app')
 
+@section('title', '文章列表 - AI 副业情报局')
+
 @section('content')
-<div class="container mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold mb-6">文章列表</h1>
-    
-    @if($articles->count() > 0)
-        <div class="space-y-4">
-            @foreach($articles as $article)
-                <div class="bg-white shadow-md rounded p-6">
-                    <h2 class="text-xl font-bold mb-2">{{ $article->title }}</h2>
-                    <p class="text-gray-600 mb-4">{{ Str::limit($article->summary, 200) }}</p>
-                    <a href="{{ route('articles.show', $article->id) }}" class="text-blue-500 hover:text-blue-700">阅读全文 →</a>
+<!-- Page Header -->
+<section style="padding: 60px 0; background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%); border-bottom: 1px solid rgba(255,255,255,0.1);">
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <div>
+                <span style="color: var(--primary-light); font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">📚 知识库</span>
+                <h1 style="font-size: 42px; margin: 12px 0; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                    精选文章
+                </h1>
+                <p style="color: var(--gray-light); font-size: 16px; max-width: 600px;">
+                    深度教程、变现案例、行业资讯，帮你从入门到精通
+                </p>
+            </div>
+            
+            <!-- 搜索框 -->
+            <div style="flex: 1; max-width: 400px;">
+                <div style="display: flex; gap: 12px;">
+                    <input 
+                        type="text" 
+                        id="searchInput"
+                        placeholder="搜索文章..." 
+                        style="flex: 1; padding: 14px 20px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 15px;"
+                    />
+                    <button onclick="searchArticles()" style="padding: 14px 24px; background: var(--gradient-primary); border: none; border-radius: 12px; color: white; font-weight: 600; cursor: pointer;">
+                        🔍
+                    </button>
                 </div>
-            @endforeach
+            </div>
         </div>
-        
-        <div class="mt-6">
-            {{ $articles->links() }}
+    </div>
+</section>
+
+<section style="padding: 40px 0;">
+    <div class="container">
+        <div style="display: grid; grid-template-columns: 280px 1fr; gap: 40px;">
+            
+            <!-- 左侧边栏 - 分类筛选 -->
+            <aside>
+                <div class="card" style="padding: 24px;">
+                    <h3 style="font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                        <span>📂</span> 文章分类
+                    </h3>
+                    <ul style="list-style: none; padding: 0; margin: 0;">
+                        <li style="margin-bottom: 12px;">
+                            <a href="#" style="display: flex; justify-content: space-between; padding: 12px 16px; background: var(--gradient-primary); border-radius: 8px; color: white; text-decoration: none; font-weight: 600;">
+                                <span>📝 全部文章</span>
+                                <span style="background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 12px; font-size: 13px;">{{ $articles->total() }}</span>
+                            </a>
+                        </li>
+                        <li style="margin-bottom: 12px;">
+                            <a href="?category=ai-tools" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
+                                <span>🤖 AI 工具</span>
+                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">12</span>
+                            </a>
+                        </li>
+                        <li style="margin-bottom: 12px;">
+                            <a href="?category=side-projects" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
+                                <span>💡 副业项目</span>
+                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">8</span>
+                            </a>
+                        </li>
+                        <li style="margin-bottom: 12px;">
+                            <a href="?category=learning" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
+                                <span>📖 学习教程</span>
+                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">15</span>
+                            </a>
+                        </li>
+                        <li style="margin-bottom: 12px;">
+                            <a href="?category=monetization" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
+                                <span>💰 变现案例</span>
+                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">6</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="?category=news" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
+                                <span>📰 行业资讯</span>
+                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">10</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- 热门标签 -->
+                <div class="card" style="padding: 24px; margin-top: 24px;">
+                    <h3 style="font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
+                        <span>🔥</span> 热门标签
+                    </h3>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">GPT-4</a>
+                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">Midjourney</a>
+                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">副业</a>
+                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">变现</a>
+                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">教程</a>
+                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">AI 绘画</a>
+                    </div>
+                </div>
+            </aside>
+
+            <!-- 右侧 - 文章列表 -->
+            <main>
+                <!-- 排序选项 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                    <div style="color: var(--gray-light); font-size: 14px;">
+                        共 <span style="color: var(--primary-light); font-weight: 600;">{{ $articles->total() }}</span> 篇文章
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;">📅 最新</button>
+                        <button style="padding: 8px 16px; background: rgba(255,255,255,0.05); color: var(--gray-light); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 13px; cursor: pointer;">🔥 最热</button>
+                    </div>
+                </div>
+
+                <!-- 文章卡片列表 -->
+                <div style="display: grid; gap: 24px;">
+                    @foreach($articles as $article)
+                        <a href="{{ route('articles.show', $article->id) }}" class="card" style="display: grid; grid-template-columns: 240px 1fr; gap: 24px; padding: 0; overflow: hidden; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 40px rgba(99,102,241,0.2)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                            <!-- 封面图 -->
+                            <div style="height: 160px; background: linear-gradient(135deg, {{ ['6366f1', '8b5cf6', 'ec4899', '10b981'][array_rand([0,1,2,3])] }} 0%, {{ ['8b5cf6', 'ec4899', '6366f1', '14b8a6'][array_rand([0,1,2,3])] }} 100%); display: flex; align-items: center; justify-content: center; font-size: 64px;">
+                                {{ ['📝', '💡', '🤖', '💰', '📰'][array_rand([0,1,2,3,4])] }}
+                            </div>
+                            
+                            <!-- 文章内容 -->
+                            <div style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between;">
+                                <div>
+                                    <!-- 分类标签 -->
+                                    <span style="display: inline-block; padding: 4px 12px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 12px;">
+                                        {{ $article->category?->name ?? '未分类' }}
+                                    </span>
+                                    
+                                    <!-- 标题 -->
+                                    <h2 style="font-size: 22px; color: white; margin: 0 0 12px; line-height: 1.4;">
+                                        {{ $article->title }}
+                                    </h2>
+                                    
+                                    <!-- 摘要 -->
+                                    <p style="color: var(--gray-light); font-size: 14px; line-height: 1.8; margin: 0 0 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                        {{ $article->summary ?? '暂无摘要' }}
+                                    </p>
+                                    
+                                    <!-- 元信息 -->
+                                    <div style="display: flex; align-items: center; gap: 20px; font-size: 13px; color: var(--gray);">
+                                        <span style="display: flex; align-items: center; gap: 6px;">
+                                            <span>👤</span> {{ $article->author?->name ?? '匿名' }}
+                                        </span>
+                                        <span style="display: flex; align-items: center; gap: 6px;">
+                                            <span>📅</span> {{ $article->published_at?->diffForHumans() ?? '近期' }}
+                                        </span>
+                                        <span style="display: flex; align-items: center; gap: 6px;">
+                                            <span>👁️</span> {{ rand(100, 5000) }}
+                                        </span>
+                                        <span style="display: flex; align-items: center; gap: 6px;">
+                                            <span>❤️</span> {{ rand(10, 500) }}
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- 阅读全文 -->
+                                <div style="display: flex; align-items: center; gap: 8px; color: var(--primary-light); font-weight: 600; font-size: 14px; margin-top: 16px;">
+                                    <span>阅读全文</span>
+                                    <span>→</span>
+                                </div>
+                            </div>
+                        </a>
+                    @endforeach
+                </div>
+
+                <!-- 分页 -->
+                @if($articles->hasPages())
+                    <div style="display: flex; justify-content: center; margin-top: 60px; gap: 8px;">
+                        {{ $articles->links('pagination::simple-bootstrap-4') }}
+                    </div>
+                @endif
+            </main>
         </div>
-    @else
-        <p class="text-gray-600">暂无文章</p>
-    @endif
-</div>
+    </div>
+</section>
+
+<script>
+function searchArticles() {
+    const query = document.getElementById('searchInput').value.trim();
+    if (query) {
+        window.location.href = '?search=' + encodeURIComponent(query);
+    } else {
+        showToast('请输入搜索关键词', 'info');
+    }
+}
+
+// 回车搜索
+document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchArticles();
+    }
+});
+</script>
 @endsection
+
+<style>
+/* 响应式 */
+@media (max-width: 768px) {
+    .card[style*="grid-template-columns: 240px"] {
+        grid-template-columns: 1fr !important;
+    }
+    .card[style*="grid-template-columns: 240px"] > div:first-child {
+        height: 200px !important;
+    }
+    aside {
+        display: none;
+    }
+}
+</style>

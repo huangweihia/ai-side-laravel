@@ -16,7 +16,9 @@ class ProjectController extends Controller
         
         // 分类筛选
         if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
+            $query->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
         }
         
         // 搜索

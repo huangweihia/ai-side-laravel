@@ -15,11 +15,12 @@ class ArticleController extends Controller
     {
         $query = Article::query();
         
-        // 分类筛选
+        // 分类筛选 - 简化处理
         if ($request->filled('category')) {
-            $query->whereHas('category', function ($q) use ($request) {
-                $q->where('slug', $request->category);
-            });
+            $category = Category::where('slug', $request->category)->first();
+            if ($category) {
+                $query->where('category_id', $category->id);
+            }
         }
         
         // 搜索

@@ -114,7 +114,7 @@
 
                 <!-- 文章卡片列表 -->
                 <div style="display: grid; gap: 24px;">
-                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $articles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $article): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $articles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $article): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                         <a href="<?php echo e(route('articles.show', $article->id)); ?>" class="card" style="display: grid; grid-template-columns: 240px 1fr; gap: 24px; padding: 0; overflow: hidden; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 40px rgba(99,102,241,0.2)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
                             <!-- 封面图 -->
                             <div style="height: 160px; background: linear-gradient(135deg, <?php echo e(['6366f1', '8b5cf6', 'ec4899', '10b981'][array_rand([0,1,2,3])]); ?> 0%, <?php echo e(['8b5cf6', 'ec4899', '6366f1', '14b8a6'][array_rand([0,1,2,3])]); ?> 100%); display: flex; align-items: center; justify-content: center; font-size: 64px;">
@@ -171,7 +171,13 @@
                                 </div>
                             </div>
                         </a>
-                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                        <div class="card" style="padding: 60px; text-align: center;">
+                            <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
+                            <h3 style="font-size: 24px; color: white; margin-bottom: 12px;">暂无文章</h3>
+                            <p style="color: var(--gray-light);">还没有发布的文章，敬请期待</p>
+                        </div>
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 </div>
 
                 <!-- 分页 -->

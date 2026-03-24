@@ -1,15 +1,73 @@
-<?php $__env->startSection('title', '项目库 - AI 副业情报局'); ?>
+<?php $__env->startSection('title', 'AI 副业项目 - AI 副业情报局'); ?>
 
 <?php $__env->startSection('content'); ?>
-<!-- Page Header -->
-<section style="padding: 60px 0; background: var(--dark-light); border-bottom: 1px solid rgba(255,255,255,0.1);">
+<!-- Hero Section -->
+<section style="padding: 100px 0 60px; background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border-bottom: 1px solid rgba(255,255,255,0.1);">
     <div class="container">
-        <div style="text-align: center; max-width: 700px; margin: 0 auto;">
-            <span class="section-label">项目库</span>
-            <h1 class="section-title" style="margin-bottom: 16px;">AI 副业项目</h1>
-            <p class="section-desc">
-                精选 GitHub 热门 AI 项目，包含项目介绍、技术栈、变现方向，帮你找到下一个百万级副业机会
+        <div style="max-width: 800px; margin: 0 auto; text-align: center;">
+            <span style="display: inline-block; padding: 8px 20px; background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.3); border-radius: 50px; font-size: 14px; color: var(--primary-light); font-weight: 600; margin-bottom: 20px;">
+                🚀 发现下一个百万级副业
+            </span>
+            <h1 style="font-size: 56px; font-weight: 800; margin-bottom: 20px; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
+                AI 副业项目库
+            </h1>
+            <p style="font-size: 18px; color: var(--gray-light); line-height: 1.8; margin-bottom: 40px;">
+                精选 GitHub 热门 AI 项目，包含详细教程、技术栈和变现路径<br>
+                帮你找到适合自己的副业方向
             </p>
+            
+            <!-- 搜索栏 -->
+            <div style="max-width: 600px; margin: 0 auto;">
+                <form action="<?php echo e(route('projects.index')); ?>" method="GET" style="display: flex; gap: 12px;">
+                    <input 
+                        type="text" 
+                        name="search"
+                        value="<?php echo e(request('search')); ?>"
+                        placeholder="搜索项目、技术栈、变现方式..." 
+                        style="flex: 1; padding: 18px 24px; background: rgba(255,255,255,0.05); border: 2px solid rgba(255,255,255,0.1); border-radius: 16px; color: white; font-size: 16px; transition: all 0.3s;"
+                        onfocus="this.style.borderColor='var(--primary)';this.style.background='rgba(255,255,255,0.1)'"
+                        onblur="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.05)'"
+                    />
+                    <button type="submit" style="padding: 18px 32px; background: var(--gradient-primary); border: none; border-radius: 16px; color: white; font-weight: 700; font-size: 16px; cursor: pointer; transition: all 0.3s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        🔍 搜索
+                    </button>
+                </form>
+            </div>
+            
+            <!-- 热门标签 -->
+            <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 30px;">
+                <span style="color: var(--gray-light); font-size: 14px;">热门搜索：</span>
+                <a href="?tag=gpt" style="padding: 6px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: var(--gray-light); font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.2)';this.style.borderColor='var(--primary)';this.style.color='white'">GPT</a>
+                <a href="?tag=midjourney" style="padding: 6px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: var(--gray-light); font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.2)';this.style.borderColor='var(--primary)';this.style.color='white'">Midjourney</a>
+                <a href="?tag=stable-diffusion" style="padding: 6px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: var(--gray-light); font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.2)';this.style.borderColor='var(--primary)';this.style.color='white'">Stable Diffusion</a>
+                <a href="?tag=rag" style="padding: 6px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: var(--gray-light); font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.2)';this.style.borderColor='var(--primary)';this.style.color='white'">RAG</a>
+                <a href="?tag=agent" style="padding: 6px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 20px; color: var(--gray-light); font-size: 13px; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.2)';this.style.borderColor='var(--primary)';this.style.color='white'">Agent</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filter Bar -->
+<section style="padding: 30px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+    <div class="container">
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+            <!-- 分类筛选 -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="<?php echo e(route('projects.index')); ?>" style="padding: 10px 20px; background: <?php echo e(!request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(!request('category') ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">全部</a>
+                <a href="?category=ai-tools" style="padding: 10px 20px; background: <?php echo e(request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">🤖 AI 工具</a>
+                <a href="?category=side-projects" style="padding: 10px 20px; background: <?php echo e(request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'side-projects' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💡 副业项目</a>
+                <a href="?category=monetization" style="padding: 10px 20px; background: <?php echo e(request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'monetization' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💰 变现案例</a>
+            </div>
+            
+            <!-- 排序选项 -->
+            <div style="display: flex; align-items: center; gap: 12px; color: var(--gray-light); font-size: 14px;">
+                <span>共 <strong style="color: var(--primary-light);"><?php echo e($projects->total()); ?></strong> 个项目</span>
+                <select onchange="location.href='?sort='+this.value" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 14px; cursor: pointer;">
+                    <option value="latest" <?php echo e(request('sort') === 'latest' ? 'selected' : ''); ?>>📅 最新</option>
+                    <option value="popular" <?php echo e(request('sort') === 'popular' ? 'selected' : ''); ?>>🔥 最热</option>
+                    <option value="stars" <?php echo e(request('sort') === 'stars' ? 'selected' : ''); ?>>⭐ Stars</option>
+                </select>
+            </div>
         </div>
     </div>
 </section>
@@ -17,89 +75,81 @@
 <!-- Projects Grid -->
 <section style="padding: 60px 0;">
     <div class="container">
-        <!-- Filter Bar -->
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 40px; flex-wrap: wrap; gap: 20px;">
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <span class="card-tag" style="background: var(--primary); color: white;">全部</span>
-                <span class="card-tag">LLM</span>
-                <span class="card-tag">RAG</span>
-                <span class="card-tag">Agent</span>
-                <span class="card-tag">Image</span>
-            </div>
-            <div style="display: flex; gap: 12px; align-items: center;">
-                <span style="color: var(--gray-light); font-size: 14px;">共 <?php echo e($projects->total()); ?> 个项目</span>
-            </div>
-        </div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 30px;">
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $projects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $project): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <a href="<?php echo e(route('projects.show', $project->id)); ?>" class="card" style="display: block; padding: 0; overflow: hidden; text-decoration: none; transition: all 0.3s ease; position: relative;" onmouseover="this.style.transform='translateY(-8px)';this.style.boxShadow='0 20px 60px rgba(99,102,241,0.3)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                    <!-- 顶部渐变条 -->
+                    <div style="height: 6px; background: linear-gradient(90deg, <?php echo e(['6366f1', '8b5cf6', 'ec4899', '10b981', 'f59e0b'][array_rand([0,1,2,3,4])]); ?> 0%, <?php echo e(['8b5cf6', 'ec4899', '6366f1', '14b8a6', 'ef4444'][array_rand([0,1,2,3,4])]); ?> 100%);"></div>
+                    
+                    <div style="padding: 30px;">
+                        <!-- 头部信息 -->
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, <?php echo e(['6366f1', '8b5cf6', 'ec4899'][array_rand([0,1,2])]); ?> 0%, <?php echo e(['8b5cf6', 'ec4899', '6366f1'][array_rand([0,1,2])]); ?> 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                    <?php echo e(['🤖', '💡', '🚀', '⚡', '🎯'][array_rand([0,1,2,3,4])]); ?>
 
-        <!-- Projects Grid -->
-        <div class="features-grid" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px;">
-            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $projects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $project): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <a href="<?php echo e(route('projects.show', $project->id)); ?>" class="card" style="display: block; text-decoration: none; height: 100%;">
-                    <!-- Card Header with Gradient -->
-                    <div style="height: 120px; background: linear-gradient(135deg, <?php echo e($project->id % 2 == 0 ? '#6366f1 0%, #8b5cf6 100%' : '#ec4899 0%, #f59e0b 100%'); ?>); position: relative; overflow: hidden;">
-                        <div style="position: absolute; top: 20px; left: 20px; right: 20px; display: flex; justify-content: space-between; align-items: flex-start;">
-                            <span style="background: rgba(255,255,255,0.2); backdrop-filter: blur(10px); padding: 6px 12px; border-radius: 20px; font-size: 12px; color: white; font-weight: 600;">
-                                <?php echo e($project->status === 'in_progress' ? '🔥 进行中' : ($project->status === 'completed' ? '✅ 已完成' : '📋 规划中')); ?>
+                                </div>
+                                <div>
+                                    <h3 style="font-size: 20px; color: white; margin: 0; font-weight: 700;"><?php echo e($project->full_name ?? $project->name); ?></h3>
+                                    <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
+                                        <span style="font-size: 12px; color: var(--gray-light);"><?php echo e($project->language ?? 'Unknown'); ?></span>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($project->is_featured): ?>
+                                            <span style="padding: 2px 8px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 10px; font-size: 11px; color: white; font-weight: 600;">⭐ 精选</span>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 描述 -->
+                        <p style="color: var(--gray-light); font-size: 15px; line-height: 1.8; margin-bottom: 24px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            <?php echo e($project->description); ?>
 
-                            </span>
+                        </p>
+                        
+                        <!-- 标签 -->
+                        <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = array_slice($project->tags ?? [], 0, 4); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tag): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                <span style="padding: 4px 12px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 12px; font-weight: 500;"><?php echo e($tag); ?></span>
+                            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </div>
+                        
+                        <!-- 底部信息 -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                            <div style="display: flex; gap: 16px; font-size: 13px; color: var(--gray);">
+                                <span style="display: flex; align-items: center; gap: 6px;">
+                                    <span>⭐</span> <?php echo e(number_format($project->stars ?? 0)); ?>
+
+                                </span>
+                                <span style="display: flex; align-items: center; gap: 6px;">
+                                    <span>🍴</span> <?php echo e(number_format($project->forks ?? 0)); ?>
+
+                                </span>
+                            </div>
                             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($project->revenue): ?>
-                                <span style="background: rgba(16,185,129,0.9); padding: 6px 12px; border-radius: 20px; font-size: 12px; color: white; font-weight: 600;">
+                                <span style="padding: 6px 14px; background: linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%); border: 1px solid rgba(16,185,129,0.3); border-radius: 20px; font-size: 12px; color: #10b981; font-weight: 600;">
                                     💰 <?php echo e($project->revenue); ?>
 
                                 </span>
                             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                         </div>
-                        <div style="position: absolute; bottom: 20px; left: 20px; right: 20px;">
-                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                                <?php
-                                    $tags = ['LLM', 'RAG', 'Agent', 'Python', 'TypeScript'];
-                                    $randomTags = array_rand($tags, 2);
-                                ?>
-                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $randomTags; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tagIndex): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                    <span style="background: rgba(255,255,255,0.2); padding: 4px 10px; border-radius: 12px; font-size: 11px; color: white;">
-                                        <?php echo e($tags[$tagIndex]); ?>
-
-                                    </span>
-                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Card Body -->
-                    <div class="card-body" style="padding: 24px;">
-                        <h3 class="card-title" style="font-size: 18px; margin-bottom: 10px; color: white;">
-                            <?php echo e(Str::limit($project->name, 50)); ?>
-
-                        </h3>
-                        <p class="card-desc" style="margin-bottom: 16px; height: 60px; overflow: hidden;">
-                            <?php echo e(Str::limit($project->description ?: '暂无描述', 120)); ?>
-
-                        </p>
-
-                        <!-- Card Footer -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1);">
-                            <div style="display: flex; align-items: center; gap: 12px; font-size: 13px; color: var(--gray-light);">
-                                <span style="display: flex; align-items: center; gap: 4px;">
-                                    ⭐ <?php echo e(rand(1000, 100000)); ?>
-
-                                </span>
-                                <span style="display: flex; align-items: center; gap: 4px;">
-                                    🍴 <?php echo e(rand(100, 10000)); ?>
-
-                                </span>
-                            </div>
-                            <span style="color: var(--primary-light); font-size: 14px; font-weight: 600;">
-                                查看详情 →
-                            </span>
-                        </div>
                     </div>
                 </a>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
+                <div style="grid-column: 1 / -1; text-align: center; padding: 100px 20px;">
+                    <div style="font-size: 80px; margin-bottom: 24px;">📭</div>
+                    <h3 style="font-size: 28px; color: white; margin-bottom: 12px; font-weight: 700;">暂无项目</h3>
+                    <p style="color: var(--gray-light); font-size: 16px; margin-bottom: 30px;">
+                        还没有收录项目，我们会尽快添加<br>
+                        有推荐的项目？<a href="<?php echo e(route('contact')); ?>" style="color: var(--primary-light); text-decoration: underline;">联系我们</a>
+                    </p>
+                </div>
+            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
         </div>
-
+        
         <!-- Pagination -->
         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($projects->hasPages()): ?>
-            <div style="display: flex; justify-content: center; margin-top: 60px; gap: 8px;">
+            <div style="display: flex; justify-content: center; margin-top: 60px;">
                 <?php echo e($projects->links('pagination::simple-bootstrap-4')); ?>
 
             </div>
@@ -108,22 +158,22 @@
 </section>
 
 <!-- CTA Section -->
-<section style="padding: 60px 0; background: var(--dark-light);">
+<section style="padding: 80px 0; background: linear-gradient(135deg, rgba(99,102,241,0.1) 0%, rgba(139,92,246,0.1) 100%);">
     <div class="container">
-        <div class="card" style="background: var(--gradient-primary); padding: 60px 40px; text-align: center; border: none; max-width: 800px; margin: 0 auto;">
-            <h2 class="section-title" style="color: white; margin-bottom: 16px;">
+        <div class="card" style="background: var(--gradient-primary); padding: 60px 40px; text-align: center; border: none; max-width: 900px; margin: 0 auto;">
+            <h2 style="font-size: 36px; color: white; margin-bottom: 16px; font-weight: 800;">
                 发现更多优质项目
             </h2>
-            <p style="color: rgba(255,255,255,0.9); font-size: 16px; margin-bottom: 30px;">
-                每天订阅我们的邮件，第一时间获取最新 AI 副业机会
+            <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 30px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                每天订阅我们的邮件，第一时间获取最新 AI 副业机会和变现路径
             </p>
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->guest()): ?>
-                <a href="<?php echo e(route('register')); ?>" class="btn btn-lg" style="background: white; color: var(--primary);">
-                    免费订阅
+                <a href="<?php echo e(route('register')); ?>" class="btn" style="background: white; color: var(--primary); padding: 18px 40px; border-radius: 16px; font-weight: 700; font-size: 16px; display: inline-flex; align-items: center; gap: 8px;">
+                    <span>🚀</span> 免费订阅
                     <span>→</span>
                 </a>
             <?php else: ?>
-                <p style="color: rgba(255,255,255,0.9); font-size: 14px;">
+                <p style="color: rgba(255,255,255,0.9); font-size: 16px;">
                     ✅ 你已订阅，每天 10:00 准时收到邮件
                 </p>
             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
@@ -131,5 +181,13 @@
     </div>
 </section>
 <?php $__env->stopSection(); ?>
+
+<style>
+@media (max-width: 768px) {
+    [style*="grid-template-columns: repeat(auto-fill, minmax(380px, 1fr))"] {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 
 <?php echo $__env->make('layouts.app', \Illuminate\Support\Arr::except(get_defined_vars(), ['__data', '__path']))->render(); ?><?php /**PATH /var/www/html/resources/views/projects/index.blade.php ENDPATH**/ ?>

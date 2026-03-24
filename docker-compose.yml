@@ -1,5 +1,3 @@
-﻿version: '3.8'
-
 services:
   mysql:
     image: mysql:8.0
@@ -30,7 +28,7 @@ services:
       dockerfile: Dockerfile
     container_name: ai_side_php
     volumes:
-      - /home/node/.openclaw/workspace/ai-side-laravel:/var/www/html:cached
+      - .:/var/www/html:delegated
       - /var/www/html/vendor
     ports:
       - "8081:80"
@@ -51,7 +49,7 @@ services:
       dockerfile: Dockerfile
     container_name: ai_side_worker
     volumes:
-      - /home/node/.openclaw/workspace/ai-side-laravel:/var/www/html:cached
+      - .:/var/www/html:delegated
       - /var/www/html/vendor
     command: php artisan queue:work --sleep=3 --tries=3 --max-time=3600
     networks:

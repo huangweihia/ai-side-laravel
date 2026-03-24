@@ -1,4 +1,4 @@
-FROM php:8.2-fpm
+FROM php:8.2-apache
 
 # 安装系统依赖
 RUN apt-get update && apt-get install -y \
@@ -34,6 +34,14 @@ RUN mkdir -p /home/laravel/.composer && \
 # 设置文件权限
 RUN chown -R www-data:www-data /var/www/html
 
+# 启用 Apache 模块
+RUN a2enmod rewrite
+
+# 设置文档根目录
+ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
+RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf
+RUN sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
+
 EXPOSE 80
 
-CMD ["php-fpm"]
+CMD ["apache2-foreground"]

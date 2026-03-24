@@ -11,38 +11,54 @@ class Subscription extends Model
 
     protected $fillable = [
         'user_id',
-        'plan',
-        'amount',
+        'email',
         'status',
-        'started_at',
-        'expires_at',
-        'payment_id',
-        'payment_method',
+        'plan',
+        'starts_at',
+        'ends_at',
+        'cancelled_at',
     ];
 
     protected $casts = [
-        'amount' => 'decimal:2',
-        'started_at' => 'datetime',
-        'expires_at' => 'datetime',
+        'starts_at' => 'datetime',
+        'ends_at' => 'datetime',
+        'cancelled_at' => 'datetime',
     ];
 
+    /**
+     * 用户关联
+     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
-    public function isActive(): bool
+    /**
+     * 作用域：有效订阅
+     */
+    public function scopeActive($query)
     {
-        return $this->status === 'active' && 
-               (!$this->expires_at || $this->expires_at->isFuture());
+        return $query->where('status', 'active')
+                     ->where('ends_at', '>', now());
     }
 
-    public function getPlanLabel(): string
+    /**
+     * 是否有效
+     */
+    public function isActive(): bool
+    {
+        return $this->status === 'active' && $this->ends_at?->isFuture();
+    }
+
+    /**
+     * 获取计划名称
+     */
+    public function getPlanName(): string
     {
         return [
-            'monthly' => '閺堝牆瀹虫导姘喅',
-            'yearly' => '楠炴潙瀹虫导姘喅',
-            'lifetime' => '缂佸牐闊╂导姘喅',
-        ][$this->plan] ?? $this->plan;
+            'monthly' => '月度会员',
+            'yearly' => '年度会员',
+            'lifetime' => '终身会员',
+        ][$this->plan] ?? '未知计划';
     }
 }

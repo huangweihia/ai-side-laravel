@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 
 class Category extends Model
 {
@@ -13,34 +12,28 @@ class Category extends Model
     protected $fillable = [
         'name',
         'slug',
+        'type',
         'description',
         'sort',
-        'is_premium',
     ];
 
     protected $casts = [
-        'is_premium' => 'boolean',
         'sort' => 'integer',
     ];
 
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::creating(function ($category) {
-            if (empty($category->slug)) {
-                $category->slug = Str::slug($category->name);
-            }
-        });
-    }
-
+    /**
+     * 文章关联
+     */
     public function articles()
     {
         return $this->hasMany(Article::class);
     }
 
-    public function scopeOrdered($query)
+    /**
+     * 项目关联
+     */
+    public function projects()
     {
-        return $query->orderBy('sort')->orderBy('name');
+        return $this->hasMany(Project::class);
     }
 }

@@ -1,0 +1,73 @@
+@extends('layouts.app')
+
+@section('title', '注册 - AI 副业情报局')
+
+@section('content')
+<div class="container" style="max-width: 480px; margin: 60px auto;">
+    <div class="card" style="padding: 40px;">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🚀</div>
+            <h1 style="font-size: 28px; font-weight: 700; margin-bottom: 8px;">创建账号</h1>
+            <p style="color: var(--gray-light); font-size: 15px;">加入 AI 副业情报局，开启副业之旅</p>
+        </div>
+        
+        @if ($errors->any())
+            <div class="alert alert-error">
+                <ul style="margin: 0; padding-left: 20px;">
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
+
+        <form method="POST" action="{{ route('register') }}">
+            @csrf
+            
+            <div class="form-group">
+                <label class="form-label" for="name">姓名</label>
+                <input class="form-input" id="name" type="text" name="name" value="{{ old('name') }}" required autofocus placeholder="你的名字">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="email">邮箱地址</label>
+                <input class="form-input" id="email" type="email" name="email" value="{{ old('email') }}" required placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password">密码</label>
+                <input class="form-input" id="password" type="password" name="password" required placeholder="至少 8 位">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="password_confirmation">确认密码</label>
+                <input class="form-input" id="password_confirmation" type="password" name="password_confirmation" required placeholder="再次输入密码">
+            </div>
+
+            <button class="btn btn-primary" type="submit" style="width: 100%; padding: 14px; font-size: 15px;">
+                免费注册
+            </button>
+        </form>
+
+        <div style="text-align: center; margin-top: 24px; padding-top: 24px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <p style="color: var(--gray-light); font-size: 14px;">
+                已有账号？
+                <a href="{{ route('login') }}" style="color: var(--primary-light); text-decoration: none; font-weight: 600;">立即登录</a>
+            </p>
+        </div>
+        
+        <p style="text-align: center; color: var(--gray); font-size: 13px; margin-top: 20px;">
+            注册即表示你同意我们的
+            <a href="#" style="color: var(--gray); text-decoration: underline;">服务条款</a>
+            和
+            <a href="#" style="color: var(--gray); text-decoration: underline;">隐私政策</a>
+        </p>
+    </div>
+    
+    <p style="text-align: center; color: var(--gray); font-size: 14px; margin-top: 24px;">
+        <a href="{{ route('home') }}" style="color: var(--gray); text-decoration: none;">
+            <span>←</span> 返回首页
+        </a>
+    </p>
+</div>
+@endsection

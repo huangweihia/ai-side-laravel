@@ -21,6 +21,7 @@ class Project extends Model
         'tags',
         'monetization',
         'difficulty',
+        'revenue',
         'is_featured',
         'collected_at',
     ];

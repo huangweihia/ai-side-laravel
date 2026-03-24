@@ -8,7 +8,7 @@
 <?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
 <?php endif; ?>
 <?php $component->withAttributes([]); ?>
-    <div style="display: grid; gap: 32px;">
+    <div style="display: grid; gap: 32px;" wire:poll.5s>
         
         <!-- 收件人管理 -->
         <?php if (isset($component)) { $__componentOriginalee08b1367eba38734199cf7829b1d1e9 = $component; } ?>
@@ -59,8 +59,11 @@
             
             <div style="display: grid; gap: 12px;">
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = $this->recipients; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $email): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php
+                        $status = $this->getSubscriptionStatus($email);
+                    ?>
                     <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px; background: #1e293b; border-radius: 8px;">
-                        <div style="display: flex; align-items: center; gap: 12px;">
+                        <div style="display: flex; align-items: center; gap: 12px; flex: 1;">
                             <input 
                                 type="checkbox" 
                                 wire:click="toggleBulkSelect('<?php echo e($email); ?>')"
@@ -69,21 +72,46 @@
                                 style="width: 18px; height: 18px; cursor: pointer;"
                             />
                             <span style="font-size: 20px;">📧</span>
-                            <span style="color: white; font-weight: 500;"><?php echo e($email); ?></span>
+                            <div style="flex: 1;">
+                                <div style="color: white; font-weight: 500; margin-bottom: 4px;"><?php echo e($email); ?></div>
+                                <div style="display: flex; gap: 8px; font-size: 12px;">
+                                    <button 
+                                        wire:click="toggleSubscription('<?php echo e($email); ?>', 'subscribed_to_daily')"
+                                        style="background: none; border: none; padding: 4px 8px; cursor: pointer; color: <?php echo e($status['daily'] ? '#10b981' : '#64748b'); ?>; display: flex; align-items: center; gap: 4px;"
+                                        title="点击切换日报订阅"
+                                    >
+                                        <?php echo e($status['daily'] ? '✅' : '❌'); ?> 日报
+                                    </button>
+                                    <button 
+                                        wire:click="toggleSubscription('<?php echo e($email); ?>', 'subscribed_to_weekly')"
+                                        style="background: none; border: none; padding: 4px 8px; cursor: pointer; color: <?php echo e($status['weekly'] ? '#10b981' : '#64748b'); ?>; display: flex; align-items: center; gap: 4px;"
+                                        title="点击切换周报订阅"
+                                    >
+                                        <?php echo e($status['weekly'] ? '✅' : '❌'); ?> 周报
+                                    </button>
+                                    <button 
+                                        wire:click="toggleSubscription('<?php echo e($email); ?>', 'subscribed_to_notifications')"
+                                        style="background: none; border: none; padding: 4px 8px; cursor: pointer; color: <?php echo e($status['notifications'] ? '#10b981' : '#64748b'); ?>; display: flex; align-items: center; gap: 4px;"
+                                        title="点击切换通知订阅"
+                                    >
+                                        <?php echo e($status['notifications'] ? '✅' : '❌'); ?> 通知
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
                             <button 
-                                wire:click="removeRecipient('<?php echo e($email); ?>')"
-                                style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;"
+                                wire:click="confirmAction('send_test', '<?php echo e($email); ?>')"
+                                wire:loading.attr="disabled"
+                                style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
                             >
-                                删除
+                                📧 测试
                             </button>
                             <button 
-                                wire:click="sendTestEmail"
-                                wire:loading.attr="disabled"
-                                style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer;"
+                                wire:click="confirmAction('delete', '<?php echo e($email); ?>')"
+                                style="padding: 8px 16px; background: #ef4444; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px;"
                             >
-                                发送测试
+                                🗑️ 删除
                             </button>
                         </div>
                     </div>
@@ -308,6 +336,74 @@
 <?php unset($__componentOriginalee08b1367eba38734199cf7829b1d1e9); ?>
 <?php endif; ?>
     </div>
+
+    
+    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($showModal): ?>
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
+            <div style="background: #1e293b; border-radius: 12px; padding: 30px; max-width: 450px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <span style="font-size: 32px;">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($modalAction === 'delete'): ?> 🗑️
+                        <?php elseif($modalAction === 'send_test'): ?> 📧
+                        <?php elseif($modalAction === 'bulk_delete'): ?> ⚠️
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </span>
+                    <h3 style="color: white; font-size: 20px; font-weight: 600; margin: 0;">
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($modalAction === 'delete'): ?> 确认删除
+                        <?php elseif($modalAction === 'send_test'): ?> 发送测试邮件
+                        <?php elseif($modalAction === 'bulk_delete'): ?> 批量删除
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </h3>
+                </div>
+
+                <div style="color: #94a3b8; font-size: 15px; line-height: 1.6; margin-bottom: 25px;">
+                    <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($modalAction === 'delete'): ?>
+                        确定要删除邮箱 <strong style="color: white;"><?php echo e($modalEmail); ?></strong> 吗？
+                        <br>删除后将不再收到任何邮件。
+                    <?php elseif($modalAction === 'send_test'): ?>
+                        将发送测试邮件到：
+                        <br><strong style="color: white;"><?php echo e($modalEmail); ?></strong>
+                        <br>请检查收件箱确认是否收到。
+                    <?php elseif($modalAction === 'bulk_delete'): ?>
+                        确定要删除选中的 <strong style="color: white;"><?php echo e(count($selectedForBulk)); ?></strong> 个邮箱吗？
+                        <br>此操作不可恢复。
+                    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end;">
+                    <button 
+                        wire:click="$set('showModal', false)"
+                        wire:loading.attr="disabled"
+                        style="padding: 10px 20px; background: #334155; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;"
+                    >
+                        取消
+                    </button>
+                    <button 
+                        wire:click="executeModalAction"
+                        wire:loading.attr="disabled"
+                        style="padding: 10px 20px; background: <?php echo e($modalAction === 'delete' || $modalAction === 'bulk_delete' ? '#ef4444' : '#10b981'); ?>; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+                    >
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($isLoading): ?>
+                            <span style="display: inline-block; animation: spin 1s linear infinite;">⏳</span>
+                            处理中...
+                        <?php else: ?>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($modalAction === 'delete'): ?> 🗑️ 确认删除
+                            <?php elseif($modalAction === 'send_test'): ?> 📧 发送
+                            <?php elseif($modalAction === 'bulk_delete'): ?> ⚠️ 确认删除
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+        </style>
+    <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
  <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal166a02a7c5ef5a9331faf66fa665c256)): ?>

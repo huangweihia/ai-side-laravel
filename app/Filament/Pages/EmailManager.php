@@ -84,7 +84,11 @@ class EmailManager extends Page implements HasForms
             ]
         );
         
+        // 清空输入框
         $this->recipient = '';
+        
+        // 强制刷新收件人列表（从数据库重新加载）
+        $this->recipients = EmailSetting::getRecipients();
         
         Notification::make()
             ->title('✅ 添加成功')
@@ -103,6 +107,9 @@ class EmailManager extends Page implements HasForms
         if ($subscription) {
             $subscription->delete();
         }
+        
+        // 强制刷新收件人列表（从数据库重新加载）
+        $this->recipients = EmailSetting::getRecipients();
         
         Notification::make()
             ->title('✅ 删除成功')
@@ -431,11 +438,14 @@ class EmailManager extends Page implements HasForms
         $this->recipients = array_values(array_filter($this->recipients, fn($e) => !in_array($e, $this->selectedForBulk)));
         EmailSetting::set('email_recipients', json_encode($this->recipients), '邮件接收人列表');
         
+        // 强制刷新收件人列表（从数据库重新加载）
+        $this->recipients = EmailSetting::getRecipients();
+        
         $count = count($this->selectedForBulk);
         $this->selectedForBulk = [];
         
         Notification::make()
-            ->title("已删除 {$count} 个邮箱")
+            ->title("✅ 已删除 {$count} 个邮箱")
             ->success()
             ->send();
     }

@@ -85,20 +85,54 @@ class EmailManager extends Page implements HasForms
 
     public function sendTestEmail(): void
     {
+        $email = $this->recipient ?: ($this->recipients[0] ?? '2801359160@qq.com');
+        
         try {
-            \Artisan::call('ai-projects:send-daily', [
-                '--email' => $this->recipient ?: ($this->recipients[0] ?? '2801359160@qq.com'),
+            // 创建简单的测试邮件
+            $subject = '🧪 邮件测试 - AI 副业情报局';
+            $content = "这是一封测试邮件，用于验证邮件发送功能是否正常。\n\n" .
+                       "发送时间：" . now()->format('Y-m-d H:i:s') . "\n" .
+                       "接收邮箱：{$email}\n\n" .
+                       "如果你收到这封邮件，说明邮件发送功能正常工作！\n\n" .
+                       "AI 副业情报局";
+            
+            // 记录邮件日志
+            $emailLog = EmailLog::create([
+                'recipient' => $email,
+                'subject' => $subject,
+                'content' => $content,
+                'type' => 'test',
+                'status' => 'pending',
+            ]);
+            
+            // 发送邮件
+            \Illuminate\Support\Facades\Mail::raw($content, function ($message) use ($email, $subject) {
+                $message->to($email)
+                        ->subject($subject);
+            });
+            
+            $emailLog->update([
+                'status' => 'sent',
+                'sent_at' => now(),
             ]);
             
             Notification::make()
-                ->title('邮件已发送')
-                ->body('请检查收件箱')
+                ->title('✅ 邮件已发送')
+                ->body("测试邮件已发送至：{$email}")
                 ->success()
                 ->send();
         } catch (\Exception $e) {
+            // 记录错误
+            if (isset($emailLog)) {
+                $emailLog->update([
+                    'status' => 'failed',
+                    'error_message' => $e->getMessage(),
+                ]);
+            }
+            
             Notification::make()
-                ->title('发送失败')
-                ->body($e->getMessage())
+                ->title('❌ 发送失败')
+                ->body('错误：' . $e->getMessage())
                 ->danger()
                 ->send();
         }

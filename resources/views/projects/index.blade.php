@@ -35,7 +35,7 @@
 
         <!-- Projects Grid -->
         <div class="features-grid" style="grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 24px;">
-            @foreach($projects as $project)
+            @forelse($projects as $project)
                 <a href="{{ route('projects.show', $project->id) }}" class="card" style="display: block; text-decoration: none; height: 100%;">
                     <!-- Card Header with Gradient -->
                     <div style="height: 120px; background: linear-gradient(135deg, {{ $project->id % 2 == 0 ? '#6366f1 0%, #8b5cf6 100%' : '#ec4899 0%, #f59e0b 100%' }}); position: relative; overflow: hidden;">
@@ -89,7 +89,13 @@
                         </div>
                     </div>
                 </a>
-            @endforeach
+            @empty
+                <div class="card" style="padding: 60px; text-align: center; grid-column: 1 / -1;">
+                    <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
+                    <h3 style="font-size: 24px; color: white; margin-bottom: 12px;">暂无项目</h3>
+                    <p style="color: var(--gray-light);">还没有收录项目，敬请期待</p>
+                </div>
+            @endforelse
         </div>
 
         <!-- Pagination -->

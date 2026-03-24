@@ -12,10 +12,10 @@ class EmailTemplatePresetSeeder extends Seeder
      */
     public function run(): void
     {
+        // 如果模板已存在，直接更新；否则创建
         $templates = [
             // === 日报模板 ===
             [
-                'id' => 1,
                 'name' => '【经典日报】简洁风格',
                 'key' => 'daily_classic',
                 'subject' => '🤖 AI & 副业资讯日报 - {{date}}',
@@ -70,7 +70,6 @@ class EmailTemplatePresetSeeder extends Seeder
             ],
             
             [
-                'id' => 2,
                 'name' => '【现代日报】卡片风格',
                 'key' => 'daily_modern',
                 'subject' => '📬 你的 AI 副业日报已送达 - {{date}}',
@@ -140,7 +139,6 @@ class EmailTemplatePresetSeeder extends Seeder
             
             // === 周报模板 ===
             [
-                'id' => 3,
                 'name' => '【周报】每周精选汇总',
                 'key' => 'weekly_summary',
                 'subject' => '📊 本周 AI 副业精选 - {{week_range}}',
@@ -213,7 +211,6 @@ class EmailTemplatePresetSeeder extends Seeder
             
             // === 欢迎邮件模板 ===
             [
-                'id' => 4,
                 'name' => '【欢迎邮件】新用户欢迎',
                 'key' => 'welcome',
                 'subject' => '🎉 欢迎加入 AI 副业情报局！',
@@ -277,7 +274,6 @@ class EmailTemplatePresetSeeder extends Seeder
             
             // === 通知模板 ===
             [
-                'id' => 5,
                 'name' => '【通知】系统通知',
                 'key' => 'notification',
                 'subject' => '🔔 {{notification_title}}',

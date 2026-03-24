@@ -7,7 +7,6 @@ use App\Models\Article;
 use App\Models\Category;
 use App\Models\User;
 use App\Models\EmailLog;
-use App\Models\JobListing;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
@@ -40,10 +39,6 @@ class TestDataSeeder extends Seeder
         $this->command->info('📧 创建邮件日志...');
         $this->createEmailLogs();
         
-        // 6. 生成职位
-        $this->command->info('💼 创建职位...');
-        $this->createJobListings();
-        
         $this->command->info('');
         $this->command->info('✅ 测试数据生成完成！');
         $this->command->info('   分类：' . Category::count());
@@ -51,7 +46,6 @@ class TestDataSeeder extends Seeder
         $this->command->info('   项目：' . Project::count());
         $this->command->info('   文章：' . Article::count());
         $this->command->info('   邮件日志：' . EmailLog::count());
-        $this->command->info('   职位：' . JobListing::count());
     }
 
     private function createCategories(): array
@@ -132,109 +126,103 @@ class TestDataSeeder extends Seeder
                 'name' => 'AI 写作助手',
                 'description' => '基于 GPT-4 的智能写作工具，支持文章生成、润色、改写等功能',
                 'url' => 'https://github.com/example/ai-writer',
-                'github_url' => 'https://github.com/example/ai-writer',
                 'status' => 'in_progress',
                 'revenue' => '1000-5000 元/月',
-                'tech_stack' => ['Python', 'GPT-4', 'FastAPI'],
+                'tech_stack' => json_encode(['Python', 'GPT-4', 'FastAPI']),
                 'category_id' => Category::where('slug', 'ai-tools')->first()?->id,
             ],
             [
                 'name' => 'AI 绘画变现',
                 'description' => '使用 Midjourney 和 Stable Diffusion 接商单，月入过万的副业项目',
                 'url' => 'https://example.com/ai-art',
-                'github_url' => null,
                 'status' => 'completed',
                 'revenue' => '10000+ 元/月',
-                'tech_stack' => ['Midjourney', 'Stable Diffusion', 'Photoshop'],
+                'tech_stack' => json_encode(['Midjourney', 'Stable Diffusion', 'Photoshop']),
                 'category_id' => Category::where('slug', 'side-projects')->first()?->id,
             ],
             [
                 'name' => 'AI 客服机器人',
                 'description' => '为企业定制 AI 客服系统，按项目收费，单项目 5000-30000 元',
                 'url' => 'https://github.com/example/ai-chatbot',
-                'github_url' => 'https://github.com/example/ai-chatbot',
                 'status' => 'in_progress',
                 'revenue' => '5000-20000 元/月',
-                'tech_stack' => ['Python', 'LangChain', 'Vue.js'],
+                'tech_stack' => json_encode(['Python', 'LangChain', 'Vue.js']),
                 'category_id' => Category::where('slug', 'ai-tools')->first()?->id,
             ],
             [
                 'name' => 'AI 生成短视频',
                 'description' => '批量生成短视频内容，通过流量分成和带货变现',
                 'url' => 'https://example.com/ai-video',
-                'github_url' => null,
                 'status' => 'in_progress',
                 'revenue' => '3000-15000 元/月',
-                'tech_stack' => ['Python', 'FFmpeg', '剪映 API'],
+                'tech_stack' => json_encode(['Python', 'FFmpeg']),
                 'category_id' => Category::where('slug', 'monetization')->first()?->id,
             ],
             [
                 'name' => 'AI 翻译服务',
                 'description' => '接入 DeepL 和大模型 API，提供专业领域翻译服务',
                 'url' => 'https://github.com/example/ai-translate',
-                'github_url' => 'https://github.com/example/ai-translate',
                 'status' => 'planning',
                 'revenue' => '2000-8000 元/月',
-                'tech_stack' => ['Node.js', 'DeepL API', 'React'],
+                'tech_stack' => json_encode(['Node.js', 'DeepL API']),
                 'category_id' => Category::where('slug', 'ai-tools')->first()?->id,
             ],
             [
                 'name' => 'AI 数据分析报告',
                 'description' => '自动生成数据分析报告，面向中小企业，按报告收费',
                 'url' => 'https://example.com/ai-analytics',
-                'github_url' => null,
                 'status' => 'in_progress',
                 'revenue' => '5000-20000 元/月',
-                'tech_stack' => ['Python', 'Pandas', 'Chart.js'],
+                'tech_stack' => json_encode(['Python', 'Pandas']),
                 'category_id' => Category::where('slug', 'side-projects')->first()?->id,
             ],
             [
                 'name' => 'AI 头像定制',
                 'description' => '使用 LoRA 模型定制专属头像，小红书引流变现',
                 'url' => 'https://example.com/ai-avatar',
-                'github_url' => null,
                 'status' => 'completed',
                 'revenue' => '1000-5000 元/月',
-                'tech_stack' => ['Stable Diffusion', 'LoRA', '小红书'],
+                'tech_stack' => json_encode(['Stable Diffusion', 'LoRA']),
                 'category_id' => Category::where('slug', 'monetization')->first()?->id,
             ],
             [
                 'name' => 'AI 课程分销',
                 'description' => '代理 AI 相关课程，通过内容营销获客，佣金 30-50%',
                 'url' => 'https://example.com/ai-course',
-                'github_url' => null,
                 'status' => 'in_progress',
                 'revenue' => '3000-15000 元/月',
-                'tech_stack' => ['微信公众号', '知识付费', '私域流量'],
+                'tech_stack' => json_encode(['微信公众号', '知识付费']),
                 'category_id' => Category::where('slug', 'monetization')->first()?->id,
             ],
             [
                 'name' => 'AI 提示词市场',
                 'description' => '收集和售卖优质 Prompt，单条售价 9.9-99 元',
                 'url' => 'https://example.com/prompt-market',
-                'github_url' => null,
                 'status' => 'planning',
                 'revenue' => '1000-10000 元/月',
-                'tech_stack' => ['Next.js', 'Stripe', 'Notion'],
+                'tech_stack' => json_encode(['Next.js', 'Stripe']),
                 'category_id' => Category::where('slug', 'side-projects')->first()?->id,
             ],
             [
                 'name' => 'AI 代写服务',
                 'description' => '承接论文润色、简历优化、文案写作等服务',
                 'url' => 'https://example.com/ai-writing-service',
-                'github_url' => null,
                 'status' => 'completed',
                 'revenue' => '5000-20000 元/月',
-                'tech_stack' => ['GPT-4', '淘宝店', '私域流量'],
+                'tech_stack' => json_encode(['GPT-4', '淘宝店']),
                 'category_id' => Category::where('slug', 'monetization')->first()?->id,
             ],
         ];
 
         foreach ($projects as $project) {
-            Project::firstOrCreate(
-                ['name' => $project['name']],
-                $project
-            );
+            try {
+                Project::firstOrCreate(
+                    ['name' => $project['name']],
+                    $project
+                );
+            } catch (\Exception $e) {
+                $this->command->warn("⚠️ 项目创建失败：" . $project['name']);
+            }
         }
     }
 
@@ -294,7 +282,7 @@ class TestDataSeeder extends Seeder
             [
                 'title' => 'Stable Diffusion 本地部署完整指南',
                 'slug' => 'stable-diffusion-local-setup',
-                'summary' => 'Windows/Mac/Linux全平台部署教程，包含常见问题解决',
+                'summary' => 'Windows/Mac/Linux 全平台部署教程，包含常见问题解决',
                 'content' => '<p>Stable Diffusion 是最流行的开源 AI 绘画工具...</p>',
                 'author_id' => $users[0]['id'] ?? 1,
                 'category_id' => Category::where('slug', 'learning')->first()?->id,
@@ -324,10 +312,14 @@ class TestDataSeeder extends Seeder
         ];
 
         foreach ($articles as $article) {
-            Article::firstOrCreate(
-                ['slug' => $article['slug']],
-                $article
-            );
+            try {
+                Article::firstOrCreate(
+                    ['slug' => $article['slug']],
+                    $article
+                );
+            } catch (\Exception $e) {
+                $this->command->warn("⚠️ 文章创建失败：" . $article['title']);
+            }
         }
     }
 
@@ -344,72 +336,18 @@ class TestDataSeeder extends Seeder
         ];
 
         foreach ($emails as $email) {
-            EmailLog::create([
-                'recipient' => $email['recipient'],
-                'subject' => $email['subject'],
-                'content' => '测试邮件内容...',
-                'type' => $email['type'],
-                'status' => $email['status'],
-                'sent_at' => $email['status'] === 'sent' ? now()->subDays(rand(0, 7)) : null,
-            ]);
-        }
-    }
-
-    private function createJobListings(): void
-    {
-        $jobs = [
-            [
-                'title' => '高级 PHP 开发工程师',
-                'company' => '某科技公司',
-                'location' => '杭州',
-                'salary' => '15-30k',
-                'description' => '负责核心业务开发，要求 3 年以上 PHP 经验',
-                'url' => 'https://example.com/job/1',
-                'source' => 'boss',
-            ],
-            [
-                'title' => 'PHP 全栈工程师',
-                'company' => '创业公司 A',
-                'location' => '杭州',
-                'salary' => '12-25k',
-                'description' => 'PHP+Vue全栈开发，有创业经验者优先',
-                'url' => 'https://example.com/job/2',
-                'source' => 'boss',
-            ],
-            [
-                'title' => '资深后端工程师（PHP）',
-                'company' => '互联网大厂',
-                'location' => '杭州',
-                'salary' => '20-40k',
-                'description' => '高并发系统设计，微服务架构经验',
-                'url' => 'https://example.com/job/3',
-                'source' => 'boss',
-            ],
-            [
-                'title' => 'PHP 技术专家',
-                'company' => '电商平台',
-                'location' => '杭州',
-                'salary' => '25-45k',
-                'description' => '技术架构设计，团队管理，代码 review',
-                'url' => 'https://example.com/job/4',
-                'source' => 'boss',
-            ],
-            [
-                'title' => 'PHP 开发工程师',
-                'company' => '金融科技公司',
-                'location' => '杭州',
-                'salary' => '10-20k',
-                'description' => '金融系统开发，熟悉支付流程优先',
-                'url' => 'https://example.com/job/5',
-                'source' => 'boss',
-            ],
-        ];
-
-        foreach ($jobs as $job) {
-            JobListing::firstOrCreate(
-                ['url' => $job['url']],
-                $job
-            );
+            try {
+                EmailLog::create([
+                    'recipient' => $email['recipient'],
+                    'subject' => $email['subject'],
+                    'content' => '测试邮件内容...',
+                    'type' => $email['type'],
+                    'status' => $email['status'],
+                    'sent_at' => $email['status'] === 'sent' ? now()->subDays(rand(0, 7)) : null,
+                ]);
+            } catch (\Exception $e) {
+                $this->command->warn("⚠️ 邮件日志创建失败：" . $email['subject']);
+            }
         }
     }
 }

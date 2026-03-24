@@ -284,7 +284,7 @@ class TestDataSeeder extends Seeder
             [
                 'title' => 'AI 工具周报：第 12 期（3.17-3.24）',
                 'slug' => 'ai-tools-weekly-12',
-                'summary' => 本周 AI 工具动态：Sora 开放测试、Claude 3 发布、GPT-5 传闻',
+                'summary' => '本周 AI 工具动态：Sora 开放测试、Claude 3 发布、GPT-5 传闻',
                 'content' => '<p>本周 AI 圈发生了很多大事...</p>',
                 'author_id' => $users[0]['id'] ?? 1,
                 'category_id' => Category::where('slug', 'news')->first()?->id,

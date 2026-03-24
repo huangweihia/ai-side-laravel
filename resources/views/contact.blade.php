@@ -53,89 +53,43 @@
     </div>
 </section>
 
-<!-- 确认模态窗 -->
-<div id="confirmModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); z-index: 9999; align-items: center; justify-content: center;">
-    <div style="background: var(--dark-light); border-radius: 16px; padding: 40px; max-width: 450px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-        <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
-            <span style="font-size: 32px;">📧</span>
-            <h3 style="color: white; font-size: 20px; font-weight: 600; margin: 0;">确认发送</h3>
-        </div>
-
-        <div style="color: var(--gray-light); font-size: 15px; line-height: 1.8; margin-bottom: 25px;">
-            确定要发送这条留言吗？<br>
-            我们会在 1-2 个工作日内回复你的邮箱。
-        </div>
-
-        <div style="display: flex; gap: 12px; justify-content: flex-end;">
-            <button onclick="hideConfirmModal()" style="padding: 12px 24px; background: var(--dark); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; font-weight: 600; cursor: pointer;">
-                取消
-            </button>
-            <button onclick="submitForm()" id="submitBtn" style="padding: 12px 24px; background: var(--gradient-primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                <span id="submitText">确认发送</span>
-                <span id="submitLoading" style="display: none;">⏳</span>
-            </button>
-        </div>
-    </div>
-</div>
-
 <script>
 function showConfirmModal() {
-    // 验证表单
     const name = document.getElementById('name').value.trim();
     const email = document.getElementById('email').value.trim();
     const subject = document.getElementById('subject').value;
     const message = document.getElementById('message').value.trim();
 
     if (!name || !email || !subject || !message) {
-        alert('请填写所有必填字段');
+        showToast('请填写所有必填字段', 'error');
         return;
     }
 
     if (!isValidEmail(email)) {
-        alert('请输入有效的邮箱地址');
+        showToast('请输入有效的邮箱地址', 'error');
         return;
     }
 
-    // 显示确认模态窗
-    document.getElementById('confirmModal').style.display = 'flex';
-}
-
-function hideConfirmModal() {
-    document.getElementById('confirmModal').style.display = 'none';
+    showConfirm({
+        icon: '📧',
+        title: '确认发送',
+        content: '确定要发送这条留言吗？<br>我们会在 1-2 个工作日内回复你的邮箱。',
+        confirmText: '确认发送',
+        confirmColor: '#6366f1',
+        onConfirm: async () => {
+            // 模拟表单提交
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            showToast('✅ 留言发送成功！我们会尽快回复你的邮箱。', 'success');
+            document.getElementById('contactForm').reset();
+        },
+        onCancel: () => {
+            // 取消操作
+        }
+    });
 }
 
 function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-
-function submitForm() {
-    const btn = document.getElementById('submitBtn');
-    const text = document.getElementById('submitText');
-    const loading = document.getElementById('submitLoading');
-
-    // 显示加载状态
-    btn.disabled = true;
-    text.textContent = '发送中...';
-    loading.style.display = 'inline';
-
-    // 模拟表单提交
-    setTimeout(() => {
-        alert('✅ 留言发送成功！我们会尽快回复你的邮箱。');
-        document.getElementById('contactForm').reset();
-        hideConfirmModal();
-        
-        // 重置按钮状态
-        btn.disabled = false;
-        text.textContent = '确认发送';
-        loading.style.display = 'none';
-    }, 1500);
-}
-
-// 点击模态窗外部关闭
-document.getElementById('confirmModal').addEventListener('click', function(e) {
-    if (e.target === this) {
-        hideConfirmModal();
-    }
-});
 </script>
 @endsection

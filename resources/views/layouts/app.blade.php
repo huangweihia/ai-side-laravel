@@ -6,6 +6,7 @@
     <meta name="description" content="AI 副业情报局 - 用 AI 赋能副业，让赚钱变得更简单">
     <title>@yield('title', config('app.name', 'AI 副业情报局'))</title>
     
+    <script src="{{ asset('js/ui-components.js') }}" defer></script>
     <style>
         :root {
             --primary: #6366f1;

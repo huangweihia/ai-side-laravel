@@ -17,6 +17,31 @@ use App\Http\Controllers\SubscriptionController;
 // 首页
 Route::get('/', [HomeController::class, 'index'])->name('home');
 
+// 公开页面
+Route::get('vip', function() {
+    return view('vip');
+})->name('vip');
+
+Route::get('about', function() {
+    return view('about');
+})->name('about');
+
+Route::get('contact', function() {
+    return view('contact');
+})->name('contact');
+
+Route::get('privacy', function() {
+    return view('privacy');
+})->name('privacy');
+
+Route::get('learning', function() {
+    return view('articles.index');
+})->name('learning');
+
+Route::get('tools', function() {
+    return view('projects.index');
+})->name('tools');
+
 // 认证路由
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');

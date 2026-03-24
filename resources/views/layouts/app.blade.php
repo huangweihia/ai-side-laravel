@@ -544,23 +544,23 @@
                     <div class="footer-links">
                         <a href="{{ route('projects.index') }}" class="footer-link">项目库</a>
                         <a href="{{ route('articles.index') }}" class="footer-link">文章</a>
-                        <a href="#" class="footer-link">VIP 会员</a>
+                        <a href="{{ route('vip') }}" class="footer-link">VIP 会员</a>
                     </div>
                 </div>
                 <div>
                     <div class="footer-title">资源</div>
                     <div class="footer-links">
-                        <a href="#" class="footer-link">学习指南</a>
-                        <a href="#" class="footer-link">工具推荐</a>
+                        <a href="{{ route('learning') }}" class="footer-link">学习指南</a>
+                        <a href="{{ route('tools') }}" class="footer-link">工具推荐</a>
                         <a href="#" class="footer-link">社群</a>
                     </div>
                 </div>
                 <div>
                     <div class="footer-title">关于</div>
                     <div class="footer-links">
-                        <a href="#" class="footer-link">关于我们</a>
-                        <a href="#" class="footer-link">联系方式</a>
-                        <a href="#" class="footer-link">隐私政策</a>
+                        <a href="{{ route('about') }}" class="footer-link">关于我们</a>
+                        <a href="{{ route('contact') }}" class="footer-link">联系方式</a>
+                        <a href="{{ route('privacy') }}" class="footer-link">隐私政策</a>
                     </div>
                 </div>
             </div>

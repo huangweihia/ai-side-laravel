@@ -6,7 +6,7 @@
         <div style="display: flex; flex-wrap: wrap; gap: 8px;">
             @foreach(($template->variables ?? []) as $var)
                 <span style="background: #e0e7ff; color: #4338ca; padding: 4px 12px; border-radius: 12px; font-size: 13px; font-family: monospace;">
-                    {{ '{{' . $var . '}}' }}
+                    @{{{{ $var }}}}}
                 </span>
             @endforeach
         </div>

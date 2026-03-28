@@ -14,10 +14,19 @@ class EmailLog extends Model
         'subject',
         'content',
         'type',
+        'template_id',
         'status',
         'error_message',
         'sent_at',
     ];
+
+    /**
+     * 模板关联
+     */
+    public function template()
+    {
+        return $this->belongsTo(EmailTemplate::class);
+    }
 
     protected $casts = [
         'sent_at' => 'datetime',

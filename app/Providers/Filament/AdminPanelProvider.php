@@ -41,7 +41,6 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\EmailLogChart::class,
                 \App\Filament\Widgets\RecentEmailsWidget::class,
                 Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

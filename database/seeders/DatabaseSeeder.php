@@ -11,7 +11,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // 默认不填充任何数据
-        // 使用 --seed 参数时只创建基础表结构
+        $this->call([
+            TestDataSeeder::class,
+            EmailConfigSeeder::class,
+            EmailTemplatePresetSeeder::class,
+        ]);
     }
 }

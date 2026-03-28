@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Comment;
+use App\Models\Favorite;
 use App\Models\Project;
+use App\Models\UserAction;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -50,7 +53,158 @@ class ProjectController extends Controller
      */
     public function show($id)
     {
+        $project = Project::with(['category', 'comments.user'])->findOrFail($id);
+        
+        // 记录浏览历史
+        if (auth()->check()) {
+            \App\Models\ViewHistory::record(auth()->user(), $project);
+        }
+        
+        $commentsTotal = $project->comments()
+            ->whereNull('parent_id')
+            ->where('is_hidden', false)
+            ->count();
+
+        $featuredComment = $project->comments()
+            ->whereNull('parent_id')
+            ->where('is_hidden', false)
+            ->with(['user', 'replies.user', 'replies.replyTo.user'])
+            ->orderByDesc('like_count')
+            ->orderByDesc('id')
+            ->first();
+
+        $commentsQuery = $project->comments()
+            ->whereNull('parent_id')
+            ->where('is_hidden', false)
+            ->with(['user', 'replies.user', 'replies.replyTo.user'])
+            ->latest();
+
+        if ($featuredComment) {
+            $commentsQuery->where('id', '!=', $featuredComment->id);
+        }
+
+        $comments = collect();
+        if ($featuredComment) {
+            $comments->push($featuredComment);
+        }
+        $comments = $comments->concat($commentsQuery->get());
+        
+        // 检查用户是否已收藏
+        $isFavorited = auth()->check() && $project->isFavoritedBy(auth()->user());
+        
+        // 相关项目推荐（同分类，排除自己）
+        $relatedProjects = Project::where('category_id', $project->category_id)
+            ->where('id', '!=', $project->id)
+            ->orderBy('stars', 'desc')
+            ->limit(5)
+            ->get();
+        
+        $likedCommentIds = auth()->check()
+            ? UserAction::query()
+                ->where('user_id', auth()->id())
+                ->where('type', 'comment_like')
+                ->where('actionable_type', Comment::class)
+                ->pluck('actionable_id')
+                ->map(fn ($id) => (int) $id)
+                ->all()
+            : [];
+
+        return view('projects.show', compact('project', 'comments', 'commentsTotal', 'featuredComment', 'isFavorited', 'likedCommentIds', 'relatedProjects'));
+    }
+
+    /**
+     * 收藏/取消收藏项目
+     */
+    public function toggleFavorite($id)
+    {
         $project = Project::findOrFail($id);
-        return view('projects.show', compact('project'));
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => '请先登录',
+            ], 401);
+        }
+
+        $favorited = UserAction::toggleAction($user->id, 'favorite', $project);
+
+        if ($favorited) {
+            $project->increment('favorite_count');
+            Favorite::firstOrCreate([
+                'user_id' => $user->id,
+                'favoritable_type' => Project::class,
+                'favoritable_id' => $project->id,
+            ]);
+        } else {
+            $project->decrement('favorite_count');
+            Favorite::where('user_id', $user->id)
+                ->where('favoritable_type', Project::class)
+                ->where('favoritable_id', $project->id)
+                ->delete();
+        }
+
+        return response()->json([
+            'success' => true,
+            'isFavorited' => $favorited,
+            'favorites_count' => $project->favorite_count,
+        ]);
+    }
+
+    /**
+     * 发表评论（项目）
+     */
+    public function storeComment($id, Request $request)
+    {
+        $project = Project::findOrFail($id);
+        $user = auth()->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => '请先登录',
+            ], 401);
+        }
+
+        $request->validate([
+            'content' => 'required|string|max:1000',
+            'parent_id' => 'nullable|integer|exists:comments,id',
+            'reply_to_id' => 'nullable|integer|exists:comments,id',
+        ]);
+
+        $parentId = $request->input('parent_id');
+        $replyToId = $request->input('reply_to_id');
+        if ($parentId) {
+            $parentComment = Comment::find($parentId);
+            if (!$parentComment || $parentComment->commentable_type !== Project::class || (int) $parentComment->commentable_id !== (int) $project->id) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '回复目标无效',
+                ], 422);
+            }
+
+            if ($replyToId) {
+                $replyTarget = Comment::find($replyToId);
+                if (!$replyTarget || (int) ($replyTarget->parent_id ?: $replyTarget->id) !== (int) $parentComment->id) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => '引用目标无效',
+                    ], 422);
+                }
+            }
+        }
+
+        $comment = $project->comments()->create([
+            'user_id' => $user->id,
+            'content' => $request->content,
+            'parent_id' => $parentId,
+            'reply_to_id' => $replyToId,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'comment' => $comment->load('user'),
+            'total' => $project->comments()->whereNull('parent_id')->where('is_hidden', false)->count(),
+        ]);
     }
 }

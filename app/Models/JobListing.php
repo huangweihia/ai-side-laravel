@@ -26,6 +26,11 @@ class JobListing extends Model
         'is_sent' => 'boolean',
     ];
 
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
     /**
      * 作用域：未发送的职位
      */

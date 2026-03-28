@@ -79,10 +79,27 @@
                                         {{ $article->category?->name ?? '未分类' }}
                                     </span>
                                     
-                                    <!-- 标题 -->
-                                    <h2 style="font-size: 22px; color: white; margin: 0 0 12px; line-height: 1.4;">
-                                        {{ $article->title }}
-                                    </h2>
+                                    <!-- 标题 + VIP 标识 -->
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                        <h2 style="font-size: 22px; color: white; margin: 0; line-height: 1.4;">
+                                            {{ $article->title }}
+                                        </h2>
+                                        @if($article->is_vip)
+                                            <span style="
+                                                padding: 4px 10px;
+                                                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                                                color: white;
+                                                border-radius: 6px;
+                                                font-size: 11px;
+                                                font-weight: 700;
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.5px;
+                                                box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+                                            ">
+                                                👑 VIP
+                                            </span>
+                                        @endif
+                                    </div>
                                     
                                     <!-- 摘要 -->
                                     <p style="color: var(--gray-light); font-size: 14px; line-height: 1.8; margin: 0 0 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">

@@ -3,6 +3,7 @@
 namespace App\Services\GitHub;
 
 use App\Models\Project;
+use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -17,40 +18,56 @@ class GitHubService
     }
 
     /**
-     * 閹兼粎鍌ㄩ悜顓㈡， AI 妞ゅ湱娲?     */
+     * 搜索热门 AI 项目
+     */
     public function searchPopularProjects(string $query = 'AI agent', int $perPage = 20): array
     {
-        $url = "{$this->baseUrl}/search/repositories";
-        
-        $response = Http::withHeaders([
-            'Accept' => 'application/vnd.github.v3+json',
-            'Authorization' => $this->token ? "token {$this->token}" : null,
-        ])->get($url, [
-            'q' => $query,
-            'sort' => 'stars',
-            'order' => 'desc',
-            'per_page' => $perPage,
-        ]);
+        $perPage = max(1, min($perPage, 100));
 
-        if ($response->successful()) {
-            return $response->json('items', []);
+        try {
+            $response = $this->githubClient()->get("{$this->baseUrl}/search/repositories", [
+                'q' => $query,
+                'sort' => 'stars',
+                'order' => 'desc',
+                'per_page' => $perPage,
+            ]);
+
+            if ($response->successful()) {
+                return $response->json('items', []);
+            }
+
+            Log::error('GitHub API request failed', [
+                'query' => $query,
+                'per_page' => $perPage,
+                'status' => $response->status(),
+                'body' => $response->body(),
+                'remaining' => $response->header('X-RateLimit-Remaining'),
+                'reset_at' => $response->header('X-RateLimit-Reset'),
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('GitHub API exception', [
+                'query' => $query,
+                'per_page' => $perPage,
+                'message' => $e->getMessage(),
+            ]);
         }
-
-        Log::error('GitHub API request failed', [
-            'query' => $query,
-            'status' => $response->status(),
-            'body' => $response->body(),
-        ]);
 
         return [];
     }
 
     /**
-     * 閼惧嘲褰?trending 妞ゅ湱娲?     */
+     * 获取热门趋势项目（近似 trending）
+     */
     public function getTrending(string $since = 'daily'): array
     {
-        // GitHub API 濞屸剝婀侀惄瀛樺复閻?trending 閹恒儱褰涢敍宀勬付鐟曚焦鎮崇槐銏℃付鏉╂垵鍨卞铏规畱妤?star 妞ゅ湱娲?        $date = now()->subDay()->format('Y-m-d');
-        
+        $days = match ($since) {
+            'weekly' => 7,
+            'monthly' => 30,
+            default => 1,
+        };
+
+        $date = now()->subDays($days)->format('Y-m-d');
+
         return $this->searchPopularProjects(
             "stars:>100 created:>{$date}",
             30
@@ -58,7 +75,7 @@ class GitHubService
     }
 
     /**
-     * 娣囨繂鐡ㄦい鍦窗閸掔増鏆熼幑顔肩氨
+     * 保存项目到数据库
      */
     public function saveProject(array $data): ?Project
     {
@@ -98,7 +115,8 @@ class GitHubService
     }
 
     /**
-     * 閹靛綊鍣洪弨鍫曟肠妞ゅ湱娲?     */
+     * 批量采集项目
+     */
     public function collectProjects(array $keywords = []): int
     {
         $keywords = $keywords ?: [
@@ -123,33 +141,34 @@ class GitHubService
                     $collected++;
                 }
 
-                // 闁灝鍘?API 闂勬劖绁?                usleep(500000); // 500ms
+                // 避免触发 GitHub API 频控
+                usleep(500000);
             }
 
-            // 濮ｅ繋閲滈崗鎶芥暛鐠囧秳绠ｉ梻瀵哥搼瀵?2 缁?            sleep(2);
+            sleep(2);
         }
 
-        Log::info("Collection completed", ['total' => $collected]);
+        Log::info('Collection completed', ['total' => $collected]);
 
         return $collected;
     }
 
     /**
-     * 鐠侊紕鐣婚幒銊ㄥ礃閸掑棙鏆?     */
+     * 计算项目评分
+     */
     protected function calculateScore(array $data): float
     {
         $stars = $data['stargazers_count'] ?? 0;
-        $hasWebsite = !empty($data['homepage']);
-        $hasDiscussions = $data['has_discussions'] ?? false;
-
         $starScore = min($stars / 10000, 10);
-        $growthScore = 5; // 姒涙顓绘稉顓犵搼婢х偤鏆?        $monetizationScore = $this->assessMonetizationPotential($data);
+        $growthScore = 5;
+        $monetizationScore = $this->assessMonetizationPotential($data);
 
         return round($starScore * 0.3 + $growthScore * 0.3 + $monetizationScore * 0.4, 2);
     }
 
     /**
-     * 鐠囧嫪鍙婇崣妯煎箛濞兼粌濮?     */
+     * 评估变现潜力
+     */
     protected function assessMonetizationPotential(array $data): float
     {
         $stars = $data['stargazers_count'] ?? 0;
@@ -157,44 +176,47 @@ class GitHubService
         $hasDiscussions = $data['has_discussions'] ?? false;
 
         if ($stars > 50000 || ($hasWebsite && $stars > 10000)) {
-            return 10; // high
-        } elseif ($stars > 10000 || $hasDiscussions) {
-            return 6; // medium
+            return 10;
         }
 
-        return 3; // low
+        if ($stars > 10000 || $hasDiscussions) {
+            return 6;
+        }
+
+        return 3;
     }
 
     /**
-     * 閸掑棙鐎介崣妯煎箛閺傜懓绱?     */
+     * 变现方式分析
+     */
     protected function analyzeMonetization(array $data): ?string
     {
         $description = strtolower($data['description'] ?? '');
         $methods = [];
 
         if (str_contains($description, 'platform') || str_contains($description, 'saas')) {
-            $methods[] = 'SaaS 鐠併垽妲?;
+            $methods[] = 'SaaS 产品';
         }
         if (str_contains($description, 'tool') || str_contains($description, 'library')) {
-            $methods[] = '娴间椒绗熺€规艾鍩?;
+            $methods[] = '工具/库收费';
         }
         if (str_contains($description, 'template') || str_contains($description, 'boilerplate')) {
-            $methods[] = '濡剝婢橀柨鈧崬?;
+            $methods[] = '模板售卖';
         }
         if (str_contains($description, 'course') || str_contains($description, 'tutorial')) {
-            $methods[] = '閸╃顔勭拠鍓р柤';
+            $methods[] = '课程/教程';
         }
 
         if (empty($methods)) {
-            $methods[] = '閹垛偓閺堫垰鎸╃拠?;
-            $methods[] = '瀵偓濠ф劘绂愰崝?;
+            $methods[] = '商业化路径待验证';
+            $methods[] = '可探索订阅/服务';
         }
 
         return implode(', ', $methods);
     }
 
     /**
-     * 鐠囧嫪鍙婇梾鎯у
+     * 评估项目难度
      */
     protected function assessDifficulty(array $data): string
     {
@@ -203,7 +225,8 @@ class GitHubService
 
         if (str_contains($description, 'no-code') || str_contains($description, 'visual')) {
             return 'easy';
-        } elseif ($stars > 50000) {
+        }
+        if ($stars > 50000) {
             return 'hard';
         }
 
@@ -211,7 +234,7 @@ class GitHubService
     }
 
     /**
-     * 閹绘劕褰囬弽鍥╊劮
+     * 提取关键词标签
      */
     protected function extractTags(array $data): array
     {
@@ -222,7 +245,7 @@ class GitHubService
         }
 
         $description = strtolower($data['description'] ?? '');
-        
+
         $tagMappings = [
             'agent' => 'Agent',
             'llm' => 'LLM',
@@ -240,6 +263,23 @@ class GitHubService
             }
         }
 
-        return array_unique($tags);
+        return array_values(array_unique($tags));
+    }
+
+    private function githubClient(): PendingRequest
+    {
+        $headers = [
+            'Accept' => 'application/vnd.github.v3+json',
+            'User-Agent' => config('app.name', 'Laravel') . '/GitHubCollector',
+        ];
+
+        if ($this->token) {
+            $headers['Authorization'] = "token {$this->token}";
+        }
+
+        return Http::withHeaders($headers)
+            ->timeout(20)
+            ->connectTimeout(8)
+            ->retry(2, 800);
     }
 }

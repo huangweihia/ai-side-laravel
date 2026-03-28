@@ -50,19 +50,32 @@ class EmailSettingResource extends Resource
                     ->label('配置项')
                     ->searchable()
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'email_send_time' => '⏰ 发送时间',
+                        'email_send_time' => '⏰ 邮件发送时间',
                         'email_recipients' => '📧 收件人列表',
+                        'email_daily_enabled' => '📅 日报启用',
+                        'email_weekly_enabled' => '📆 周报启用',
                         'smtp_host' => '📮 SMTP 服务器',
+                        'smtp_port' => '🔌 SMTP 端口',
+                        'smtp_encryption' => '🔐 加密方式',
+                        'smtp_username' => '👤 SMTP 用户名',
+                        'smtp_password' => '🔑 SMTP 密码',
+                        'smtp_from_address' => '📤 发件邮箱',
+                        'smtp_from_name' => '🏷️ 发件人名称',
                         default => $state,
                     }),
                 Tables\Columns\TextColumn::make('value')
                     ->label('配置值')
                     ->searchable()
-                    ->limit(50),
+                    ->limit(50)
+                    ->formatStateUsing(fn (EmailSetting $record, string $state): string => match ($record->key) {
+                        'smtp_password' => '••••••••',
+                        'email_recipients' => count(json_decode($state, true) ?? []) . ' 个收件人',
+                        default => $state,
+                    }),
                 Tables\Columns\TextColumn::make('description')
                     ->label('描述')
                     ->limit(50)
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: false),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('更新时间')
                     ->dateTime('Y-m-d H:i')

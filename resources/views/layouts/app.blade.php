@@ -3,11 +3,13 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="description" content="AI 副业情报局 - 用 AI 赋能副业，让赚钱变得更简单">
     <title>@yield('title', config('app.name', 'AI 副业情报局'))</title>
     
     <script src="{{ asset('js/ui-components.js') }}" defer></script>
     <style>
+        /* ========== 默认皮肤：深空蓝 ========== */
         :root {
             --primary: #6366f1;
             --primary-dark: #4f46e5;
@@ -34,6 +36,54 @@
             --radius-xl: 24px;
         }
 
+        /* ========== 皮肤 2：极简白 ========== */
+        body.skin-light {
+            --dark: #f8fafc;
+            --dark-light: #ffffff;
+            --gray: #94a3b8;
+            --gray-light: #64748b;
+            --white: #1e293b;
+            --gradient-dark: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+        }
+        body.skin-light .navbar {
+            background: rgba(255, 255, 255, 0.9);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+        }
+        body.skin-light .card {
+            background: #ffffff;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+        }
+
+        /* ========== 皮肤 3：暗夜黑 ========== */
+        body.skin-dark {
+            --dark: #000000;
+            --dark-light: #0a0a0a;
+            --gray: #404040;
+            --gray-light: #737373;
+            --white: #ffffff;
+            --gradient-dark: linear-gradient(135deg, #000000 0%, #0a0a0a 100%);
+        }
+
+        /* ========== 皮肤 4：护眼绿 ========== */
+        body.skin-green {
+            --dark: #0c1a12;
+            --dark-light: #14291f;
+            --gray: #5c7c70;
+            --gray-light: #8ba89a;
+            --white: #e8f5e9;
+            --gradient-dark: linear-gradient(135deg, #0c1a12 0%, #14291f 100%);
+        }
+
+        /* ========== 皮肤 5：暖棕咖啡 ========== */
+        body.skin-brown {
+            --dark: #1a1512;
+            --dark-light: #2a2218;
+            --gray: #8b7355;
+            --gray-light: #b8a082;
+            --white: #f5ebe0;
+            --gradient-dark: linear-gradient(135deg, #1a1512 0%, #2a2218 100%);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
@@ -42,6 +92,7 @@
             color: var(--white);
             line-height: 1.6;
             overflow-x: hidden;
+            transition: all 0.3s ease;
         }
 
         a { text-decoration: none; color: inherit; transition: all 0.2s ease; }
@@ -510,13 +561,32 @@
             </a>
             
             <div class="navbar-menu">
+                {{-- 公开导航 --}}
                 <a href="{{ route('home') }}" class="navbar-link {{ request()->routeIs('home') ? 'active' : '' }}">首页</a>
-                <a href="{{ route('projects.index') }}" class="navbar-link {{ request()->routeIs('projects.*') ? 'active' : '' }}">项目</a>
-                <a href="{{ route('articles.index') }}" class="navbar-link {{ request()->routeIs('articles.*') ? 'active' : '' }}">文章</a>
-                <a href="/admin" class="navbar-link">后台</a>
                 
+                {{-- 内容分类导航 --}}
+                <a href="{{ route('projects.index') }}" class="navbar-link {{ request()->routeIs('projects.*') ? 'active' : '' }}">🚀 项目</a>
+                <a href="{{ route('articles.index') }}" class="navbar-link {{ request()->routeIs('articles.*') ? 'active' : '' }}">📝 文章</a>
+                <a href="{{ route('knowledge.index') }}" class="navbar-link {{ request()->routeIs('knowledge.*') ? 'active' : '' }}">📚 知识库</a>
+                <a href="{{ route('jobs.index') }}" class="navbar-link {{ request()->routeIs('jobs.*') ? 'active' : '' }}">💼 职位</a>
+                
+                {{-- 用户功能 --}}
                 @auth
+                    @if(auth()->user()?->isVip() || auth()->user()?->isAdmin())
+                        <a href="{{ route('submissions.index') }}" class="navbar-link {{ request()->routeIs('submissions.*') ? 'active' : '' }}" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3);">
+                            ✍️ 投稿
+                        </a>
+                    @endif
+                    
+                    {{-- 后台入口：仅管理员可见 --}}
+                    @if(auth()->user()->isAdmin())
+                        <a href="/admin" class="navbar-link" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
+                            🔒 后台
+                        </a>
+                    @endif
+                    
                     <a href="{{ route('dashboard') }}" class="btn btn-sm btn-secondary">个人中心</a>
+                    <button type="button" onclick="toggleSkinPanel(event)" class="btn btn-sm btn-secondary" style="padding: 8px 12px; font-size: 16px; position: relative; z-index: 10000;" title="切换皮肤">🎨</button>
                     <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="btn btn-sm btn-primary">登出</button>
@@ -528,6 +598,36 @@
             </div>
         </div>
     </nav>
+
+    {{-- 皮肤切换面板 --}}
+    <div id="skin-panel" style="display: none; position: fixed; top: 80px; right: 20px; background: var(--dark-light); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 16px; z-index: 100000; box-shadow: 0 20px 60px rgba(0,0,0,0.4); min-width: 200px;" onclick="event.stopPropagation()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+            <span style="font-weight: 700; color: var(--white); font-size: 14px;">🎨 选择皮肤</span>
+            <button onclick="toggleSkinPanel()" style="background: transparent; border: none; color: var(--gray-light); font-size: 20px; cursor: pointer; padding: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='var(--white)'" onmouseout="this.style.background='transparent'; this.style.color='var(--gray-light)'">×</button>
+        </div>
+        <div style="display: grid; gap: 8px;">
+            <button onclick="setSkin('')" style="padding: 10px 14px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); border: 2px solid rgba(99, 102, 241, 0.3); border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.borderColor='#667eea'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(99, 102, 241, 0.3)'; this.style.transform='translateX(0)'">
+                <span style="width: 16px; height: 16px; background: #0f172a; border-radius: 50%; border: 2px solid #667eea;"></span>
+                深空蓝 (默认)
+            </button>
+            <button onclick="setSkin('skin-light')" style="padding: 10px 14px; background: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%); border: 2px solid rgba(0, 0, 0, 0.1); border-radius: 10px; color: #1e293b; cursor: pointer; font-weight: 600; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.borderColor='#667eea'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(0, 0, 0, 0.1)'; this.style.transform='translateX(0)'">
+                <span style="width: 16px; height: 16px; background: #f8fafc; border-radius: 50%; border: 2px solid #cbd5e1;"></span>
+                极简白
+            </button>
+            <button onclick="setSkin('skin-dark')" style="padding: 10px 14px; background: linear-gradient(135deg, #000000 0%, #0a0a0a 100%); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; color: #fff; cursor: pointer; font-weight: 600; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.borderColor='#667eea'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(255, 255, 255, 0.2)'; this.style.transform='translateX(0)'">
+                <span style="width: 16px; height: 16px; background: #000000; border-radius: 50%; border: 2px solid #404040;"></span>
+                暗夜黑
+            </button>
+            <button onclick="setSkin('skin-green')" style="padding: 10px 14px; background: linear-gradient(135deg, #0c1a12 0%, #14291f 100%); border: 2px solid rgba(16, 185, 129, 0.3); border-radius: 10px; color: #e8f5e9; cursor: pointer; font-weight: 600; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.borderColor='#10b981'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(16, 185, 129, 0.3)'; this.style.transform='translateX(0)'">
+                <span style="width: 16px; height: 16px; background: #0c1a12; border-radius: 50%; border: 2px solid #10b981;"></span>
+                护眼绿
+            </button>
+            <button onclick="setSkin('skin-brown')" style="padding: 10px 14px; background: linear-gradient(135deg, #1a1512 0%, #2a2218 100%); border: 2px solid rgba(184, 160, 130, 0.3); border-radius: 10px; color: #f5ebe0; cursor: pointer; font-weight: 600; font-size: 13px; text-align: left; transition: all 0.2s; display: flex; align-items: center; gap: 8px;" onmouseover="this.style.borderColor='#b8a082'; this.style.transform='translateX(4px)'" onmouseout="this.style.borderColor='rgba(184, 160, 130, 0.3)'; this.style.transform='translateX(0)'">
+                <span style="width: 16px; height: 16px; background: #1a1512; border-radius: 50%; border: 2px solid #b8a082;"></span>
+                暖棕咖啡
+            </button>
+        </div>
+    </div>
 
     <main class="main">
         @yield('content')
@@ -549,14 +649,6 @@
                     </div>
                 </div>
                 <div>
-                    <div class="footer-title">资源</div>
-                    <div class="footer-links">
-                        <a href="{{ route('learning') }}" class="footer-link">学习指南</a>
-                        <a href="{{ route('tools') }}" class="footer-link">工具推荐</a>
-                        <a href="#" class="footer-link">社群</a>
-                    </div>
-                </div>
-                <div>
                     <div class="footer-title">关于</div>
                     <div class="footer-links">
                         <a href="{{ route('about') }}" class="footer-link">关于我们</a>
@@ -570,5 +662,71 @@
             </div>
         </div>
     </footer>
+
+    <script>
+    // 皮肤切换功能
+    function toggleSkinPanel() {
+        const panel = document.getElementById('skin-panel');
+        if (!panel) return;
+        const isShowing = panel.style.display === 'block';
+        panel.style.display = isShowing ? 'none' : 'block';
+        
+        // 防止事件冒泡
+        if (!isShowing) {
+            setTimeout(() => {
+                panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }, 100);
+        }
+    }
+
+    function setSkin(skinName) {
+        document.body.className = skinName;
+        localStorage.setItem('preferred_skin', skinName);
+        toggleSkinPanel();
+        
+        // 通知其他页面组件皮肤已更改
+        if (window.dispatchEvent) {
+            window.dispatchEvent(new CustomEvent('skin-changed', { detail: { skin: skinName } }));
+        }
+    }
+
+    // 页面加载时恢复用户选择的皮肤
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            const savedSkin = localStorage.getItem('preferred_skin') || '';
+            if (savedSkin) {
+                document.body.className = savedSkin;
+            }
+        } catch(e) {
+            console.log('Skin restore failed:', e);
+        }
+    });
+
+    // 点击页面其他地方关闭皮肤面板
+    document.addEventListener('click', function(e) {
+        const panel = document.getElementById('skin-panel');
+        if (panel && panel.style.display === 'block' && !panel.contains(e.target)) {
+            panel.style.display = 'none';
+        }
+    });
+
+    // ESC 键关闭面板
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            const panel = document.getElementById('skin-panel');
+            if (panel) panel.style.display = 'none';
+        }
+    });
+    
+    // 阻止面板内部点击事件冒泡
+    document.addEventListener('DOMContentLoaded', function() {
+        const panel = document.getElementById('skin-panel');
+        if (panel) {
+            panel.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
+        }
+    });
+    </script>
 </body>
 </html>

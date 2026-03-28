@@ -5,13 +5,15 @@ namespace App\Filament\Pages;
 use App\Models\EmailSetting;
 use App\Models\EmailLog;
 use App\Models\EmailSubscription;
+use App\Models\EmailTemplate;
+use App\Models\Project;
+use App\Models\Article;
+use App\Models\JobListing;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Forms\Form;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Mail;
 
 class EmailManager extends Page implements HasForms
 {
@@ -33,7 +35,9 @@ class EmailManager extends Page implements HasForms
     public ?string $modalAction = null;
     public ?string $modalEmail = null;
     public ?string $modalType = null;
+    public array $selectedTemplates = ['daily_digest_classic'];
     public bool $showModal = false;
+    public bool $showTemplateModal = false;
     public bool $isLoading = false;
 
     public function mount(): void
@@ -69,11 +73,9 @@ class EmailManager extends Page implements HasForms
             return;
         }
 
-        // 添加到收件人列表
         $this->recipients[] = $this->recipient;
         EmailSetting::set('email_recipients', json_encode($this->recipients), '邮件接收人列表');
         
-        // 同时创建订阅记录（默认全选）
         EmailSubscription::updateOrCreate(
             ['email' => $this->recipient],
             [
@@ -84,10 +86,7 @@ class EmailManager extends Page implements HasForms
             ]
         );
         
-        // 清空输入框
         $this->recipient = '';
-        
-        // 强制刷新收件人列表（从数据库重新加载）
         $this->recipients = EmailSetting::getRecipients();
         
         Notification::make()
@@ -102,13 +101,11 @@ class EmailManager extends Page implements HasForms
         $this->recipients = array_values(array_filter($this->recipients, fn($e) => $e !== $email));
         EmailSetting::set('email_recipients', json_encode($this->recipients), '邮件接收人列表');
         
-        // 同时删除订阅记录
         $subscription = EmailSubscription::where('email', $email)->first();
         if ($subscription) {
             $subscription->delete();
         }
         
-        // 强制刷新收件人列表（从数据库重新加载）
         $this->recipients = EmailSetting::getRecipients();
         
         Notification::make()
@@ -117,9 +114,6 @@ class EmailManager extends Page implements HasForms
             ->send();
     }
 
-    /**
-     * 获取收件人的订阅状态
-     */
     public function getSubscriptionStatus(string $email): array
     {
         $subscription = EmailSubscription::where('email', $email)->first();
@@ -141,9 +135,6 @@ class EmailManager extends Page implements HasForms
         ];
     }
 
-    /**
-     * 打开确认模态窗
-     */
     public function confirmAction(string $action, string $email = null, string $type = null): void
     {
         $this->modalAction = $action;
@@ -152,13 +143,9 @@ class EmailManager extends Page implements HasForms
         $this->showModal = true;
     }
 
-    /**
-     * 切换订阅类型
-     */
     public function toggleSubscription(string $email, string $type): void
     {
         try {
-            // 先获取或创建订阅记录
             $subscription = EmailSubscription::firstOrCreate(
                 ['email' => $email],
                 [
@@ -169,12 +156,10 @@ class EmailManager extends Page implements HasForms
                 ]
             );
             
-            // 切换指定的订阅类型
             $subscription->update([
                 $type => !$subscription->{$type},
             ]);
             
-            // 强制刷新收件人列表
             $this->recipients = EmailSetting::getRecipients();
             
             Notification::make()
@@ -191,9 +176,6 @@ class EmailManager extends Page implements HasForms
         }
     }
 
-    /**
-     * 执行模态窗中的操作
-     */
     public function executeModalAction(): void
     {
         $this->isLoading = true;
@@ -220,20 +202,243 @@ class EmailManager extends Page implements HasForms
         }
     }
 
-    /**
-     * 发送测试邮件（所有收件人或指定邮箱）
-     */
+    public function openTemplateModal(): void
+    {
+        if (empty($this->recipients)) {
+            Notification::make()
+                ->title('⚠️ 请先添加收件人')
+                ->warning()
+                ->send();
+            return;
+        }
+        
+        $this->showTemplateModal = true;
+        $this->selectedTemplates = ['daily_digest_classic'];
+    }
+
+    public function sendWithTemplate(): void
+    {
+        if (empty($this->recipients)) {
+            Notification::make()
+                ->title('⚠️ 请先添加收件人')
+                ->warning()
+                ->send();
+            return;
+        }
+        
+        if (empty($this->selectedTemplates)) {
+            Notification::make()
+                ->title('⚠️ 请至少选择一个模板')
+                ->warning()
+                ->send();
+            return;
+        }
+        
+        $this->isLoading = true;
+        
+        try {
+            $totalSuccess = 0;
+            $totalFailed = 0;
+            
+            // 获取所有选中的模板
+            $templates = EmailTemplate::whereIn('key', $this->selectedTemplates)
+                ->where('is_active', true)
+                ->get();
+            
+            if ($templates->isEmpty()) {
+                throw new \Exception('选中的模板不存在或未启用');
+            }
+            
+            // 获取最新数据（按排序 + ID 倒序）
+            $hotProjects = Project::orderBy('sort', 'desc')
+                ->orderBy('id', 'desc')
+                ->limit(5)
+                ->get();
+            
+            $hotArticles = Article::where('is_published', true)
+                ->orderBy('sort', 'desc')
+                ->orderBy('id', 'desc')
+                ->limit(5)
+                ->get();
+            
+            $newJobs = JobListing::orderBy('sort', 'desc')
+                ->orderBy('id', 'desc')
+                ->limit(5)
+                ->get();
+            
+            // 给每个收件人发送
+            foreach ($this->recipients as $email) {
+                $success = 0;
+                
+                foreach ($templates as $template) {
+                    try {
+                        $subscription = EmailSubscription::where('email', $email)->first();
+                        
+                        // 检查订阅状态
+                        if (!$this->canSendTemplate($template, $subscription)) {
+                            continue;
+                        }
+                        
+                        // 准备邮件数据
+                        $data = $this->prepareEmailData($email, $subscription, $hotProjects, $hotArticles, $newJobs);
+                        
+                        // 渲染模板内容（关键修复：正确替换变量）
+                        $content = $this->renderTemplateContent($template, $data);
+                        
+                        // 记录日志
+                        $emailLog = EmailLog::create([
+                            'recipient' => $email,
+                            'subject' => $this->getSubject($template, $data),
+                            'content' => $content,
+                            'type' => $template->key,
+                            'template_id' => $template->id,
+                            'status' => 'pending',
+                        ]);
+                        
+                        // 发送邮件
+                        Mail::raw($content, function ($message) use ($email, $template, $data) {
+                            $message->to($email)
+                                    ->subject($this->getSubject($template, $data))
+                                    ->from(config('mail.from.address', '2801359160@qq.com'), 
+                                           config('mail.from.name', 'AI 副业情报局'));
+                        });
+                        
+                        $emailLog->update(['status' => 'sent', 'sent_at' => now()]);
+                        $success++;
+                        
+                    } catch (\Exception $e) {
+                        $totalFailed++;
+                        if (isset($emailLog)) {
+                            $emailLog->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
+                        }
+                    }
+                }
+                
+                $totalSuccess += $success;
+            }
+            
+            $this->showTemplateModal = false;
+            
+            Notification::make()
+                ->title('✅ 邮件已发送')
+                ->body("成功发送 {$totalSuccess} 封邮件")
+                ->success()
+                ->send();
+                
+        } catch (\Exception $e) {
+            Notification::make()
+                ->title('❌ 发送失败')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+        } finally {
+            $this->isLoading = false;
+        }
+    }
+    
+    private function canSendTemplate($template, $subscription): bool
+    {
+        if (!$subscription) return true;
+        
+        return match ($template->key) {
+            'daily_digest_classic', 'daily_digest_modern' => $subscription->isSubscribedToDaily(),
+            'weekly_summary' => $subscription->isSubscribedToWeekly(),
+            'notification' => $subscription->isSubscribedToNotifications(),
+            default => true,
+        };
+    }
+    
+    private function prepareEmailData(string $email, $subscription, $projects, $articles, $jobs): array
+    {
+        return [
+            'date' => now()->format('Y-m-d'),
+            'week_range' => now()->startOfWeek()->format('m-d') . ' ~ ' . now()->endOfWeek()->format('m-d'),
+            'name' => $subscription?->user?->name ?? '朋友',
+            'email' => $email,
+            'projects' => $this->renderProjects($projects),
+            'side_hustles' => $this->renderArticles($articles),
+            'resources' => $this->renderJobs($jobs),
+            'top_projects' => $this->renderProjects($projects),
+            'articles' => $this->renderArticles($articles),
+            'unsubscribe_url' => url('/unsubscribe/' . ($subscription?->unsubscribe_token ?? '')),
+            'preferences_url' => url('/subscriptions/preferences'),
+        ];
+    }
+    
+    private function renderTemplateContent($template, array $data): string
+    {
+        $content = $template->content;
+        
+        // 替换所有变量
+        foreach ($data as $key => $value) {
+            $content = str_replace('{{' . $key . '}}', $value, $content);
+        }
+        
+        return $content;
+    }
+    
+    private function getSubject($template, array $data): string
+    {
+        $subject = $template->subject;
+        foreach ($data as $key => $value) {
+            $subject = str_replace('{{' . $key . '}}', $value, $subject);
+        }
+        return $subject;
+    }
+    
+    private function renderProjects($projects): string
+    {
+        if ($projects->isEmpty()) return '<p>暂无新项目</p>';
+        
+        $html = '<ul style="list-style: none; padding: 0;">';
+        foreach ($projects as $project) {
+            $html .= '<li style="margin-bottom: 15px; padding: 12px; background: rgba(99, 102, 241, 0.1); border-radius: 8px;">';
+            $html .= '<strong style="color: #6366f1;">' . e($project->name) . '</strong><br>';
+            $html .= '<span style="font-size: 13px; color: #94a3b8;">' . e($project->description) . '</span><br>';
+            $html .= '<span style="font-size: 12px; color: #64748b;">⭐ ' . number_format($project->stars) . '</span>';
+            $html .= '</li>';
+        }
+        $html .= '</ul>';
+        return $html;
+    }
+    
+    private function renderArticles($articles): string
+    {
+        if ($articles->isEmpty()) return '<p>暂无新文章</p>';
+        
+        $html = '<ul style="list-style: none; padding: 0;">';
+        foreach ($articles as $article) {
+            $html .= '<li style="margin-bottom: 15px;">';
+            $html .= '<strong style="color: #8b5cf6;">' . e($article->title) . '</strong><br>';
+            $html .= '<span style="font-size: 13px; color: #94a3b8;">' . e($article->summary) . '</span>';
+            $html .= '</li>';
+        }
+        $html .= '</ul>';
+        return $html;
+    }
+    
+    private function renderJobs($jobs): string
+    {
+        if ($jobs->isEmpty()) return '<p>暂无新职位</p>';
+        
+        $html = '<ul style="list-style: none; padding: 0;">';
+        foreach ($jobs as $job) {
+            $html .= '<li style="margin-bottom: 15px; padding: 12px; background: rgba(16, 185, 129, 0.1); border-radius: 8px;">';
+            $html .= '<strong style="color: #10b981;">' . e($job->title) . '</strong><br>';
+            $html .= '<span style="font-size: 13px; color: #94a3b8;">' . e($job->company_name) . ' | ' . e($job->salary) . ' | ' . e($job->city) . '</span>';
+            $html .= '</li>';
+        }
+        $html .= '</ul>';
+        return $html;
+    }
+
     public function sendTestEmail(): void
     {
-        // 如果没有指定收件人，发送给所有收件人
-        $emails = !empty($this->recipient) 
-            ? [$this->recipient] 
-            : $this->recipients;
+        $emails = !empty($this->recipient) ? [$this->recipient] : $this->recipients;
         
         if (empty($emails)) {
             Notification::make()
                 ->title('⚠️ 请先添加收件人')
-                ->body('在收件人列表中添加邮箱后再发送测试')
                 ->warning()
                 ->send();
             return;
@@ -241,19 +446,12 @@ class EmailManager extends Page implements HasForms
         
         $success = 0;
         $failed = 0;
-        $errors = [];
         
         foreach ($emails as $email) {
             try {
-                // 创建简单的测试邮件
                 $subject = '🧪 邮件测试 - AI 副业情报局';
-                $content = "这是一封测试邮件，用于验证邮件发送功能是否正常。\n\n" .
-                           "发送时间：" . now()->format('Y-m-d H:i:s') . "\n" .
-                           "接收邮箱：{$email}\n\n" .
-                           "如果你收到这封邮件，说明邮件发送功能正常工作！\n\n" .
-                           "AI 副业情报局";
+                $content = "这是一封测试邮件。\n\n发送时间：" . now()->format('Y-m-d H:i:s') . "\n接收邮箱：{$email}";
                 
-                // 记录邮件日志
                 $emailLog = EmailLog::create([
                     'recipient' => $email,
                     'subject' => $subject,
@@ -262,66 +460,31 @@ class EmailManager extends Page implements HasForms
                     'status' => 'pending',
                 ]);
                 
-                // 发送邮件
-                \Illuminate\Support\Facades\Mail::raw($content, function ($message) use ($email, $subject) {
-                    $message->to($email)
-                            ->subject($subject);
+                Mail::raw($content, function ($message) use ($email, $subject) {
+                    $message->to($email)->subject($subject);
                 });
                 
-                $emailLog->update([
-                    'status' => 'sent',
-                    'sent_at' => now(),
-                ]);
-                
+                $emailLog->update(['status' => 'sent', 'sent_at' => now()]);
                 $success++;
             } catch (\Exception $e) {
-                // 记录错误
-                if (isset($emailLog)) {
-                    $emailLog->update([
-                        'status' => 'failed',
-                        'error_message' => $e->getMessage(),
-                    ]);
-                }
-                
                 $failed++;
-                $errors[] = "{$email}: " . $e->getMessage();
             }
         }
         
-        // 显示结果
         if ($success > 0 && $failed === 0) {
             Notification::make()
                 ->title('✅ 邮件已发送')
                 ->body("成功发送 {$success} 封测试邮件")
                 ->success()
                 ->send();
-        } elseif ($success > 0 && $failed > 0) {
-            Notification::make()
-                ->title('⚠️ 部分发送成功')
-                ->body("成功：{$success} 封，失败：{$failed} 封\n" . implode("\n", $errors))
-                ->warning()
-                ->send();
-        } else {
-            Notification::make()
-                ->title('❌ 发送失败')
-                ->body("所有邮件发送失败\n" . implode("\n", $errors))
-                ->danger()
-                ->send();
         }
     }
 
-    /**
-     * 发送测试邮件到单个邮箱（私有方法）
-     */
     private function sendTestEmailToSingle(string $email): void
     {
         try {
             $subject = '🧪 邮件测试 - AI 副业情报局';
-            $content = "这是一封测试邮件，用于验证邮件发送功能是否正常。\n\n" .
-                       "发送时间：" . now()->format('Y-m-d H:i:s') . "\n" .
-                       "接收邮箱：{$email}\n\n" .
-                       "如果你收到这封邮件，说明邮件发送功能正常工作！\n\n" .
-                       "AI 副业情报局";
+            $content = "这是一封测试邮件。\n\n发送时间：" . now()->format('Y-m-d H:i:s');
             
             $emailLog = EmailLog::create([
                 'recipient' => $email,
@@ -331,14 +494,11 @@ class EmailManager extends Page implements HasForms
                 'status' => 'pending',
             ]);
             
-            \Illuminate\Support\Facades\Mail::raw($content, function ($message) use ($email, $subject) {
+            Mail::raw($content, function ($message) use ($email, $subject) {
                 $message->to($email)->subject($subject);
             });
             
-            $emailLog->update([
-                'status' => 'sent',
-                'sent_at' => now(),
-            ]);
+            $emailLog->update(['status' => 'sent', 'sent_at' => now()]);
             
             Notification::make()
                 ->title('✅ 邮件已发送')
@@ -346,10 +506,11 @@ class EmailManager extends Page implements HasForms
                 ->success()
                 ->send();
         } catch (\Exception $e) {
-            if (isset($emailLog)) {
-                $emailLog->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
-            }
-            throw $e;
+            Notification::make()
+                ->title('❌ 发送失败')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
         }
     }
 
@@ -377,9 +538,7 @@ class EmailManager extends Page implements HasForms
         foreach ($lines as $line) {
             $email = trim($line);
             
-            if (empty($email)) {
-                continue;
-            }
+            if (empty($email)) continue;
 
             if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
                 $invalid++;
@@ -394,7 +553,6 @@ class EmailManager extends Page implements HasForms
             $this->recipients[] = $email;
             $added++;
             
-            // 同时创建订阅记录
             EmailSubscription::firstOrCreate(
                 ['email' => $email],
                 [
@@ -453,8 +611,6 @@ class EmailManager extends Page implements HasForms
 
         $this->recipients = array_values(array_filter($this->recipients, fn($e) => !in_array($e, $this->selectedForBulk)));
         EmailSetting::set('email_recipients', json_encode($this->recipients), '邮件接收人列表');
-        
-        // 强制刷新收件人列表（从数据库重新加载）
         $this->recipients = EmailSetting::getRecipients();
         
         $count = count($this->selectedForBulk);
@@ -466,15 +622,15 @@ class EmailManager extends Page implements HasForms
             ->send();
     }
 
-    public function exportRecipientsAction()
+    public function getAvailableTemplatesProperty(): array
     {
-        $content = implode("\n", $this->recipients);
-        
-        return response()
-            ->streamDownload(function () use ($content) {
-                echo $content;
-            }, 'email-recipients-' . now()->format('Y-m-d') . '.txt', [
-                'Content-Type' => 'text/plain',
-            ]);
+        return EmailTemplate::where('is_active', true)
+            ->get()
+            ->map(fn($t) => [
+                'key' => $t->key,
+                'name' => $t->name,
+                'subject' => $t->subject,
+            ])
+            ->toArray();
     }
 }

@@ -20,7 +20,9 @@ class Article extends Model
         'author_id',
         'view_count',
         'like_count',
+        'favorite_count',
         'is_premium',
+        'is_vip',
         'is_published',
         'published_at',
         'source_url',
@@ -31,7 +33,9 @@ class Article extends Model
     protected $casts = [
         'view_count' => 'integer',
         'like_count' => 'integer',
+        'favorite_count' => 'integer',
         'is_premium' => 'boolean',
+        'is_vip' => 'boolean',
         'is_published' => 'boolean',
         'published_at' => 'datetime',
     ];
@@ -55,6 +59,63 @@ class Article extends Model
     public function author()
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    /**
+     * 评论关联
+     */
+    public function comments()
+    {
+        return $this->morphMany(\App\Models\Comment::class, 'commentable');
+    }
+
+    /**
+     * 收藏关联
+     */
+    public function favorites()
+    {
+        return $this->morphMany(\App\Models\Favorite::class, 'favoritable');
+    }
+
+    /**
+     * 检查用户是否已收藏
+     */
+    public function isFavoritedBy($user): bool
+    {
+        if (!$user) return false;
+        return $this->favorites()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * 检查用户是否已点赞
+     */
+    public function isLikedBy($user): bool
+    {
+        if (!$user) return false;
+        // 简单实现，实际应该有点赞表
+        return false;
+    }
+
+    /**
+     * 获取相关文章（同分类，排除自己）
+     */
+    public function getRelatedArticles($limit = 5)
+    {
+        return static::where('category_id', $this->category_id)
+            ->where('id', '!=', $this->id)
+            ->where('is_published', true)
+            ->orderBy('view_count', 'desc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * 获取阅读进度（基于内容长度）
+     */
+    public function getReadingTimeAttribute(): int
+    {
+        $wordCount = str_word_count(strip_tags($this->content));
+        return max(1, ceil($wordCount / 200)); // 假设每分钟读 200 字
     }
 
     public function scopePublished($query)

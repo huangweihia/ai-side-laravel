@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div style="display: grid; gap: 32px;" wire:poll.5s>
         
-        <!-- 收件人管理 -->
+        {{-- 收件人管理 --}}
         <x-filament::section>
             <x-slot name="heading">
                 📧 邮件接收人管理
@@ -106,7 +106,7 @@
             </div>
         </x-filament::section>
 
-        <!-- 批量导入/导出 -->
+        {{-- 批量导入/导出 --}}
         <x-filament::section>
             <x-slot name="heading">
                 📥 批量导入/导出
@@ -129,13 +129,16 @@
                     <div style="margin-top: 12px; display: flex; gap: 12px;">
                         <button 
                             wire:click="bulkImport"
-                            style="padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;"
+                            wire:loading.attr="disabled"
+                            style="padding: 10px 20px; background: #6366f1; color: white; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;"
                         >
-                            📥 导入邮箱列表
+                            <span wire:loading.remove wire:target="bulkImport">📥</span>
+                            <span wire:loading wire:target="bulkImport">⏳</span>
+                            导入邮箱列表
                         </button>
                         <a 
                             href="{{ url('/admin/email-manager/export') }}"
-                            style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center;"
+                            style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 6px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;"
                         >
                             📤 导出邮箱列表
                         </a>
@@ -144,7 +147,7 @@
             </div>
         </x-filament::section>
 
-        <!-- 发送时间配置 -->
+        {{-- 定时发送配置 --}}
         <x-filament::section>
             <x-slot name="heading">
                 ⏰ 定时发送配置
@@ -170,7 +173,7 @@
             </div>
         </x-filament::section>
 
-        <!-- 最近发送记录 -->
+        {{-- 最近发送记录 --}}
         <x-filament::section>
             <x-slot name="heading">
                 📋 最近发送记录
@@ -213,30 +216,45 @@
             </div>
         </x-filament::section>
 
-        <!-- 快捷操作 -->
+        {{-- 快捷操作 --}}
         <x-filament::section>
             <x-slot name="heading">
                 ⚡ 快捷操作
             </x-slot>
+            <x-slot name="description">
+                发送邮件或查看日志
+            </x-slot>
             
             <div style="display: flex; gap: 16px; flex-wrap: wrap;">
                 <button 
-                    wire:click="sendTestEmail"
-                    style="padding: 12px 24px; background: #6366f1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+                    wire:click="openTemplateModal"
+                    wire:loading.attr="disabled"
+                    style="padding: 12px 24px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(99,102,241,0.3);"
                 >
-                    <span>🚀</span> 立即发送日报
+                    <span wire:loading.remove wire:target="openTemplateModal">📬</span>
+                    <span wire:loading wire:target="openTemplateModal">⏳</span>
+                    选择模板发送邮件
+                </button>
+                <button 
+                    wire:click="sendTestEmail"
+                    wire:loading.attr="disabled"
+                    style="padding: 12px 24px; background: #10b981; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px;"
+                >
+                    <span wire:loading.remove wire:target="sendTestEmail">🧪</span>
+                    <span wire:loading wire:target="sendTestEmail">⏳</span>
+                    发送测试邮件
                 </button>
                 <a 
                     href="{{ url('/admin/email-logs') }}"
                     style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;"
                 >
-                    <span>📧</span> 查看完整日志
+                    <span>📋</span> 查看完整日志
                 </a>
             </div>
         </x-filament::section>
     </div>
 
-    {{-- 确认模态窗 --}}
+    {{-- 确认模态窗（删除/测试等）--}}
     @if($showModal)
         <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;">
             <div style="background: #1e293b; border-radius: 12px; padding: 30px; max-width: 450px; width: 90%; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
@@ -295,12 +313,89 @@
                 </div>
             </div>
         </div>
-
-        <style>
-            @keyframes spin {
-                from { transform: rotate(0deg); }
-                to { transform: rotate(360deg); }
-            }
-        </style>
     @endif
+
+    {{-- 模板选择模态窗（独立显示）--}}
+    @if($showTemplateModal)
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
+            <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 35px; max-width: 600px; width: 90%; box-shadow: 0 25px 60px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                    <span style="font-size: 36px;">📬</span>
+                    <div>
+                        <h3 style="color: white; font-size: 22px; font-weight: 700; margin: 0;">选择邮件模板</h3>
+                        <p style="color: #64748b; font-size: 14px; margin: 5px 0 0;">将发送给 {{ count($this->recipients) }} 个收件人</p>
+                    </div>
+                </div>
+
+                <div style="display: grid; gap: 12px; margin-bottom: 25px;">
+                    @foreach($this->availableTemplates as $template)
+                        <label style="display: flex; align-items: center; gap: 15px; padding: 18px; background: {{ in_array($template['key'], $this->selectedTemplates) ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)' }}; border: 2px solid {{ in_array($template['key'], $this->selectedTemplates) ? '#6366f1' : 'rgba(255,255,255,0.1)' }}; border-radius: 12px; cursor: pointer; transition: all 0.2s;">
+                            <input 
+                                type="checkbox" 
+                                value="{{ $template['key'] }}"
+                                wire:model="selectedTemplates"
+                                style="width: 20px; height: 20px; accent-color: #6366f1;"
+                            />
+                            <div style="flex: 1;">
+                                <div style="color: white; font-weight: 600; margin-bottom: 5px;">{{ $template['name'] }}</div>
+                                <div style="color: #64748b; font-size: 13px;">邮件主题：{{ $template['subject'] }}</div>
+                            </div>
+                            @if(in_array($template['key'], $this->selectedTemplates))
+                                <span style="font-size: 24px;">✅</span>
+                            @endif
+                        </label>
+                    @endforeach
+                </div>
+                
+                <div style="padding: 15px; background: rgba(234, 179, 8, 0.1); border-radius: 8px; margin-bottom: 20px;">
+                    <p style="color: #eab308; font-size: 14px; margin: 0;">
+                        💡 提示：可以多选模板，每个收件人将收到所有选中模板的邮件
+                    </p>
+                </div>
+
+                <div style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <button 
+                        wire:click="$set('showTemplateModal', false)"
+                        wire:loading.attr="disabled"
+                        wire:target="sendWithTemplate"
+                        style="padding: 12px 24px; background: #334155; color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s;"
+                    >
+                        取消
+                    </button>
+                    <button 
+                        wire:click="sendWithTemplate"
+                        wire:loading.attr="disabled"
+                        wire:target="sendWithTemplate"
+                        style="padding: 12px 32px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px; box-shadow: 0 4px 15px rgba(99,102,241,0.3); transition: all 0.2s; opacity: {{ $isLoading ? '0.6' : '1' }};"
+                        @if($isLoading) disabled @endif
+                    >
+                        @if($isLoading)
+                            <span style="display: inline-block; animation: spin 1s linear infinite;">⏳</span>
+                            发送中...
+                        @else
+                            <span>🚀</span> 立即发送
+                        @endif
+                    </button>
+                </div>
+                
+                {{-- 加载遮罩 --}}
+                @if($isLoading)
+                    <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; border-radius: 16px; z-index: 10;">
+                        <div style="text-align: center;">
+                            <div style="display: inline-block; width: 50px; height: 50px; border: 4px solid rgba(255,255,255,0.3); border-top-color: #6366f1; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <p style="color: white; margin-top: 15px; font-weight: 600;">正在发送邮件...</p>
+                            <p style="color: #94a3b8; font-size: 13px; margin-top: 5px;">请稍候，不要关闭窗口</p>
+                        </div>
+                    </div>
+                @endif
+            </div>
+        </div>
+    @endif
+
+    <style>
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </x-filament-panels::page>

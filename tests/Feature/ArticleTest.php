@@ -10,11 +10,15 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ArticleTest extends TestCase
 {
-    use RefreshDatabase;
+    // 不使用 RefreshDatabase，避免清空数据库
+    // use RefreshDatabase;
 
     /** @test */
     public function it_can_view_articles_index()
     {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        
         $response = $this->get(route('articles.index'));
         $response->assertStatus(200);
     }
@@ -22,6 +26,9 @@ class ArticleTest extends TestCase
     /** @test */
     public function it_can_filter_articles_by_category()
     {
+        $user = User::factory()->create();
+        $this->actingAs($user);
+        
         $category = Category::create(['name' => '教程', 'slug' => 'learning']);
         
         Article::create([
@@ -31,7 +38,7 @@ class ArticleTest extends TestCase
             'content' => 'Test content',
             'category_id' => $category->id,
             'is_published' => true,
-            'author_id' => User::factory()->create()->id,
+            'author_id' => $user->id,
         ]);
 
         $response = $this->get(route('articles.index', ['category' => 'learning']));
@@ -43,6 +50,7 @@ class ArticleTest extends TestCase
     public function it_can_search_articles()
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
         
         Article::create([
             'title' => 'GPT-4 Tutorial',
@@ -62,6 +70,7 @@ class ArticleTest extends TestCase
     public function it_only_shows_published_articles()
     {
         $user = User::factory()->create();
+        $this->actingAs($user);
         
         Article::create([
             'title' => 'Published Article',

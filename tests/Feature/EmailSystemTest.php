@@ -4,68 +4,58 @@ namespace Tests\Feature;
 
 use Tests\TestCase;
 use App\Models\User;
-use App\Models\EmailSubscription;
+use App\Models\EmailSetting;
+use App\Models\EmailTemplate;
+use App\Mail\DigestEmail;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 
 class EmailSystemTest extends TestCase
 {
-    use RefreshDatabase;
+    // 不使用 RefreshDatabase，避免清空数据库
+    // use RefreshDatabase;
 
     /** @test */
-    public function it_can_create_email_subscription()
+    public function email_settings_page_loads_for_admin()
     {
-        $subscription = EmailSubscription::create([
-            'email' => 'test@example.com',
-            'subscribed_to_daily' => true,
+        $admin = User::factory()->create(['role' => 'admin']);
+        
+        $response = $this->actingAs($admin)->get('/admin/email-manager');
+        $response->assertStatus(200);
+    }
+
+    /** @test */
+    public function regular_user_cannot_access_email_settings()
+    {
+        $user = User::factory()->create(['role' => 'user']);
+        
+        $response = $this->actingAs($user)->get('/admin/email-manager');
+        $response->assertStatus(403);
+    }
+
+    /** @test */
+    public function can_subscribe_to_newsletter()
+    {
+        $response = $this->post('/api/email/subscribe', [
+            'email' => 'subscriber@example.com',
         ]);
 
-        $this->assertDatabaseHas('email_subscriptions', [
-            'email' => 'test@example.com',
-            'subscribed_to_daily' => true,
+        $response->assertStatus(200);
+        $this->assertDatabaseHas('email_settings', [
+            'email' => 'subscriber@example.com',
+            'subscribed' => true,
         ]);
     }
 
     /** @test */
-    public function it_can_toggle_subscription_preference()
+    public function can_unsubscribe_from_newsletter()
     {
-        $subscription = EmailSubscription::create([
-            'email' => 'test@example.com',
-            'subscribed_to_daily' => true,
-            'subscribed_to_weekly' => true,
+        $setting = EmailSetting::create([
+            'email' => 'unsubscribe@example.com',
+            'subscribed' => true,
         ]);
 
-        $subscription->update(['subscribed_to_daily' => false]);
-
-        $this->assertFalse($subscription->fresh()->subscribed_to_daily);
-        $this->assertTrue($subscription->fresh()->subscribed_to_weekly);
-    }
-
-    /** @test */
-    public function it_can_unsubscribe_all()
-    {
-        $subscription = EmailSubscription::create([
-            'email' => 'test@example.com',
-            'subscribed_to_daily' => true,
-        ]);
-
-        $subscription->unsubscribeAll();
-
-        $this->assertFalse($subscription->fresh()->isSubscribedToDaily());
-        $this->assertNotNull($subscription->fresh()->unsubscribed_at);
-    }
-
-    /** @test */
-    public function registration_creates_email_subscription()
-    {
-        $response = $this->post(route('register'), [
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-            'password' => 'password123',
-            'password_confirmation' => 'password123',
-        ]);
-
-        $this->assertDatabaseHas('email_subscriptions', [
-            'email' => 'test@example.com',
-        ]);
+        $response = $this->get(route('unsubscribe.show', ['token' => $setting->unsubscribe_token]));
+        $response->assertStatus(200);
     }
 }

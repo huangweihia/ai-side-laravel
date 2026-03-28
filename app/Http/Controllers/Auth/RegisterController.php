@@ -5,10 +5,10 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\EmailSubscription;
+use App\Services\EmailNotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Mail;
 
 class RegisterController extends Controller
 {
@@ -46,29 +46,22 @@ class RegisterController extends Controller
             'subscribed_to_notifications' => true,
         ]);
 
-        // 发送欢迎邮件
-        $this->sendWelcomeEmail($user, $subscription);
+        // 发送欢迎邮件（使用后台模板 key=welcome）
+        app(EmailNotificationService::class)->sendFromTemplateByKey(
+            'welcome',
+            $user,
+            [
+                'trial_days' => 3,
+                'trial_end_date' => now()->addDays(3)->format('Y-m-d'),
+                'unsubscribe_url' => $subscription->getUnsubscribeUrl(),
+                'preferences_url' => route('subscriptions.preferences'),
+            ],
+            'welcome'
+        );
 
         Auth::login($user);
 
         return redirect('/dashboard');
     }
 
-    /**
-     * 发送欢迎邮件
-     */
-    private function sendWelcomeEmail(User $user, EmailSubscription $subscription)
-    {
-        try {
-            $content = view('emails.welcome', compact('user', 'subscription'))->render();
-            
-            Mail::raw($content, function ($message) use ($user) {
-                $message->to($user->email)
-                        ->subject('🎉 欢迎加入 AI 副业情报局！');
-            });
-        } catch (\Exception $e) {
-            // 欢迎邮件发送失败不影响注册流程
-            \Log::warning('欢迎邮件发送失败：' . $e->getMessage());
-        }
-    }
 }

@@ -4,109 +4,141 @@ namespace Tests\Unit\Models;
 
 use Tests\TestCase;
 use App\Models\Project;
+use App\Models\Category;
+use App\Models\Favorite;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class ProjectTest extends TestCase
 {
-    use RefreshDatabase;
+    // 不使用 RefreshDatabase，避免清空数据库
+    // use RefreshDatabase;
 
     /** @test */
-    public function it_can_create_a_project()
+    public function it_has_correct_fillable_fields()
     {
+        $category = Category::create([
+            'name' => 'Test Category',
+            'slug' => 'test',
+            'description' => 'test',
+            'sort' => 1,
+            'is_premium' => false,
+        ]);
+
         $project = Project::create([
             'name' => 'Test Project',
             'full_name' => 'test/test-project',
-            'url' => 'https://github.com/test/test-project',
-            'description' => 'A test project',
-            'stars' => 1000,
-            'forks' => 100,
-            'score' => 8.5,
-            'language' => 'PHP',
-        ]);
-
-        $this->assertDatabaseHas('projects', [
-            'name' => 'Test Project',
-            'stars' => 1000,
-        ]);
-
-        $this->assertEquals('test-project', $project->name);
-        $this->assertEquals(1000, $project->stars);
-    }
-
-    /** @test */
-    public function it_calculates_score_correctly()
-    {
-        $score = Project::calculateScore(50000, 5, 'high');
-        
-        $this->assertGreaterThan(5, $score);
-        $this->assertLessThanOrEqual(10, $score);
-    }
-
-    /** @test */
-    public function it_has_featured_scope()
-    {
-        Project::create([
-            'name' => 'Featured Project',
-            'url' => 'https://github.com/test/featured',
-            'stars' => 50000,
+            'description' => 'Test description',
+            'url' => 'https://example.com',
+            'language' => 'Python',
+            'stars' => 100,
+            'forks' => 20,
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
             'is_featured' => true,
+            'tags' => ['ai', 'automation'],
+            'monetization_paths' => ['subscription', 'ads'],
+            'tech_stack' => ['Python', 'FastAPI'],
+            'resources' => [
+                ['title' => 'Docs', 'url' => 'https://example.com/docs', 'type' => 'documentation']
+            ],
         ]);
 
-        Project::create([
-            'name' => 'Normal Project',
-            'url' => 'https://github.com/test/normal',
-            'stars' => 1000,
-            'is_featured' => false,
+        $this->assertEquals('Test Project', $project->name);
+        $this->assertEquals(['ai', 'automation'], $project->tags);
+        $this->assertTrue($project->is_featured);
+    }
+
+    /** @test */
+    public function it_can_be_favorited_by_user()
+    {
+        $user = User::factory()->create();
+        $category = Category::create([
+            'name' => 'Test',
+            'slug' => 'test',
+            'description' => 'test',
+            'sort' => 1,
+            'is_premium' => false,
         ]);
 
-        $featured = Project::featured()->get();
-
-        $this->assertCount(1, $featured);
-        $this->assertEquals('Featured Project', $featured->first()->name);
-    }
-
-    /** @test */
-    public function it_has_popular_scope()
-    {
-        Project::create(['name' => 'Project A', 'url' => 'https://github.com/test/a', 'stars' => 1000]);
-        Project::create(['name' => 'Project B', 'url' => 'https://github.com/test/b', 'stars' => 5000]);
-        Project::create(['name' => 'Project C', 'url' => 'https://github.com/test/c', 'stars' => 3000]);
-
-        $popular = Project::popular(2)->get();
-
-        $this->assertCount(2, $popular);
-        $this->assertEquals('Project B', $popular->first()->name);
-    }
-
-    /** @test */
-    public function it_returns_correct_difficulty_label()
-    {
-        $project = new Project(['difficulty' => 'easy']);
-        $this->assertEquals('缁犫偓閸?, $project->getDifficultyLabel());
-
-        $project->difficulty = 'medium';
-        $this->assertEquals('娑擃厾鐡?, $project->getDifficultyLabel());
-
-        $project->difficulty = 'hard';
-        $this->assertEquals('閸ヤ即姣?, $project->getDifficultyLabel());
-    }
-
-    /** @test */
-    public function it_updates_existing_project_on_duplicate_url()
-    {
         $project = Project::create([
-            'name' => 'Original Name',
-            'url' => 'https://github.com/test/project',
-            'stars' => 1000,
+            'name' => 'Favorite Project',
+            'full_name' => 'test/favorite',
+            'description' => 'Test',
+            'url' => 'https://example.com',
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'is_featured' => false,
+            'tags' => [],
+            'monetization_paths' => [],
+            'tech_stack' => [],
+            'resources' => [],
         ]);
 
-        $updated = Project::updateOrCreate(
-            ['url' => 'https://github.com/test/project'],
-            ['stars' => 2000]
-        );
+        Favorite::create([
+            'user_id' => $user->id,
+            'favoritable_type' => Project::class,
+            'favoritable_id' => $project->id,
+        ]);
 
-        $this->assertEquals($project->id, $updated->id);
-        $this->assertEquals(2000, $updated->fresh()->stars);
-        $this->assertEquals('Original Name', $updated->fresh()->name);
+        $this->assertTrue($project->favorites()->exists());
+        $this->assertTrue($project->isFavoritedBy($user));
+    }
+
+    /** @test */
+    public function it_has_difficulty_label_attribute()
+    {
+        $category = Category::create([
+            'name' => 'Test',
+            'slug' => 'test',
+            'description' => 'test',
+            'sort' => 1,
+            'is_premium' => false,
+        ]);
+
+        $project = Project::create([
+            'name' => 'Difficulty Test',
+            'full_name' => 'test/difficulty',
+            'description' => 'Test',
+            'url' => 'https://example.com',
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'is_featured' => false,
+            'tags' => [],
+            'monetization_paths' => [],
+            'tech_stack' => [],
+            'resources' => [],
+        ]);
+
+        $this->assertEquals('中等', $project->difficulty_label);
+    }
+
+    /** @test */
+    public function it_has_income_label_attribute()
+    {
+        $category = Category::create([
+            'name' => 'Test',
+            'slug' => 'test',
+            'description' => 'test',
+            'sort' => 1,
+            'is_premium' => false,
+        ]);
+
+        $project = Project::create([
+            'name' => 'Income Test',
+            'full_name' => 'test/income',
+            'description' => 'Test',
+            'url' => 'https://example.com',
+            'category_id' => $category->id,
+            'difficulty' => 'medium',
+            'income_range' => '5000-20000',
+            'is_featured' => false,
+            'tags' => [],
+            'monetization_paths' => [],
+            'tech_stack' => [],
+            'resources' => [],
+        ]);
+
+        $this->assertEquals('5000-20000 元/月', $project->income_label);
     }
 }

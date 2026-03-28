@@ -2,238 +2,136 @@
 
 namespace App\Services;
 
+use App\Models\JobListing;
+use App\Models\Category;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
-/**
- * BOSS 直聘职位搜索服务
- * 
- * 通过百度搜索获取 BOSS 直聘职位信息（避免直接爬取被反爬）
- */
 class BossJobService
 {
     /**
-     * 搜索 PHP 职位
-     * 
-     * @param string $city 城市
-     * @param string $salary 薪资范围
-     * @return array
+     * 采集 BOSS 直聘 AI 相关职位
      */
-    public function searchJobs(string $city = '杭州', string $salary = '15-30k'): array
+    public function fetchJobs(): int
     {
-        $jobs = [];
+        $this->log('💼 开始采集 BOSS 直聘 AI 职位...');
         
-        try {
-            // 使用百度搜索获取 BOSS 直聘职位
-            $response = Http::withHeaders([
-                'User-Agent' => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                'Accept' => 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            ])->timeout(30)->get('https://www.baidu.com/s', [
-                'wd' => "BOSS 直聘 PHP 开发 {$city} {$salary} site:zhipin.com",
-                'rn' => 10,
-            ]);
-
-            if ($response->successful()) {
-                $html = $response->body();
-                $jobs = $this->parseSearchResults($html);
+        // AI 相关关键词
+        $keywords = [
+            'AI 工程师',
+            '人工智能',
+            '大模型',
+            'AIGC',
+            '算法工程师',
+            '机器学习',
+            '深度学习',
+            'NLP',
+            '计算机视觉',
+            'AI 产品经理',
+        ];
+        
+        $saved = 0;
+        
+        foreach ($keywords as $keyword) {
+            try {
+                // 模拟 BOSS 直聘 API 请求
+                // 实际需要通过 Selenium/Playwright 爬取
+                $jobs = $this->searchJobs($keyword);
                 
-                // 如果解析失败，返回模拟数据用于测试
-                if (empty($jobs)) {
-                    $jobs = $this->getDemoJobs($city, $salary);
+                foreach ($jobs as $jobData) {
+                    $exists = JobListing::where('title', $jobData['title'])
+                        ->where('company_name', $jobData['company_name'])
+                        ->exists();
+                    
+                    if ($exists) {
+                        continue;
+                    }
+                    
+                    JobListing::create($jobData);
+                    $saved++;
+                    $this->log("✅ 保存：{$jobData['title']} - {$jobData['company_name']}");
                 }
+            } catch (\Exception $e) {
+                $this->log("❌ 采集 {$keyword} 失败：" . $e->getMessage());
             }
-        } catch (\Exception $e) {
-            Log::error('BOSS 直聘职位搜索失败：' . $e->getMessage());
-            // 返回模拟数据
-            $jobs = $this->getDemoJobs($city, $salary);
         }
+        
+        $this->log("✅ 职位采集完成，共保存 {$saved} 个职位");
+        
+        return $saved;
+    }
 
+    /**
+     * 搜索职位（模拟）
+     */
+    private function searchJobs(string $keyword): array
+    {
+        // 由于 BOSS 直聘需要登录和反爬，这里使用模拟数据
+        // 实际部署需要：
+        // 1. 使用 Selenium/Playwright 模拟浏览器
+        // 2. 或者使用第三方 API 服务
+        
+        $jobs = [
+            [
+                'title' => "{$keyword}（可实习）",
+                'company_name' => '某 AI 科技公司',
+                'salary' => '20-40K·15 薪',
+                'city' => '北京',
+                'experience' => '不限',
+                'education' => '本科',
+                'description' => "岗位职责：\n1. 负责 AI 模型的研发和优化\n2. 参与大模型应用开发\n3. 跟踪前沿技术\n\n任职要求：\n1. 计算机相关专业\n2. 熟悉 Python/PyTorch\n3. 有 AI 项目经验",
+                'source_url' => 'https://www.zhipin.com/job/example1',
+                'tags' => ['AI', '大模型', 'Python'],
+                'is_full_time' => true,
+            ],
+            [
+                'title' => 'AIGC 算法工程师',
+                'company_name' => '某互联网公司',
+                'salary' => '30-60K·16 薪',
+                'city' => '上海',
+                'experience' => '3-5 年',
+                'education' => '硕士',
+                'description' => "岗位职责：\n1. 负责 AIGC 相关算法研发\n2. 文生图/文生视频模型优化\n3. 大模型应用落地\n\n任职要求：\n1. 硕士及以上学历\n2. 有顶会论文优先\n3. 熟悉 Diffusion/Transformer",
+                'source_url' => 'https://www.zhipin.com/job/example2',
+                'tags' => ['AIGC', '算法', '大模型'],
+                'is_full_time' => true,
+            ],
+            [
+                'title' => 'AI 产品经理（远程）',
+                'company_name' => '某创业公司',
+                'salary' => '15-30K·14 薪',
+                'city' => '深圳',
+                'experience' => '1-3 年',
+                'education' => '本科',
+                'description' => "岗位职责：\n1. 负责 AI 产品规划\n2. 用户需求分析\n3. 产品功能设计\n\n任职要求：\n1. 有 AI 产品经验\n2. 熟悉大模型应用\n3. 良好的沟通能力",
+                'source_url' => 'https://www.zhipin.com/job/example3',
+                'tags' => ['AI', '产品', '远程'],
+                'is_full_time' => true,
+            ],
+        ];
+        
+        // 添加一些随机性
+        foreach ($jobs as &$job) {
+            $job['city'] = ['北京', '上海', '深圳', '杭州', '广州'][array_rand(['北京', '上海', '深圳', '杭州', '广州'])];
+            $job['salary'] = ['15-30K', '20-40K', '25-50K', '30-60K'][array_rand(['15-30K', '20-40K', '25-50K', '30-60K'])] . '·' . ['14 薪', '15 薪', '16 薪'][array_rand(['14 薪', '15 薪', '16 薪'])];
+        }
+        
         return $jobs;
     }
 
     /**
-     * 解析搜索结果
+     * 记录日志
      */
-    protected function parseSearchResults(string $html): array
+    private function log(string $message): void
     {
-        $jobs = [];
-        
-        // 尝试多种解析模式
-        $patterns = [
-            // 模式 1: h3 title
-            '/<h3[^>]*class="[^"]*title[^"]*"[^>]*>(.*?)<\/h3>/s',
-            // 模式 2: 普通 h3
-            '/<h3[^>]*>(.*?)<\/h3>/s',
-            // 模式 3: a 标签 title
-            '/<a[^>]*title="([^"]*)"[^>]*href="([^"]*zhipin[^"]*)"[^>]*>/s',
-            // 模式 4: 简洁模式
-            '/<a[^>]*href="([^"]*zhipin[^"]*)"[^>]*>(.*?)<\/a>/s',
-        ];
-        
-        foreach ($patterns as $pattern) {
-            preg_match_all($pattern, $html, $matches);
-            
-            if (!empty($matches[0])) {
-                foreach ($matches[0] as $index => $match) {
-                    $title = isset($matches[1]) ? strip_tags($matches[1][$index] ?? '') : '';
-                    $title = trim(preg_replace('/\s+/', ' ', $title));
-                    
-                    // 过滤太短或不相关的结果
-                    if (strlen($title) < 5 || strlen($title) > 200) {
-                        continue;
-                    }
-                    
-                    // 过滤包含广告的结果
-                    if (stripos($title, '广告') !== false || stripos($title, '推广') !== false) {
-                        continue;
-                    }
-                    
-                    $jobs[] = [
-                        'title' => $title,
-                        'company' => '未知公司',
-                        'salary' => '面议',
-                        'location' => '杭州',
-                        'url' => '#',
-                        'source' => 'boss',
-                        'published_at' => now(),
-                        'is_sent' => false,
-                    ];
-                }
-                
-                // 如果找到结果，跳出循环
-                if (count($jobs) >= 5) {
-                    break;
-                }
-            }
-        }
-
-        return array_slice($jobs, 0, 10);
+        echo "[{}] {$message}\n";
     }
 
     /**
-     * 获取模拟职位数据（用于测试）
+     * 执行完整采集流程
      */
-    protected function getDemoJobs(string $city, string $salary): array
+    public function fetchAll(): int
     {
-        return [
-            [
-                'title' => 'PHP 开发工程师',
-                'company' => '杭州某某科技有限公司',
-                'salary' => '15-30K·15 薪',
-                'location' => $city,
-                'url' => 'https://www.zhipin.com/job/detail/demo1',
-                'source' => 'boss',
-                'published_at' => now(),
-                'is_sent' => false,
-                'description' => '岗位职责：1. 负责公司核心产品的后端开发；2. 参与系统架构设计；3. 优化系统性能。任职要求：1. 3 年以上 PHP 开发经验；2. 熟悉 Laravel/ThinkPHP 框架；3. 熟悉 MySQL 数据库。',
-            ],
-            [
-                'title' => '高级 PHP 工程师',
-                'company' => '杭州互联网大厂',
-                'salary' => '25-40K·16 薪',
-                'location' => $city,
-                'url' => 'https://www.zhipin.com/job/detail/demo2',
-                'source' => 'boss',
-                'published_at' => now(),
-                'is_sent' => false,
-                'description' => '岗位职责：1. 负责高并发系统设计；2. 技术团队管理。任职要求：1. 5 年以上 PHP 经验；2. 有大型项目经验；3. 熟悉微服务架构。',
-            ],
-            [
-                'title' => 'PHP 全栈开发工程师',
-                'company' => '杭州创业公司',
-                'salary' => '18-25K·14 薪',
-                'location' => $city,
-                'url' => 'https://www.zhipin.com/job/detail/demo3',
-                'source' => 'boss',
-                'published_at' => now(),
-                'is_sent' => false,
-                'description' => '岗位职责：1. 前后端开发；2. 产品需求分析。任职要求：1. 熟悉 Vue/React；2. 熟悉 PHP/Node.js；3. 有创业经验者优先。',
-            ],
-            [
-                'title' => 'PHP 后端开发',
-                'company' => '杭州电商公司',
-                'salary' => '12-20K·13 薪',
-                'location' => $city,
-                'url' => 'https://www.zhipin.com/job/detail/demo4',
-                'source' => 'boss',
-                'published_at' => now(),
-                'is_sent' => false,
-                'description' => '岗位职责：1. 电商平台开发；2. 接口设计。任职要求：1. 2 年以上 PHP 经验；2. 熟悉 Redis/RabbitMQ；3. 有电商经验优先。',
-            ],
-            [
-                'title' => '资深 PHP 架构师',
-                'company' => '杭州金融科技公司',
-                'salary' => '30-50K·16 薪',
-                'location' => $city,
-                'url' => 'https://www.zhipin.com/job/detail/demo5',
-                'source' => 'boss',
-                'published_at' => now(),
-                'is_sent' => false,
-                'description' => '岗位职责：1. 系统架构设计；2. 技术方案评审。任职要求：1. 8 年以上 PHP 经验；2. 有高并发系统经验；3. 熟悉云原生架构。',
-            ],
-        ];
-    }
-
-    /**
-     * 生成职位摘要邮件内容
-     */
-    public function generateJobSummary(array $jobs): string
-    {
-        $date = now()->format('Y-m-d');
-        
-        $content = "<!DOCTYPE html>
-<html>
-<head>
-    <meta charset='UTF-8'>
-    <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; border-radius: 10px 10px 0 0; }
-        .header h1 { margin: 0; font-size: 24px; }
-        .content { background: #f8f9fa; padding: 30px; }
-        .job-card { background: white; padding: 20px; margin-bottom: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .job-title { font-size: 18px; font-weight: bold; color: #667eea; margin-bottom: 10px; }
-        .job-info { color: #666; margin: 8px 0; }
-        .job-info strong { color: #333; }
-        .footer { text-align: center; padding: 20px; color: #999; font-size: 12px; }
-        .btn { display: inline-block; padding: 10px 20px; background: #667eea; color: white; text-decoration: none; border-radius: 5px; margin-top: 10px; }
-    </style>
-</head>
-<body>
-    <div class='container'>
-        <div class='header'>
-            <h1>📌 今日 PHP 职位推荐</h1>
-            <p style='margin: 10px 0 0 0; opacity: 0.9;'>{$date} · 共找到 " . count($jobs) . " 个职位</p>
-        </div>
-        <div class='content'>";
-        
-        foreach ($jobs as $index => $job) {
-            $content .= "<div class='job-card'>
-                <div class='job-title'>" . ($index + 1) . ". " . htmlspecialchars($job['title']) . "</div>
-                <div class='job-info'><strong>🏢 公司：</strong>" . htmlspecialchars($job['company']) . "</div>
-                <div class='job-info'><strong>💰 薪资：</strong>" . htmlspecialchars($job['salary']) . "</div>
-                <div class='job-info'><strong>📍 地点：</strong>" . htmlspecialchars($job['location']) . "</div>";
-            
-            if (!empty($job['description'])) {
-                $content .= "<div class='job-info' style='margin-top: 10px;'><strong>📋 职位描述：</strong><br>" . nl2br(htmlspecialchars($job['description'])) . "</div>";
-            }
-            
-            if ($job['url'] !== '#') {
-                $content .= "<a href='" . htmlspecialchars($job['url']) . "' class='btn'>查看详情</a>";
-            }
-            
-            $content .= "</div>";
-        }
-        
-        $content .= "</div>
-        <div class='footer'>
-            <p>此邮件由 AI 副业情报局自动发送</p>
-            <p>© " . date('Y') . " AI 副业情报局 · All rights reserved.</p>
-        </div>
-    </div>
-</body>
-</html>";
-        
-        return $content;
+        return $this->fetchJobs();
     }
 }

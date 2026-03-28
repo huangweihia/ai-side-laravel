@@ -3,11 +3,14 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProjectResource\Pages;
+use App\Jobs\FetchContentJob;
 use App\Models\Project;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 
 class ProjectResource extends Resource
@@ -65,12 +68,13 @@ class ProjectResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('id')
-                    ->label('ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('name')
-                    ->label('项目名称')
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
+                Tables\Columns\TextColumn::make('name')->label('项目名称')->searchable(),
+                Tables\Columns\TextColumn::make('comments_count')
+                    ->label('评论数')
+                    ->counts('comments')
+                    ->badge()
+                    ->color('info'),
                 Tables\Columns\TextColumn::make('status')
                     ->label('状态')
                     ->badge()
@@ -87,19 +91,9 @@ class ProjectResource extends Resource
                         'on_hold' => '已暂停',
                         default => $state,
                     }),
-                Tables\Columns\TextColumn::make('revenue')
-                    ->label('收入')
-                    ->money('CNY')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('start_date')
-                    ->label('开始日期')
-                    ->date('Y-m-d')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('创建时间')
-                    ->dateTime('Y-m-d H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('revenue')->label('收入')->money('CNY')->sortable(),
+                Tables\Columns\TextColumn::make('start_date')->label('开始日期')->date('Y-m-d')->sortable(),
+                Tables\Columns\TextColumn::make('created_at')->label('创建时间')->dateTime('Y-m-d H:i')->sortable()->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -113,12 +107,49 @@ class ProjectResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Action::make('viewComments')
+                    ->label('查看评论')
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->color('info')
+                    ->url(fn (Project $record): string => CommentResource::getUrl('index', [
+                        'tableFilters' => [
+                            'commentable_type' => ['value' => Project::class],
+                            'commentable_id' => ['value' => (string) $record->id],
+                        ],
+                    ])),
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                Action::make('fetchGitHub')
+                    ->label('🐙 采集 GitHub 项目')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('采集 GitHub 项目')
+                    ->modalDescription('将在后台异步采集 GitHub 项目，完成后会通知你。')
+                    ->modalSubmitActionLabel('开始采集')
+                    ->action(function () {
+                        try {
+                            FetchContentJob::dispatch('projects', auth()->id());
+
+                            Notification::make()
+                                ->title('✅ 采集任务已启动')
+                                ->body('GitHub 项目采集已在后台执行，完成后会通知你')
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title('❌ 采集失败')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
             ]);
     }
 

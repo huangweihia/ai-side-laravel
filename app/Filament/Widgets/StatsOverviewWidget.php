@@ -5,8 +5,8 @@ namespace App\Filament\Widgets;
 use App\Models\User;
 use App\Models\Article;
 use App\Models\Project;
-use App\Models\JobListing;
 use App\Models\EmailLog;
+use App\Models\EmailSubscription;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -17,49 +17,35 @@ class StatsOverviewWidget extends BaseWidget
         $today = now()->startOfDay();
         
         return [
-            Stat::make('总用户数', number_format(User::count()))
-                ->description('注册用户总数')
-                ->descriptionIcon('heroicon-m-user-group')
-                ->color('success')
-                ->chart([7, 3, 4, 5, 6, 3, 5])
-                ->extraAttributes([
-                    'class' => 'cursor-pointer',
-                ]),
-            
-            Stat::make('今日新增用户', number_format(User::where('created_at', '>=', $today)->count()))
-                ->description('较昨日 ' . rand(-10, 30) . '%')
+            Stat::make('总用户数', User::count())
+                ->description('今日新增 ' . User::whereDate('created_at', $today)->count() . ' 人')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
             
-            Stat::make('项目总数', number_format(Project::count()))
-                ->description('副业项目库')
-                ->descriptionIcon('heroicon-m-briefcase')
+            Stat::make('VIP 用户', User::where('role', 'vip')->orWhere('subscription_ends_at', '>', now())->count())
+                ->description('转化率 ' . round(User::where('role', 'vip')->count() / max(1, User::count()) * 100, 2) . '%')
+                ->descriptionIcon('heroicon-m-star')
                 ->color('warning'),
             
-            Stat::make('文章总数', number_format(Article::count()))
-                ->description('已发布文章')
+            Stat::make('文章总数', Article::count())
+                ->description('今日新增 ' . Article::whereDate('created_at', $today)->count() . ' 篇')
                 ->descriptionIcon('heroicon-m-document-text')
                 ->color('primary'),
             
-            Stat::make('职位/项目抓取', number_format(JobListing::count()))
-                ->description('累计抓取数量')
-                ->descriptionIcon('heroicon-m-cloud-arrow-down')
+            Stat::make('项目总数', Project::count())
+                ->description('已收录 ' . Project::where('is_featured', true)->count() . ' 个精选')
+                ->descriptionIcon('heroicon-m-briefcase')
                 ->color('info'),
             
-            Stat::make('邮件发送', number_format(EmailLog::where('status', 'sent')->count()))
-                ->description('成功发送 ' . EmailLog::where('status', 'sent')->where('created_at', '>=', $today)->count() . ' 封今日')
+            Stat::make('邮件发送', EmailLog::whereDate('created_at', $today)->count())
+                ->description('今日发送 ' . EmailLog::whereDate('created_at', $today)->where('status', 'sent')->count() . ' 封')
                 ->descriptionIcon('heroicon-m-envelope')
                 ->color('success'),
             
-            Stat::make('VIP 用户', number_format(User::where('role', 'vip')->count()))
-                ->description('付费会员')
-                ->descriptionIcon('heroicon-m-star')
-                ->color('danger'),
-            
-            Stat::make('失败邮件', number_format(EmailLog::where('status', 'failed')->count()))
-                ->description('需要检查')
-                ->descriptionIcon('heroicon-m-exclamation-triangle')
-                ->color('danger'),
+            Stat::make('订阅用户', EmailSubscription::whereNull('unsubscribed_at')->count())
+                ->description('活跃订阅 ' . EmailSubscription::where('subscribed_to_daily', true)->whereNull('unsubscribed_at')->count())
+                ->descriptionIcon('heroicon-m-bell')
+                ->color('primary'),
         ];
     }
 }

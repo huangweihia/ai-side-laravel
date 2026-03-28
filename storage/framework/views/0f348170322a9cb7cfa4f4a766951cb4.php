@@ -35,72 +35,20 @@
 
 <section style="padding: 40px 0;">
     <div class="container">
-        <div style="display: grid; grid-template-columns: 280px 1fr; gap: 40px;">
-            
-            <!-- 左侧边栏 - 分类筛选 -->
-            <aside>
-                <div class="card" style="padding: 24px;">
-                    <h3 style="font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                        <span>📂</span> 文章分类
-                    </h3>
-                    <ul style="list-style: none; padding: 0; margin: 0;">
-                        <li style="margin-bottom: 12px;">
-                            <a href="#" style="display: flex; justify-content: space-between; padding: 12px 16px; background: var(--gradient-primary); border-radius: 8px; color: white; text-decoration: none; font-weight: 600;">
-                                <span>📝 全部文章</span>
-                                <span style="background: rgba(255,255,255,0.2); padding: 2px 10px; border-radius: 12px; font-size: 13px;"><?php echo e($articles->total()); ?></span>
-                            </a>
-                        </li>
-                        <li style="margin-bottom: 12px;">
-                            <a href="?category=ai-tools" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
-                                <span>🤖 AI 工具</span>
-                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">12</span>
-                            </a>
-                        </li>
-                        <li style="margin-bottom: 12px;">
-                            <a href="?category=side-projects" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
-                                <span>💡 副业项目</span>
-                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">8</span>
-                            </a>
-                        </li>
-                        <li style="margin-bottom: 12px;">
-                            <a href="?category=learning" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
-                                <span>📖 学习教程</span>
-                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">15</span>
-                            </a>
-                        </li>
-                        <li style="margin-bottom: 12px;">
-                            <a href="?category=monetization" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
-                                <span>💰 变现案例</span>
-                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">6</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="?category=news" style="display: flex; justify-content: space-between; padding: 12px 16px; background: rgba(255,255,255,0.05); border-radius: 8px; color: var(--gray-light); text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)';this.style.color='white'" onmouseout="this.style.background='rgba(255,255,255,0.05)';this.style.color='var(--gray-light)'">
-                                <span>📰 行业资讯</span>
-                                <span style="background: rgba(255,255,255,0.1); padding: 2px 10px; border-radius: 12px; font-size: 13px;">10</span>
-                            </a>
-                        </li>
-                    </ul>
+        <div>
+            <!-- 顶部筛选栏 -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <a href="<?php echo e(route('articles.index')); ?>" style="padding: 10px 20px; background: <?php echo e(!request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(!request('category') ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">📝 全部</a>
+                    <a href="?category=ai-tools" style="padding: 10px 20px; background: <?php echo e(request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">🤖 AI 工具</a>
+                    <a href="?category=side-projects" style="padding: 10px 20px; background: <?php echo e(request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'side-projects' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">💡 副业</a>
+                    <a href="?category=learning" style="padding: 10px 20px; background: <?php echo e(request('category') === 'learning' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'learning' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">📖 教程</a>
+                    <a href="?category=monetization" style="padding: 10px 20px; background: <?php echo e(request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'monetization' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">💰 变现</a>
+                    <a href="?category=news" style="padding: 10px 20px; background: <?php echo e(request('category') === 'news' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'news' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">📰 资讯</a>
                 </div>
+            </div>
 
-                <!-- 热门标签 -->
-                <div class="card" style="padding: 24px; margin-top: 24px;">
-                    <h3 style="font-size: 18px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                        <span>🔥</span> 热门标签
-                    </h3>
-                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">GPT-4</a>
-                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">Midjourney</a>
-                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">副业</a>
-                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">变现</a>
-                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">教程</a>
-                        <a href="#" style="padding: 6px 14px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 13px; text-decoration: none;">AI 绘画</a>
-                    </div>
-                </div>
-            </aside>
-
-            <!-- 右侧 - 文章列表 -->
-            <main>
+            <!-- 文章列表 -->
                 <!-- 排序选项 -->
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                     <div style="color: var(--gray-light); font-size: 14px;">
@@ -131,11 +79,28 @@
 
                                     </span>
                                     
-                                    <!-- 标题 -->
-                                    <h2 style="font-size: 22px; color: white; margin: 0 0 12px; line-height: 1.4;">
-                                        <?php echo e($article->title); ?>
+                                    <!-- 标题 + VIP 标识 -->
+                                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                        <h2 style="font-size: 22px; color: white; margin: 0; line-height: 1.4;">
+                                            <?php echo e($article->title); ?>
 
-                                    </h2>
+                                        </h2>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($article->is_vip): ?>
+                                            <span style="
+                                                padding: 4px 10px;
+                                                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                                                color: white;
+                                                border-radius: 6px;
+                                                font-size: 11px;
+                                                font-weight: 700;
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.5px;
+                                                box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+                                            ">
+                                                👑 VIP
+                                            </span>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                    </div>
                                     
                                     <!-- 摘要 -->
                                     <p style="color: var(--gray-light); font-size: 14px; line-height: 1.8; margin: 0 0 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">

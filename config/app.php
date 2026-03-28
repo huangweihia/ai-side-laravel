@@ -8,6 +8,12 @@ return [
     'env' => env('APP_ENV', 'production'),
     'debug' => (bool) env('APP_DEBUG', false),
     'url' => env('APP_URL', 'http://localhost'),
+    /*
+     * 服务端自调用（如 Filament 调本应用 API）时使用，避免 APP_URL 为宿主机端口
+     *（如 http://localhost:8081）时在 Docker 容器内连错端口。容器内 Web 一般为 80。
+     * php artisan serve 时可设为 http://127.0.0.1:8000
+     */
+    'internal_url' => env('APP_INTERNAL_URL', 'http://127.0.0.1'),
     'timezone' => 'Asia/Shanghai',
     'locale' => 'zh_CN',
     'fallback_locale' => 'en',

@@ -34,6 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make('内容管理'),
+                NavigationGroup::make('AI 采集'),
                 NavigationGroup::make('用户与互动'),
                 NavigationGroup::make('订阅与会员'),
                 NavigationGroup::make('邮件系统'),

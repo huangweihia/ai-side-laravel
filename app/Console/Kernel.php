@@ -2,8 +2,11 @@
 
 namespace App\Console;
 
+use App\Models\EmailSetting;
+use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\Artisan;
 
 class Kernel extends ConsoleKernel
 {
@@ -17,12 +20,20 @@ class Kernel extends ConsoleKernel
                  ->dailyAt('02:00')
                  ->timezone('Asia/Shanghai')
                  ->withoutOverlapping();
-        
-        // 每日上午 9 点发送订阅邮件（日报/周报）
-        $schedule->command('emails:send-scheduled', ['--limit=100'])
-                 ->dailyAt('09:00')
-                 ->timezone('Asia/Shanghai')
-                 ->withoutOverlapping();
+
+        /**
+         * 邮件订阅：日报 / 周报（周一走周报模板）
+         * 发送时刻读取后台「邮件设置 → 邮件发送时间」(email_send_time，默认 10:00，时区 Asia/Shanghai)
+         * 依赖 Docker 中 scheduler 容器每分钟执行 `php artisan schedule:run`
+         */
+        $schedule->call(function (): void {
+            Artisan::call('emails:send-scheduled', ['--limit' => '100']);
+        })
+            ->name('subscription-digest-emails')
+            ->everyMinute()
+            ->timezone('Asia/Shanghai')
+            ->when(fn (): bool => $this->matchesConfiguredEmailSendTime())
+            ->withoutOverlapping(10);
         
         // 每日上午 10 点发送 AI 副业项目推荐邮件（核心功能）
         $schedule->command('ai-projects:send-daily', ['--email' => '2801359160@qq.com'])
@@ -35,6 +46,21 @@ class Kernel extends ConsoleKernel
                  ->dailyAt('10:30')
                  ->timezone('Asia/Shanghai')
                  ->withoutOverlapping();
+    }
+
+    /**
+     * 当前上海时间是否与后台「邮件发送时间」一致（精确到分钟）
+     */
+    protected function matchesConfiguredEmailSendTime(): bool
+    {
+        $raw = trim((string) EmailSetting::get('email_send_time', '10:00'));
+        try {
+            $configured = Carbon::parse($raw, 'Asia/Shanghai')->format('H:i');
+        } catch (\Throwable) {
+            $configured = '10:00';
+        }
+
+        return now('Asia/Shanghai')->format('H:i') === $configured;
     }
 
     /**

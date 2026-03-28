@@ -37,6 +37,10 @@ MAIL_FROM_ADDRESS=2801359160@qq.com
 MAIL_FROM_NAME="${APP_NAME}"
 ```
 
+### 3. 基础邮件模板（`daily_digest` 等）
+
+定时命令 `emails:send-scheduled` 会读取数据库中 `key = daily_digest` / `weekly_summary` 的模板。**新环境**执行 `php artisan migrate` 后，会通过迁移 `2026_03_28_150000` 及既有留言/VIP 相关迁移写入后台「基础模版」所列 10 项；定义见 `database/data/email_templates_newsletter_and_system_presets.php`（与 `EmailTemplatePresetSeeder` 同源）。详见 `docs/05-开发文档/迁移与前台功能变更记录.md` 第 2.1 节。
+
 ---
 
 ## 🚀 启动邮件自动化

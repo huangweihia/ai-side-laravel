@@ -15,14 +15,16 @@ class SendScheduledEmails extends Command
      *
      * @var string
      */
-    protected $signature = 'emails:send-scheduled {--limit=100 : 每次发送的最大数量}';
+    protected $signature = 'emails:send-scheduled
+                            {--limit=100 : 每次发送的最大数量}
+                            {--email= : 仅向该邮箱发送一封（用于测试，须为已订阅且未退订的地址）}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = '发送定时邮件（日报/周报）';
+    protected $description = '发送定时邮件（日报/周报）；定时任务见 app/Console/Kernel.php（每日 9:00 Asia/Shanghai）';
 
     /**
      * Execute the console command.
@@ -34,15 +36,26 @@ class SendScheduledEmails extends Command
 
         $today = now();
         $isMonday = $today->isMonday();
+        $onlyEmail = $this->option('email');
 
-        // 获取待发送的邮件订阅用户
-        $subscriptions = EmailSubscription::with(['user'])
-            ->where('unsubscribed_at', null)
-            ->where(function($query) use ($isMonday) {
+        // 获取待发送的邮件订阅用户（未退订 + 周一发周报否则发日报）
+        $subscriptionsQuery = EmailSubscription::with(['user'])->whereNull('unsubscribed_at');
+
+        if ($onlyEmail) {
+            // 测试：指定邮箱发一封，只要开通了日报或周报其一即可（模板仍按是否周一选日报/周报）
+            $subscriptionsQuery
+                ->where('email', $onlyEmail)
+                ->where(function ($q) {
+                    $q->where('subscribed_to_daily', true)->orWhere('subscribed_to_weekly', true);
+                });
+            $limit = 1;
+        } else {
+            $subscriptionsQuery->where(function ($query) use ($isMonday) {
                 $query->where($isMonday ? 'subscribed_to_weekly' : 'subscribed_to_daily', true);
-            })
-            ->limit($limit)
-            ->get();
+            });
+        }
+
+        $subscriptions = $subscriptionsQuery->limit($limit)->get();
 
         if ($subscriptions->isEmpty()) {
             $this->info('没有待发送的邮件订阅用户');
@@ -51,8 +64,11 @@ class SendScheduledEmails extends Command
 
         $this->info("找到 {$subscriptions->count()} 个订阅用户");
 
-        // 获取邮件模板
-        $templateKey = $isMonday ? 'weekly_summary' : 'daily_digest';
+        // 获取邮件模板（--email 测试时固定用日报模板，避免周一测到周报模板）
+        $templateKey = ($onlyEmail || ! $isMonday) ? 'daily_digest' : 'weekly_summary';
+        if ($onlyEmail && $isMonday) {
+            $this->warn('测试模式：使用 daily_digest 模板（与生产周一发周报不同）');
+        }
         $template = EmailTemplate::where('key', $templateKey)->first();
         
         if (!$template) {
@@ -67,25 +83,29 @@ class SendScheduledEmails extends Command
 
         foreach ($subscriptions as $subscription) {
             try {
-                // 检查用户是否存在
-                if (!$subscription->user) {
-                    $this->warn("用户 ID {$subscription->user_id} 不存在，跳过");
-                    continue;
+                $user = $subscription->user;
+                if (! $user) {
+                    // 仅有邮箱、未绑定 user_id 的订阅仍尝试发送（用邮箱前缀作称呼）
+                    $user = new \App\Models\User([
+                        'name' => explode('@', (string) $subscription->email)[0] ?: '用户',
+                        'email' => $subscription->email,
+                    ]);
+                    $user->exists = false;
                 }
 
                 // 准备邮件内容
                 $subject = str_replace(
                     ['{date}', '{day}', '{user.name}'],
-                    [$today->format('Y-m-d'), $today->dayName, $subscription->user->name ?? '用户'],
+                    [$today->format('Y-m-d'), $today->dayName, $user->name ?? '用户'],
                     $template->subject
                 );
 
-                $content = $this->renderTemplate($template, $subscription->user, $subscription);
+                $content = $this->renderTemplate($template, $user, $subscription);
 
                 // 发送邮件
                 Mail::send(
                     'emails.template',
-                    ['content' => $content, 'user' => $subscription->user],
+                    ['content' => $content, 'user' => $user],
                     function ($message) use ($subscription, $subject) {
                         $message->to($subscription->email)
                                 ->subject($subject)
@@ -98,7 +118,7 @@ class SendScheduledEmails extends Command
                     'recipient' => $subscription->email,
                     'subject' => $subject,
                     'content' => $content,
-                    'type' => $isMonday ? 'weekly_digest' : 'daily_digest',
+                    'type' => $templateKey === 'weekly_summary' ? 'weekly_digest' : 'daily_digest',
                     'status' => 'sent',
                     'sent_at' => now(),
                 ]);
@@ -118,7 +138,7 @@ class SendScheduledEmails extends Command
                     'recipient' => $subscription->email,
                     'subject' => $template->subject,
                     'content' => $e->getMessage(),
-                    'type' => $isMonday ? 'weekly_digest' : 'daily_digest',
+                    'type' => $templateKey === 'weekly_summary' ? 'weekly_digest' : 'daily_digest',
                     'status' => 'failed',
                     'error_message' => $e->getMessage(),
                 ]);

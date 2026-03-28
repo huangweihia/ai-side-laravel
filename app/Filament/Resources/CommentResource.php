@@ -24,7 +24,9 @@ class CommentResource extends Resource
     protected static ?string $navigationLabel = '评论管理';
     protected static ?string $modelLabel = '评论';
     protected static ?string $navigationGroup = '内容管理';
-    protected static ?int $navigationSort = 50;
+    /** 挂在「知识库管理」下，与知识库/文档业务归为一类，不再与文章等平级 */
+    protected static ?string $navigationParentItem = '知识库管理';
+    protected static ?int $navigationSort = 71;
 
     public static function getNavigationBadge(): ?string
     {

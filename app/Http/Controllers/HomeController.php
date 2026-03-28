@@ -87,15 +87,23 @@ class HomeController extends Controller
             ->orderBy('viewed_at', 'desc')
             ->limit(10)
             ->get();
+
+        // 他人发给我的主页留言（个人中心展示）
+        $profileMessagesReceived = ProfileMessage::where('recipient_id', $user->id)
+            ->with('sender')
+            ->latest()
+            ->limit(8)
+            ->get();
         
         // 统计数据
         $stats = [
             'favorites' => Favorite::where('user_id', $user->id)->count(),
             'comments' => Comment::where('user_id', $user->id)->count(),
             'histories' => ViewHistory::where('user_id', $user->id)->count(),
+            'profile_messages' => ProfileMessage::where('recipient_id', $user->id)->count(),
         ];
         
-        return view('dashboard', compact('user', 'favorites', 'comments', 'histories', 'stats'));
+        return view('dashboard', compact('user', 'favorites', 'comments', 'histories', 'stats', 'profileMessagesReceived'));
     }
     
     /**
@@ -109,10 +117,13 @@ class HomeController extends Controller
             'comments' => Comment::where('user_id', $user->id)->count(),
             'favorites' => Favorite::where('user_id', $user->id)->count(),
             'histories' => ViewHistory::where('user_id', $user->id)->count(),
+            'profile_messages' => ProfileMessage::where('recipient_id', $user->id)->count(),
         ];
 
         $profileMessages = null;
         $urgentSentToday = false;
+        $profileMessagesSent = null;
+
         if (auth()->check() && (int) auth()->id() === (int) $user->id) {
             $profileMessages = ProfileMessage::where('recipient_id', $user->id)
                 ->with('sender')
@@ -122,9 +133,16 @@ class HomeController extends Controller
                 ->where('sender_user_id', $user->id)
                 ->whereDate('sent_at', now()->toDateString())
                 ->exists();
+        } elseif (auth()->check()) {
+            // 访客：展示自己发给主页主人的留言记录（分页参数 sent_page）
+            $profileMessagesSent = ProfileMessage::query()
+                ->where('recipient_id', $user->id)
+                ->where('sender_id', auth()->id())
+                ->latest()
+                ->paginate(10, ['*'], 'sent_page');
         }
 
-        return view('users.show', compact('user', 'stats', 'profileMessages', 'urgentSentToday'));
+        return view('users.show', compact('user', 'stats', 'profileMessages', 'urgentSentToday', 'profileMessagesSent'));
     }
 
     /**

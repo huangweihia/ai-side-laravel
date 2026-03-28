@@ -44,7 +44,7 @@
                 @endif
                 
                 <!-- 统计数据 -->
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1);">
                     <div>
                         <div style="font-size: 20px; font-weight: 700; color: var(--primary-light);">{{ $stats['favorites'] }}</div>
                         <div style="font-size: 12px; color: var(--gray-light);">收藏</div>
@@ -56,6 +56,10 @@
                     <div>
                         <div style="font-size: 20px; font-weight: 700; color: var(--primary-light);">{{ $stats['histories'] }}</div>
                         <div style="font-size: 12px; color: var(--gray-light);">浏览</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 20px; font-weight: 700; color: var(--primary-light);">{{ $stats['profile_messages'] ?? 0 }}</div>
+                        <div style="font-size: 12px; color: var(--gray-light);">主页留言</div>
                     </div>
                 </div>
             </div>
@@ -70,10 +74,19 @@
                     <span>👁️</span>
                     <span>浏览历史</span>
                 </a>
+                <a href="{{ route('users.show', $user->id) }}#profile-messages" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">
+                    <span>💬</span>
+                    <span>主页留言</span>
+                    @if(($stats['profile_messages'] ?? 0) > 0)
+                        <span style="margin-left: auto; font-size: 11px; padding: 2px 8px; border-radius: 999px; background: rgba(99,102,241,0.25); color: var(--primary-light); font-weight: 700;">{{ $stats['profile_messages'] }}</span>
+                    @endif
+                </a>
+                @if($user->isVip() || $user->isAdmin())
                 <a href="{{ route('my.jobs.index') }}" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">
                     <span>💼</span>
                     <span>我发布的职位</span>
                 </a>
+                @endif
                 <a href="{{ route('notifications.index') }}" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">
                     <span>🔔</span>
                     <span>系统通知</span>
@@ -97,6 +110,35 @@
         
         <!-- 右侧：内容区域 -->
         <div>
+            <!-- 收到的主页留言 -->
+            <div class="card" style="padding: 24px; margin-bottom: 24px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                    <h3 style="font-size: 18px; font-weight: 700; margin: 0;">
+                        💬 收到的主页留言
+                    </h3>
+                    <a href="{{ route('users.show', $user->id) }}#profile-messages" style="font-size: 13px; color: var(--primary-light); text-decoration: none;">在我的主页查看全部 →</a>
+                </div>
+                <p style="color: var(--gray-light); font-size: 13px; margin: -8px 0 16px;">访客在你公开主页上发送的留言，仅自己可见。</p>
+                @if($profileMessagesReceived->count() > 0)
+                    <div style="display: grid; gap: 12px;">
+                        @foreach($profileMessagesReceived as $msg)
+                            <div style="padding: 16px; background: rgba(255,255,255,0.05); border-radius: 12px; border: 1px solid rgba(255,255,255,0.08);">
+                                <div style="display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; flex-wrap: wrap;">
+                                    <a href="{{ route('users.show', $msg->sender_id) }}" style="font-weight: 600; color: var(--primary-light); text-decoration: none;">{{ $msg->sender?->name ?? '用户' }}</a>
+                                    <span style="font-size: 12px; color: var(--gray-light);">{{ $msg->created_at->diffForHumans() }}</span>
+                                </div>
+                                <p style="margin: 0; color: var(--gray-light); font-size: 14px; line-height: 1.6; white-space: pre-wrap;">{{ Str::limit($msg->body, 280) }}</p>
+                            </div>
+                        @endforeach
+                    </div>
+                @else
+                    <div style="text-align: center; padding: 28px; color: var(--gray-light);">
+                        <div style="font-size: 36px; margin-bottom: 10px;">📭</div>
+                        <p style="margin: 0;">暂无主页留言</p>
+                    </div>
+                @endif
+            </div>
+
             <!-- 我的收藏 -->
             <div class="card" style="padding: 24px; margin-bottom: 24px;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">

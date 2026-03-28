@@ -29,7 +29,7 @@
             为保护隐私，主页仅展示汇总数据，不公开评论内容；公开讨论请在对应文章、项目或知识库文档页面查看。
         </p>
 
-        <div style="display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:18px;">
+        <div style="display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:18px;">
             <div style="background:#f8fafc; border-radius:12px; padding:14px; text-align:center;">
                 <div style="color:#0f172a; font-size:20px; font-weight:800;">{{ $stats['comments'] ?? 0 }}</div>
                 <div style="color:#64748b; font-size:13px;">评论数（汇总）</div>
@@ -42,10 +42,14 @@
                 <div style="color:#0f172a; font-size:20px; font-weight:800;">{{ $stats['histories'] ?? 0 }}</div>
                 <div style="color:#64748b; font-size:13px;">浏览数</div>
             </div>
+            <div style="background:#f8fafc; border-radius:12px; padding:14px; text-align:center;">
+                <div style="color:#0f172a; font-size:20px; font-weight:800;">{{ $stats['profile_messages'] ?? 0 }}</div>
+                <div style="color:#64748b; font-size:13px;">主页留言</div>
+            </div>
         </div>
     </div>
 
-    <div style="background:#fff; border-radius:16px; padding:24px; box-shadow:0 6px 24px rgba(0,0,0,.06); margin-bottom:20px;">
+    <div id="profile-messages" style="background:#fff; border-radius:16px; padding:24px; box-shadow:0 6px 24px rgba(0,0,0,.06); margin-bottom:20px;">
         <h2 style="margin-top:0; color:#1e293b;">留言</h2>
         @auth
             @if((int) auth()->id() === (int) $user->id)
@@ -58,14 +62,16 @@
                                     <strong style="color:#1e293b;">{{ $msg->sender?->name ?? '用户' }}</strong>
                                     <span style="color:#94a3b8; font-size:12px; margin-left:8px;">{{ $msg->created_at->diffForHumans() }}</span>
                                 </div>
-                                @if(auth()->user()->isVip() && !$urgentSentToday)
+                                @if(!$user->isAdmin() && auth()->user()->isVip() && !$urgentSentToday)
                                     <form action="{{ route('users.messages.urgent', [$user, $msg]) }}" method="post" style="display:flex; flex-direction:column; align-items:flex-end; gap:8px; min-width:200px;">
                                         @csrf
                                         <textarea name="urgent_note" rows="2" placeholder="紧急附言（可选，留空用默认文案）" style="width:100%; max-width:280px; padding:8px 10px; border:1px solid #e2e8f0; border-radius:8px; font-size:13px; resize:vertical;"></textarea>
                                         <button type="submit" style="padding:8px 14px; background:linear-gradient(135deg,#f59e0b,#d97706); color:#fff; border:none; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;">📣 紧急通知（邮件）</button>
                                     </form>
-                                @elseif(auth()->user()->isVip() && $urgentSentToday)
+                                @elseif(!$user->isAdmin() && auth()->user()->isVip() && $urgentSentToday)
                                     <span style="font-size:12px; color:#94a3b8;">今日紧急通知已使用</span>
+                                @elseif($user->isAdmin())
+                                    <span style="font-size:12px; color:#64748b;">管理员主页：留言后已向对方邮箱自动发送通知</span>
                                 @endif
                             </div>
                             <p style="margin:10px 0 0; color:#334155; font-size:14px; white-space:pre-wrap;">{{ $msg->body }}</p>
@@ -78,9 +84,24 @@
                     @endif
                 @endif
             @else
+                <h3 style="margin:0 0 12px; font-size:16px; font-weight:700; color:#1e293b;">我发给 TA 的留言</h3>
+                <p style="color:#64748b; font-size:13px; margin:0 0 16px; line-height:1.5;">仅展示你在此主页向对方发送的留言，对方可在自己的主页查看。</p>
+                @forelse($profileMessagesSent as $msg)
+                    <div style="padding:14px 16px; margin-bottom:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px;">
+                        <div style="color:#94a3b8; font-size:12px; margin-bottom:8px;">{{ $msg->created_at->format('Y-m-d H:i') }} · {{ $msg->created_at->diffForHumans() }}</div>
+                        <p style="margin:0; color:#334155; font-size:14px; white-space:pre-wrap; line-height:1.6;">{{ $msg->body }}</p>
+                    </div>
+                @empty
+                    <p style="color:#64748b; font-size:14px; margin:0 0 20px;">暂无留言记录，发送后会在上方显示。</p>
+                @endforelse
+                @if($profileMessagesSent->hasPages())
+                    <div style="margin:16px 0 20px;">{{ $profileMessagesSent->links() }}</div>
+                @endif
+
+                <h3 style="margin:0 0 12px; font-size:16px; font-weight:700; color:#1e293b;">{{ $profileMessagesSent->isNotEmpty() ? '发送新留言' : '给 TA 留言' }}</h3>
                 <form action="{{ route('users.messages.store', $user) }}" method="post">
                     @csrf
-                    <label for="profile-msg-body" style="display:block; color:#64748b; font-size:13px; margin-bottom:8px;">给 TA 留言（登录用户）</label>
+                    <label for="profile-msg-body" style="display:block; color:#64748b; font-size:13px; margin-bottom:8px;">登录用户可留言</label>
                     <textarea id="profile-msg-body" name="body" rows="4" required maxlength="2000" placeholder="写下你想说的话…" style="width:100%; padding:12px 14px; border:1px solid #e2e8f0; border-radius:12px; font-size:14px; resize:vertical;">{{ old('body') }}</textarea>
                     <button type="submit" style="margin-top:12px; padding:10px 20px; background:#6366f1; color:#fff; border:none; border-radius:10px; font-weight:600; cursor:pointer;">发送留言</button>
                 </form>

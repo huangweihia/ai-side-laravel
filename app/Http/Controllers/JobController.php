@@ -140,6 +140,11 @@ class JobController extends Controller
      */
     public function myJobs(Request $request)
     {
+        $user = auth()->user();
+        if (! $user->isVip() && ! $user->isAdmin()) {
+            abort(403, '仅 VIP 会员可使用「我发布的职位」');
+        }
+
         $query = Job::query()
             ->where('user_id', auth()->id())
             ->latest('published_at');
@@ -159,6 +164,11 @@ class JobController extends Controller
      */
     public function myJobApplications(Request $request, Job $job)
     {
+        $user = auth()->user();
+        if (! $user->isVip() && ! $user->isAdmin()) {
+            abort(403, '仅 VIP 会员可使用「我发布的职位」');
+        }
+
         if ((int) $job->user_id !== (int) auth()->id()) {
             abort(403, '无权查看该职位的申请');
         }

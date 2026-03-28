@@ -21,7 +21,7 @@ class AiContentController extends Controller
     {
         // 验证 Token（简单认证）
         $token = $request->header('X-API-Token');
-        $expectedToken = env('OPENCLAW_WEBHOOK_TOKEN', 'ai-fetcher-secret-token');
+        $expectedToken = env('OPENCLAW_WEBHOOK_TOKEN', 'openclaw-ai-fetcher-2026');
         
         if ($token !== $expectedToken) {
             return response()->json(['success' => false, 'message' => '认证失败'], 401);
@@ -138,20 +138,18 @@ class AiContentController extends Controller
         $saved = 0;
         foreach ($items as $item) {
             try {
+                // 根据 DATABASE_SCHEMA.md，job_listings 表字段是 company 不是 company_name
                 JobListing::firstOrCreate(
                     [
                         'title' => $item['title'] ?? '未知职位',
-                        'company_name' => $item['company_name'] ?? '未知公司'
+                        'company' => $item['company_name'] ?? $item['company'] ?? '未知公司'
                     ],
                     [
                         'salary' => $item['salary'] ?? '面议',
-                        'city' => $item['city'] ?? '不限',
-                        'experience' => $item['experience'] ?? '不限',
-                        'education' => $item['education'] ?? '不限',
+                        'location' => $item['city'] ?? '不限',
                         'description' => $item['description'] ?? '',
-                        'source_url' => $item['url'] ?? null,
-                        'tags' => $item['tags'] ?? [],
-                        'is_full_time' => true,
+                        'url' => $item['url'] ?? null,
+                        'source' => $item['source'] ?? 'openclaw_ai',
                     ]
                 );
                 $saved++;

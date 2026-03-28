@@ -11,14 +11,11 @@ use Illuminate\Support\Facades\Http;
 
 class AiAutoFetcher extends Page
 {
-    /** 暂时隐藏采集入口 */
-    protected static bool $shouldRegisterNavigation = false;
-
     protected static ?string $navigationIcon = 'heroicon-o-rocket-launch';
     protected static string $view = 'filament.pages.ai-auto-fetcher';
     protected static ?string $navigationLabel = 'AI 自动采集';
-    protected static ?int $navigationSort = 5;
-    protected static ?string $navigationGroup = '内容管理';
+    protected static ?int $navigationSort = 10;
+    protected static ?string $navigationGroup = 'AI 采集';
 
     public string $selectedType = 'articles';
     public string $topic = '';
@@ -93,7 +90,7 @@ class AiAutoFetcher extends Page
         // 这里调用 OpenClaw API 或者直接生成
         // 为了演示，我们直接调用之前创建的 Webhook API
         
-        $webhookUrl = url('/api/openclaw/webhook');
+        $webhookUrl = $this->getOpenClawWebhookUrl();
         $token = env('OPENCLAW_WEBHOOK_TOKEN', 'openclaw-ai-fetcher-2026');
         
         // 构造请求数据
@@ -108,11 +105,28 @@ class AiAutoFetcher extends Page
         if ($response->successful()) {
             return $response->json();
         }
-        
+
+        $body = $response->json();
+        $msg = is_array($body) && isset($body['message'])
+            ? (string) $body['message']
+            : $response->body();
+
         return [
             'success' => false,
-            'message' => 'API 调用失败：' . $response->status(),
+            'message' => 'API 调用失败（HTTP ' . $response->status() . '）：' . $msg,
         ];
+    }
+
+    /**
+     * 后台自调 Webhook：用 internal_url（容器内通常为 80），勿用 APP_URL 的宿主机端口。
+     */
+    protected function getOpenClawWebhookUrl(): string
+    {
+        $base = rtrim((string) config('app.internal_url', ''), '/');
+
+        return $base !== ''
+            ? $base . '/api/openclaw/webhook'
+            : url('/api/openclaw/webhook');
     }
 
     protected function buildRequestData(string $type, string $topic, int $limit): array

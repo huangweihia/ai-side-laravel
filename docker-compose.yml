@@ -55,6 +55,32 @@ services:
     networks:
       - ai_side_network
 
+  # Laravel 调度器：每分钟执行 `schedule:run`，触发 Kernel 中定时任务（含按后台「邮件发送时间」发送订阅邮件）
+  scheduler:
+    build:
+      context: ./docker/php
+      dockerfile: Dockerfile
+    container_name: ai_side_scheduler
+    working_dir: /var/www/html
+    volumes:
+      - .:/var/www/html:delegated
+      - /var/www/html/vendor
+    command: >
+      sh -c "while true; do php artisan schedule:run --no-ansi; sleep 60; done"
+    environment:
+      APP_URL: http://localhost:8081
+      APP_DEBUG: "true"
+      DB_HOST: mysql
+      DB_DATABASE: ai_side
+      DB_USERNAME: ai_side
+      DB_PASSWORD: aiside123456
+      REDIS_HOST: redis
+    depends_on:
+      - mysql
+    restart: unless-stopped
+    networks:
+      - ai_side_network
+
 volumes:
   mysql_data:
 

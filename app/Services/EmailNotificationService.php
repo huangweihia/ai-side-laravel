@@ -11,12 +11,13 @@ use Illuminate\Support\Facades\Mail;
 class EmailNotificationService
 {
     /**
-     * 模板邮件（欢迎、VIP 提醒、紧急通知等）仅在用户开启「系统通知」订阅时发送。
+     * 模板邮件（欢迎、VIP 提醒、紧急通知等）默认仅在用户开启「系统通知」订阅时发送。
+     * $ignoreSubscriptionPreference 为 true 时跳过校验（如管理员主页留言自动通知等重要场景）。
      * 日报/周报由独立命令按 subscribed_to_daily / subscribed_to_weekly 筛选，不走本方法。
      */
-    public function sendFromTemplateByKey(string $templateKey, User $user, array $extraData = [], ?string $type = null): bool
+    public function sendFromTemplateByKey(string $templateKey, User $user, array $extraData = [], ?string $type = null, bool $ignoreSubscriptionPreference = false): bool
     {
-        if (! EmailSubscription::wantsSystemNotifications($user)) {
+        if (! $ignoreSubscriptionPreference && ! EmailSubscription::wantsSystemNotifications($user)) {
             return false;
         }
 

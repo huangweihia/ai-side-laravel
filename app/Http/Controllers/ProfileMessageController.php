@@ -12,7 +12,7 @@ use Illuminate\Support\Str;
 
 class ProfileMessageController extends Controller
 {
-    public function store(Request $request, User $user)
+    public function store(Request $request, User $user, EmailNotificationService $emailNotificationService)
     {
         $visitor = auth()->user();
         if ((int) $visitor->id === (int) $user->id) {
@@ -23,11 +23,57 @@ class ProfileMessageController extends Controller
             'body' => 'required|string|max:2000',
         ]);
 
-        ProfileMessage::create([
+        $message = ProfileMessage::create([
             'recipient_id' => $user->id,
             'sender_id' => $visitor->id,
             'body' => $request->input('body'),
         ]);
+
+        // 主页主人为管理员：自动向留言者发送邮件（使用后台模板 profile_message_admin_auto，不依赖对方「系统通知」开关）
+        if ($user->isAdmin()) {
+            $sent = $emailNotificationService->sendFromTemplateByKey(
+                'profile_message_admin_auto',
+                $visitor,
+                [
+                    'recipient_name' => $visitor->name ?? '用户',
+                    'profile_owner_name' => $user->name ?? '管理员',
+                    'message_excerpt' => Str::limit(strip_tags($message->body), 200),
+                    'extra_note' => '你也可以登录网站在「个人中心」查看与对方主页的互动。',
+                    'profile_url' => route('users.show', $user->id),
+                ],
+                'profile_message_admin_auto',
+                true
+            );
+
+            if ($sent) {
+                return back()->with('success', '留言已发送，系统已向你的邮箱发送通知（管理员主页自动通知）。');
+            }
+
+            return back()->with('success', '留言已发送（邮件未发出：请检查邮件配置或联系站长）。');
+        }
+
+        // 管理员在普通用户主页留言：通知主页主人（收件人），不依赖对方「系统通知」开关
+        if ($visitor->isAdmin()) {
+            $sent = $emailNotificationService->sendFromTemplateByKey(
+                'profile_message_to_owner_from_admin',
+                $user,
+                [
+                    'recipient_name' => $user->name ?? '用户',
+                    'admin_name' => $visitor->name ?? '管理员',
+                    'message_excerpt' => Str::limit(strip_tags($message->body), 200),
+                    'extra_note' => '请登录网站在「个人中心」或你的公开主页查看完整留言。',
+                    'profile_url' => route('users.show', $user->id),
+                ],
+                'profile_message_to_owner_from_admin',
+                true
+            );
+
+            if ($sent) {
+                return back()->with('success', '留言已发送，系统已向对方邮箱发送通知。');
+            }
+
+            return back()->with('success', '留言已发送（对方邮件未发出：请检查邮件配置或联系站长）。');
+        }
 
         return back()->with('success', '留言已发送');
     }
@@ -37,7 +83,7 @@ class ProfileMessageController extends Controller
         $owner = auth()->user();
         abort_unless((int) $owner->id === (int) $user->id, 403);
         abort_unless((int) $message->recipient_id === (int) $user->id, 404);
-        abort_unless($owner->isVip(), 403);
+        abort_unless($owner->isVip() || $owner->isAdmin(), 403);
 
         $request->validate([
             'urgent_note' => 'nullable|string|max:500',

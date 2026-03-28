@@ -5,7 +5,6 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ArticleResource\Pages;
 use App\Jobs\ProcessAsyncTaskJob;
 use App\Models\Article;
-use App\Models\Comment;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -52,8 +51,8 @@ class ArticleResource extends Resource
                         ->label('分类')
                         ->relationship('category', 'name')
                         ->searchable(),
-                    Forms\Components\Toggle::make('is_premium')
-                        ->label('付费内容'),
+                    Forms\Components\Toggle::make('is_vip')
+                        ->label('是否 VIP'),
                     Forms\Components\Toggle::make('is_published')
                         ->label('已发布'),
                 ])->columns(2),
@@ -78,8 +77,8 @@ class ArticleResource extends Resource
                     ->counts('comments')
                     ->badge()
                     ->color('info'),
-                Tables\Columns\IconColumn::make('is_premium')
-                    ->label('付费')
+                Tables\Columns\IconColumn::make('is_vip')
+                    ->label('是否VIP')
                     ->boolean(),
                 Tables\Columns\IconColumn::make('is_published')
                     ->label('发布')

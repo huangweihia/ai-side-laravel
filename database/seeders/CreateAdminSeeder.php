@@ -6,6 +6,12 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
+/**
+ * 超级管理员（QQ 邮箱）创建/更新 + 积分初始化。
+ * 原 FixAdminPasswordSeeder / ResetAdminPasswordSeeder 已合并到此：密码与角色以本类为准。
+ *
+ * 使用：php artisan db:seed --class=CreateAdminSeeder
+ */
 class CreateAdminSeeder extends Seeder
 {
     /**

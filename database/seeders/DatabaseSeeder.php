@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             TestDataSeeder::class,
             EmailConfigSeeder::class,
             EmailTemplatePresetSeeder::class,
+            DemoEmailSubscriptionsSeeder::class,
         ]);
     }
 }

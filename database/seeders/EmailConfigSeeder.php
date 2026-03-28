@@ -31,10 +31,12 @@ class EmailConfigSeeder extends Seeder
             );
         }
 
-        // 初始化邮件配置
+        // 初始化邮件配置（与演示订阅邮箱对齐，便于本地联调）
         $emailSettings = [
-            ['key' => 'email_recipients', 'value' => json_encode(['2801359160@qq.com']), 'description' => '邮件接收人列表'],
+            ['key' => 'email_recipients', 'value' => json_encode(['2801359160@qq.com', 'vip1@example.com', 'vip2@example.com']), 'description' => '邮件接收人列表'],
             ['key' => 'email_send_time', 'value' => '10:00', 'description' => '邮件发送时间'],
+            ['key' => 'email_daily_enabled', 'value' => '1', 'description' => '是否启用日报'],
+            ['key' => 'email_weekly_enabled', 'value' => '1', 'description' => '是否启用周报'],
         ];
 
         foreach ($emailSettings as $setting) {
@@ -48,6 +50,6 @@ class EmailConfigSeeder extends Seeder
 
         $this->command->info('✅ 邮件配置初始化完成！');
         $this->command->info('   - SMTP 配置：7 项');
-        $this->command->info('   - 邮件设置：2 项');
+        $this->command->info('   - 邮件设置：'.count($emailSettings).' 项');
     }
 }

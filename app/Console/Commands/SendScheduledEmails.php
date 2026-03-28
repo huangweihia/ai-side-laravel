@@ -39,6 +39,7 @@ class SendScheduledEmails extends Command
         $onlyEmail = $this->option('email');
 
         // 获取待发送的邮件订阅用户（未退订 + 周一发周报否则发日报）
+        // 与后台「订阅与会员 → 邮件订阅」同源：模型 EmailSubscription，表 email_subscriptions（非 subscriptions 付费表）
         $subscriptionsQuery = EmailSubscription::with(['user'])->whereNull('unsubscribed_at');
 
         if ($onlyEmail) {

@@ -3,11 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ArticleResource\Pages;
-use App\Jobs\ProcessAsyncTaskJob;
 use App\Models\Article;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
@@ -112,34 +110,7 @@ class ArticleResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->headerActions([
-                Action::make('fetchArticles')
-                    ->label('📥 采集文章')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('采集文章')
-                    ->modalDescription('将在后台异步采集文章，完成后会通知你。')
-                    ->modalSubmitActionLabel('开始采集')
-                    ->action(function () {
-                        try {
-                            $task = \App\Models\AsyncTask::createTask('文章采集', 'fetch_articles');
-                            ProcessAsyncTaskJob::dispatch($task);
-
-                            Notification::make()
-                                ->title('✅ 采集任务已启动')
-                                ->body('文章采集已在后台执行，可在任务管理查看进度')
-                                ->success()
-                                ->send();
-                        } catch (\Exception $e) {
-                            Notification::make()
-                                ->title('❌ 采集失败')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
-            ]);
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getPages(): array

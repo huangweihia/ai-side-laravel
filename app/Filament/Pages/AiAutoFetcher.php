@@ -11,6 +11,9 @@ use Illuminate\Support\Facades\Http;
 
 class AiAutoFetcher extends Page
 {
+    /** 暂时隐藏采集入口 */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $navigationIcon = 'heroicon-o-rocket-launch';
     protected static string $view = 'filament.pages.ai-auto-fetcher';
     protected static ?string $navigationLabel = 'AI 自动采集';

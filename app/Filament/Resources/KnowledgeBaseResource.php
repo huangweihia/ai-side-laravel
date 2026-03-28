@@ -67,7 +67,9 @@ class KnowledgeBaseResource extends Resource
                 Tables\Columns\TextColumn::make('title')
                     ->label('标题')
                     ->searchable()
-                    ->limit(40),
+                    ->limit(40)
+                    ->url(fn (KnowledgeBase $record): string => static::getUrl('edit', ['record' => $record]))
+                    ->color('primary'),
                 Tables\Columns\TextColumn::make('category')
                     ->label('分类')
                     ->badge()
@@ -82,7 +84,12 @@ class KnowledgeBaseResource extends Resource
                     ->label('评论数')
                     ->counts('comments')
                     ->badge()
-                    ->color('info'),
+                    ->color('info')
+                    ->url(fn (KnowledgeBase $record): string => CommentResource::getUrl('index', [
+                        'tableFilters' => [
+                            'knowledge_base_comments' => ['knowledge_base_id' => (string) $record->id],
+                        ],
+                    ])),
                 Tables\Columns\IconColumn::make('is_public')
                     ->label('公开')
                     ->boolean(),
@@ -92,8 +99,11 @@ class KnowledgeBaseResource extends Resource
                 Tables\Columns\TextColumn::make('documents_count')
                     ->label('文档数')
                     ->counts('documents')
-                    ->url(fn ($record) => route('filament.admin.resources.knowledge-bases.edit', ['record' => $record, 'tab' => '-documents-tab']))
-                    ->openUrlInNewTab(false)
+                    ->url(fn (KnowledgeBase $record): string => KnowledgeDocumentResource::getUrl('index', [
+                        'tableFilters' => [
+                            'knowledge_base_id' => ['value' => (string) $record->id],
+                        ],
+                    ]))
                     ->color('primary'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('创建时间')
@@ -119,8 +129,7 @@ class KnowledgeBaseResource extends Resource
                     ->color('info')
                     ->url(fn (KnowledgeBase $record): string => CommentResource::getUrl('index', [
                         'tableFilters' => [
-                            'commentable_type' => ['value' => KnowledgeBase::class],
-                            'commentable_id' => ['value' => (string) $record->id],
+                            'knowledge_base_comments' => ['knowledge_base_id' => (string) $record->id],
                         ],
                     ])),
                 Tables\Actions\DeleteAction::make(),
@@ -177,7 +186,8 @@ class KnowledgeBaseResource extends Resource
                                 ->send();
                         }),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getRelations(): array

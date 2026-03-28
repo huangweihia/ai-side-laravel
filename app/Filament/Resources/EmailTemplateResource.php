@@ -94,11 +94,16 @@ class EmailTemplateResource extends Resource
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('已启用')
                     ->boolean(),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('创建时间')
+                    ->dateTime('Y-m-d H:i')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('updated_at')
                     ->label('更新时间')
                     ->dateTime('Y-m-d H:i')
                     ->sortable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->filters([
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('启用状态'),

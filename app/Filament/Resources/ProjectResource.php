@@ -3,11 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProjectResource\Pages;
-use App\Jobs\FetchContentJob;
 use App\Models\Project;
 use Filament\Forms;
 use Filament\Forms\Form;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
@@ -132,33 +130,7 @@ class ProjectResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->headerActions([
-                Action::make('fetchGitHub')
-                    ->label('🐙 采集 GitHub 项目')
-                    ->icon('heroicon-o-arrow-down-tray')
-                    ->color('success')
-                    ->requiresConfirmation()
-                    ->modalHeading('采集 GitHub 项目')
-                    ->modalDescription('将在后台异步采集 GitHub 项目，完成后会通知你。')
-                    ->modalSubmitActionLabel('开始采集')
-                    ->action(function () {
-                        try {
-                            FetchContentJob::dispatch('projects', auth()->id());
-
-                            Notification::make()
-                                ->title('✅ 采集任务已启动')
-                                ->body('GitHub 项目采集已在后台执行，完成后会通知你')
-                                ->success()
-                                ->send();
-                        } catch (\Exception $e) {
-                            Notification::make()
-                                ->title('❌ 采集失败')
-                                ->body($e->getMessage())
-                                ->danger()
-                                ->send();
-                        }
-                    }),
-            ]);
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getPages(): array

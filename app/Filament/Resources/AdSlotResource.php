@@ -98,8 +98,10 @@ class AdSlotResource extends Resource
                 Tables\Columns\TextColumn::make('id'),
                 Tables\Columns\IconColumn::make('is_enabled')->label('启用')->boolean(),
                 Tables\Columns\TextColumn::make('display_mode')->badge(),
-                Tables\Columns\TextColumn::make('updated_at')->dateTime(),
+                Tables\Columns\TextColumn::make('created_at')->label('创建时间')->dateTime()->sortable(),
+                Tables\Columns\TextColumn::make('updated_at')->label('更新时间')->dateTime()->sortable(),
             ])
+            ->defaultSort('created_at', 'desc')
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])

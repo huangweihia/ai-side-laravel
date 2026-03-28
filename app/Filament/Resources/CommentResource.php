@@ -4,8 +4,11 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\CommentResource\Pages;
 use App\Models\Comment;
+use App\Models\KnowledgeBase;
+use App\Models\KnowledgeDocument;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Tables\Filters\Filter;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Actions\Action;
@@ -111,6 +114,53 @@ class CommentResource extends Resource
                         'App\\Models\\KnowledgeDocument' => '知识库文档',
                         'App\\Models\\JobListing' => '采集职位',
                     ]),
+                Filter::make('commentable_id')
+                    ->label('对象 ID')
+                    ->form([
+                        Forms\Components\TextInput::make('value')
+                            ->numeric()
+                            ->label('对象 ID'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $v = $data['value'] ?? null;
+                        if ($v === null || $v === '') {
+                            return $query;
+                        }
+
+                        return $query->where('commentable_id', (int) $v);
+                    }),
+                Filter::make('knowledge_base_comments')
+                    ->label('指定知识库（含其文档）')
+                    ->form([
+                        Forms\Components\TextInput::make('knowledge_base_id')
+                            ->numeric()
+                            ->label('知识库 ID'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        $kbId = $data['knowledge_base_id'] ?? null;
+                        if ($kbId === null || $kbId === '') {
+                            return $query;
+                        }
+                        $kbId = (int) $kbId;
+
+                        return $query->where(function (Builder $q) use ($kbId): void {
+                            $q->where(function (Builder $q2) use ($kbId): void {
+                                $q2->where('commentable_type', KnowledgeBase::class)
+                                    ->where('commentable_id', $kbId);
+                            })->orWhere(function (Builder $q2) use ($kbId): void {
+                                $docIds = KnowledgeDocument::query()
+                                    ->where('knowledge_base_id', $kbId)
+                                    ->pluck('id');
+                                if ($docIds->isEmpty()) {
+                                    $q2->whereRaw('1 = 0');
+
+                                    return;
+                                }
+                                $q2->where('commentable_type', KnowledgeDocument::class)
+                                    ->whereIn('commentable_id', $docIds);
+                            });
+                        });
+                    }),
                 Tables\Filters\TernaryFilter::make('is_hidden')
                     ->label('隐藏状态')
                     ->trueLabel('已隐藏')
@@ -170,7 +220,7 @@ class CommentResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->defaultSort('id', 'desc');
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getPages(): array

@@ -10,6 +10,9 @@ use Filament\Notifications\Notification;
 
 class TaskManager extends Page
 {
+    /** 暂时隐藏：侧边栏不展示，仍可直链访问 /admin/task-manager */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
     protected static string $view = 'filament.pages.task-manager';
     protected static ?string $navigationLabel = '任务管理';

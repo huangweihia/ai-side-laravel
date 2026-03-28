@@ -122,40 +122,6 @@
             </div>
         </x-filament::section>
 
-        {{-- 快速操作 --}}
-        <x-filament::section>
-            <x-slot name="heading">
-                ⚡ 快速操作
-            </x-slot>
-            <x-slot name="description">
-                手动触发采集任务
-            </x-slot>
-            
-            <div style="display: flex; gap: 16px; flex-wrap: wrap;">
-                <x-filament::button wire:click="fetchArticles" wire:loading.attr="disabled" wire:target="fetchArticles">
-                    <span style="margin-right: 6px;">📝</span>
-                    采集文章
-                </x-filament::button>
-                
-                <x-filament::button wire:click="fetchProjects" wire:loading.attr="disabled" wire:target="fetchProjects" color="success">
-                    <span style="margin-right: 6px;">🐙</span>
-                    采集项目
-                </x-filament::button>
-                
-                <x-filament::button disabled color="gray" tooltip="暂未实现">
-                    <span style="margin-right: 6px;">💼</span>
-                    采集职位
-                </x-filament::button>
-                
-                <x-filament::button disabled color="gray" tooltip="暂未实现">
-                    <span style="margin-right: 6px;">📚</span>
-                    采集知识库
-                </x-filament::button>
-            </div>
-            
-            <div style="margin-top: 16px; padding: 12px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; color: #10b981; font-size: 13px;">
-                ✅ 同步执行模式：点击后按钮显示加载状态，任务完成后显示通知
-            </div>
-        </x-filament::section>
+        {{-- 快速操作（采集）：暂时隐藏，需要时在 TaskManager 与视图中恢复 --}}
     </div>
 </x-filament-panels::page>

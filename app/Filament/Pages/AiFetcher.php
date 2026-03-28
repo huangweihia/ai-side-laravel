@@ -11,6 +11,9 @@ use Filament\Forms\Components\TextInput;
 
 class AiFetcher extends Page
 {
+    /** 暂时隐藏采集入口（与 AiAutoFetcher 二选一时可保留其一） */
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $navigationIcon = 'heroicon-o-rocket-launch';
     protected static string $view = 'filament.pages.ai-fetcher';
     protected static ?string $navigationLabel = 'AI 自动采集';

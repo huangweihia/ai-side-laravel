@@ -183,7 +183,8 @@ class ContentSubmissionResource extends Resource
                         }
                     }),
                 Tables\Actions\EditAction::make(),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc');
     }
 
     public static function getPages(): array

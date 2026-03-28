@@ -4,8 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriptionResource\Pages;
 use App\Models\EmailSubscription;
+use App\Services\SubscriptionDigestMailer;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -120,6 +122,41 @@ class SubscriptionResource extends Resource
                     ->query(fn (Builder $q): Builder => $q->whereNull('unsubscribed_at')),
             ])
             ->actions([
+                Tables\Actions\Action::make('send_digest_now')
+                    ->label('立即发送')
+                    ->icon('heroicon-o-paper-airplane')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->modalHeading('发送订阅邮件')
+                    ->modalDescription('向该邮箱发送一封与「定时任务」相同规则的邮件（非周一为日报；须未退订且至少开启日报或周报之一）。')
+                    ->action(function (EmailSubscription $record): void {
+                        $mailer = app(SubscriptionDigestMailer::class);
+                        $result = $mailer->runForSingleEmail($record->email);
+                        $body = implode("\n", $result['lines']);
+                        if ($result['failed'] > 0 && $result['sent'] === 0) {
+                            Notification::make()
+                                ->title('发送失败')
+                                ->body($body)
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+                        if ($result['sent'] > 0) {
+                            Notification::make()
+                                ->title('已发送')
+                                ->body($body)
+                                ->success()
+                                ->send();
+
+                            return;
+                        }
+                        Notification::make()
+                            ->title('未发送')
+                            ->body($body)
+                            ->warning()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\Action::make('unsubscribe_link')
                     ->label('退订链接')

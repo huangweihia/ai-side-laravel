@@ -17,7 +17,7 @@ class FavoriteResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-star';
     protected static ?string $navigationLabel = '收藏管理';
     protected static ?string $modelLabel = '收藏';
-    protected static ?int $navigationSort = 7;
+    protected static ?int $navigationSort = 9;
 
     public static function getNavigationBadge(): ?string
     {

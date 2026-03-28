@@ -32,6 +32,9 @@
                             <span>💻 {{ $project->language }}</span>
                         @endif
                         <span>📅 {{ $project->created_at?->diffForHumans() ?? '近期' }}</span>
+                        @if($project->is_vip)
+                            <span style="padding: 4px 12px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; border-radius: 20px; font-size: 12px; font-weight: 700;">👑 VIP</span>
+                        @endif
                     </div>
                 </div>
                 
@@ -59,16 +62,28 @@
                 </button>
             </div>
 
-            {{-- 项目描述 --}}
+            {{-- 项目描述（未授权仅展示摘要，不暴露完整介绍） --}}
             <div style="background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
                 <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0 0 16px;">
                     📋 项目介绍
                 </h2>
-                <p style="color: #64748b; font-size: 16px; line-height: 1.8; margin: 0;">
-                    {{ $project->description ?? '暂无描述' }}
-                </p>
+                @if($canViewFullProject)
+                    <p style="color: #64748b; font-size: 16px; line-height: 1.8; margin: 0;">
+                        {{ $project->description ?? '暂无描述' }}
+                    </p>
+                @else
+                    <p style="color: #64748b; font-size: 16px; line-height: 1.8; margin: 0 0 16px;">
+                        {{ \Illuminate\Support\Str::limit(strip_tags($project->description ?? '本项目为 VIP 专属，开通后可查看完整介绍与资源。'), 220) }}
+                    </p>
+                    <div style="padding: 20px; border-radius: 14px; border: 2px solid rgba(251, 191, 36, 0.45); background: linear-gradient(135deg, rgba(30, 41, 59, 0.04) 0%, rgba(15, 23, 42, 0.03) 100%); text-align: center;">
+                        <div style="font-size: 36px; margin-bottom: 8px;">👑</div>
+                        <p style="color: #475569; font-size: 15px; margin: 0 0 14px;">变现分析、技术栈、教程资源与仓库链接仅对 VIP 开放。</p>
+                        <a href="{{ route('vip', ['redirect' => request()->fullUrl()]) }}" style="padding: 12px 28px; border-radius: 12px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #fff; font-weight: 700; font-size: 15px; text-decoration: none; display: inline-block;">开通 VIP 解锁</a>
+                    </div>
+                @endif
             </div>
 
+            @if($canViewFullProject)
             {{-- 变现分析 --}}
             @if($project->difficulty || $project->income_range || $project->time_commitment || $project->monetization_paths)
             <div style="background: white; border-radius: 16px; padding: 24px; margin-bottom: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
@@ -211,6 +226,7 @@
                     访问 GitHub 项目
                 </a>
             </div>
+            @endif
             @endif
 
             {{-- 评论区 --}}

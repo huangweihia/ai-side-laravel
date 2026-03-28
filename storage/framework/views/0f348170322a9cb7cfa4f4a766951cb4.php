@@ -63,7 +63,88 @@
                 <!-- 文章卡片列表 -->
                 <div style="display: grid; gap: 24px;">
                     <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $articles; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $article): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
-                        <a href="<?php echo e(route('articles.show', $article->id)); ?>" class="card" style="display: grid; grid-template-columns: 240px 1fr; gap: 24px; padding: 0; overflow: hidden; text-decoration: none; transition: all 0.3s ease;" onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 40px rgba(99,102,241,0.2)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                        <?php
+                            $vipLocked = $article->is_vip && (!auth()->check() || (!auth()->user()->isVip() && !auth()->user()->isAdmin()));
+                        ?>
+                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($vipLocked): ?>
+                        <div class="card article-card"
+                           data-article-id="<?php echo e($article->id); ?>"
+                           data-article-url="<?php echo e(route('articles.show', $article->id)); ?>"
+                           data-is-vip="1"
+                           data-vip-locked="1"
+                           style="display: grid; grid-template-columns: 240px 1fr; gap: 24px; padding: 0; overflow: hidden; transition: all 0.3s ease;"
+                           onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 40px rgba(99,102,241,0.2)'"
+                           onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                            <a href="<?php echo e(route('articles.show', $article->id)); ?>"
+                               style="height: 160px; background: linear-gradient(135deg, <?php echo e(['6366f1', '8b5cf6', 'ec4899', '10b981'][array_rand([0,1,2,3])]); ?> 0%, <?php echo e(['8b5cf6', 'ec4899', '6366f1', '14b8a6'][array_rand([0,1,2,3])]); ?> 100%); display: flex; align-items: center; justify-content: center; font-size: 64px; text-decoration: none;">
+                                <?php echo e(['📝', '💡', '🤖', '💰', '📰'][array_rand([0,1,2,3,4])]); ?>
+
+                            </a>
+                            <div style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between;">
+                                <a href="<?php echo e(route('articles.show', $article->id)); ?>" style="text-decoration: none; color: inherit;">
+                                    <div>
+                                        <span style="display: inline-block; padding: 4px 12px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 12px;">
+                                            <?php echo e($article->category?->name ?? '未分类'); ?>
+
+                                        </span>
+                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                            <h2 style="font-size: 22px; color: white; margin: 0; line-height: 1.4;">
+                                                <?php echo e($article->title); ?>
+
+                                            </h2>
+                                            <a href="<?php echo e(route('vip', ['redirect' => route('articles.show', $article->id)])); ?>" style="
+                                                padding: 4px 10px;
+                                                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                                                color: white;
+                                                border-radius: 6px;
+                                                font-size: 11px;
+                                                font-weight: 700;
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.5px;
+                                                box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+                                                text-decoration: none;
+                                            ">👑 VIP</a>
+                                        </div>
+                                        <p style="color: var(--gray-light); font-size: 14px; line-height: 1.8; margin: 0 0 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                            <?php echo e($article->summary ?? '暂无摘要'); ?>
+
+                                        </p>
+                                        <div style="display: flex; align-items: center; gap: 20px; font-size: 13px; color: var(--gray);">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span>👤</span> <?php echo e($article->author?->name ?? '匿名'); ?>
+
+                                            </span>
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span>📅</span> <?php echo e($article->published_at?->diffForHumans() ?? '近期'); ?>
+
+                                            </span>
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span>👁️</span> <?php echo e(rand(100, 5000)); ?>
+
+                                            </span>
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span>❤️</span> <?php echo e(rand(10, 500)); ?>
+
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                                <a href="<?php echo e(route('vip', ['redirect' => route('articles.show', $article->id)])); ?>" class="vip-readmore-link" style="display: flex; align-items: center; gap: 8px; color: var(--primary-light); font-weight: 600; font-size: 14px; margin-top: 16px; text-align: left; text-decoration: none;">
+                                    <span>阅读全文</span>
+                                    <span>→</span>
+                                </a>
+                            </div>
+                        </div>
+                        <?php else: ?>
+                        <a href="<?php echo e(route('articles.show', $article->id)); ?>"
+                           class="card article-card"
+                           data-article-id="<?php echo e($article->id); ?>"
+                           data-article-url="<?php echo e(route('articles.show', $article->id)); ?>"
+                           data-is-vip="<?php echo e($article->is_vip ? '1' : '0'); ?>"
+                           data-vip-locked="0"
+                           style="display: grid; grid-template-columns: 240px 1fr; gap: 24px; padding: 0; overflow: hidden; text-decoration: none; transition: all 0.3s ease;"
+                           onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 40px rgba(99,102,241,0.2)'"
+                           onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
                             <!-- 封面图 -->
                             <div style="height: 160px; background: linear-gradient(135deg, <?php echo e(['6366f1', '8b5cf6', 'ec4899', '10b981'][array_rand([0,1,2,3])]); ?> 0%, <?php echo e(['8b5cf6', 'ec4899', '6366f1', '14b8a6'][array_rand([0,1,2,3])]); ?> 100%); display: flex; align-items: center; justify-content: center; font-size: 64px;">
                                 <?php echo e(['📝', '💡', '🤖', '💰', '📰'][array_rand([0,1,2,3,4])]); ?>
@@ -136,6 +217,7 @@
                                 </div>
                             </div>
                         </a>
+                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                         <div class="card" style="padding: 60px; text-align: center;">
                             <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
@@ -152,7 +234,7 @@
 
                     </div>
                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
-            </main>
+            </div>
         </div>
     </div>
 </section>
@@ -182,7 +264,7 @@ document.getElementById('searchInput')?.addEventListener('keypress', function(e)
     .card[style*="grid-template-columns: 240px"] {
         grid-template-columns: 1fr !important;
     }
-    .card[style*="grid-template-columns: 240px"] > div:first-child {
+    .card[style*="grid-template-columns: 240px"] > *:first-child {
         height: 200px !important;
     }
     aside {

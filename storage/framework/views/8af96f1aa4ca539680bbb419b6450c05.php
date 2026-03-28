@@ -586,7 +586,7 @@
                     <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                     
                     <a href="<?php echo e(route('dashboard')); ?>" class="btn btn-sm btn-secondary">个人中心</a>
-                    <button type="button" onclick="toggleSkinPanel(event)" class="btn btn-sm btn-secondary" style="padding: 8px 12px; font-size: 16px; position: relative; z-index: 10000;" title="切换皮肤">🎨</button>
+                    <button type="button" data-skin-toggle class="btn btn-sm btn-secondary" style="padding: 8px 12px; font-size: 16px; position: relative; z-index: 10000;" title="切换皮肤">🎨</button>
                     <form method="POST" action="<?php echo e(route('logout')); ?>" style="display: inline;">
                         <?php echo csrf_field(); ?>
                         <button type="submit" class="btn btn-sm btn-primary">登出</button>
@@ -594,6 +594,7 @@
                 <?php else: ?>
                     <a href="<?php echo e(route('login')); ?>" class="navbar-link">登录</a>
                     <a href="<?php echo e(route('register')); ?>" class="btn btn-sm btn-primary">免费注册</a>
+                    <button type="button" data-skin-toggle class="btn btn-sm btn-secondary" style="padding: 8px 12px; font-size: 16px; position: relative; z-index: 10000;" title="切换皮肤">🎨</button>
                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </div>
         </div>
@@ -664,16 +665,15 @@
     </footer>
 
     <script>
-    // 皮肤切换功能
+    // 皮肤切换功能（注意：打开面板时必须阻止冒泡，否则 document 上的关闭逻辑会在同一次点击里立刻把面板关掉）
     function toggleSkinPanel() {
         const panel = document.getElementById('skin-panel');
         if (!panel) return;
         const isShowing = panel.style.display === 'block';
         panel.style.display = isShowing ? 'none' : 'block';
-        
-        // 防止事件冒泡
+
         if (!isShowing) {
-            setTimeout(() => {
+            setTimeout(function () {
                 panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }, 100);
         }
@@ -690,7 +690,17 @@
         }
     }
 
-    // 页面加载时恢复用户选择的皮肤
+    // 点击页面其他地方关闭皮肤面板（排除调色按钮本身）
+    document.addEventListener('click', function(e) {
+        if (e.target && e.target.closest && e.target.closest('[data-skin-toggle]')) {
+            return;
+        }
+        const panel = document.getElementById('skin-panel');
+        if (panel && panel.style.display === 'block' && !panel.contains(e.target)) {
+            panel.style.display = 'none';
+        }
+    });
+
     document.addEventListener('DOMContentLoaded', function() {
         try {
             const savedSkin = localStorage.getItem('preferred_skin') || '';
@@ -700,13 +710,20 @@
         } catch(e) {
             console.log('Skin restore failed:', e);
         }
-    });
 
-    // 点击页面其他地方关闭皮肤面板
-    document.addEventListener('click', function(e) {
+        document.querySelectorAll('[data-skin-toggle]').forEach(function (btn) {
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                toggleSkinPanel();
+            });
+        });
+
         const panel = document.getElementById('skin-panel');
-        if (panel && panel.style.display === 'block' && !panel.contains(e.target)) {
-            panel.style.display = 'none';
+        if (panel) {
+            panel.addEventListener('click', function(e) {
+                e.stopPropagation();
+            });
         }
     });
 
@@ -715,16 +732,6 @@
         if (e.key === 'Escape') {
             const panel = document.getElementById('skin-panel');
             if (panel) panel.style.display = 'none';
-        }
-    });
-    
-    // 阻止面板内部点击事件冒泡
-    document.addEventListener('DOMContentLoaded', function() {
-        const panel = document.getElementById('skin-panel');
-        if (panel) {
-            panel.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
         }
     });
     </script>

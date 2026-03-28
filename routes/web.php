@@ -11,6 +11,9 @@ use App\Http\Controllers\KnowledgeController;
 use App\Http\Controllers\InteractionController;
 use App\Http\Controllers\FavoriteController;
 use App\Http\Controllers\HistoryController;
+use App\Http\Controllers\ProfileMessageController;
+use App\Http\Controllers\SystemNotificationController;
+use App\Http\Controllers\MyArticleEngagementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -90,6 +93,12 @@ Route::middleware('guest')->group(function () {
 // 登出
 Route::post('logout', [LoginController::class, 'logout'])->name('logout')->middleware('auth');
 
+// 用户主页留言（需登录）
+Route::middleware('auth')->group(function () {
+    Route::post('users/{user}/messages', [ProfileMessageController::class, 'store'])->name('users.messages.store');
+    Route::post('users/{user}/messages/{message}/urgent', [ProfileMessageController::class, 'sendUrgent'])->name('users.messages.urgent');
+});
+
 // 需要登录的路由
 Route::middleware('auth')->group(function () {
     // VIP 投稿
@@ -126,6 +135,12 @@ Route::middleware('auth')->group(function () {
     Route::post('articles/{id}/favorite', [ArticleController::class, 'toggleFavorite'])->name('articles.favorite');
     Route::post('articles/{id}/like', [ArticleController::class, 'toggleLike'])->name('articles.like');
     Route::post('articles/{id}/comments', [ArticleController::class, 'storeComment'])->name('articles.comments.store');
+
+    // 系统通知、投稿文章互动数据
+    Route::get('notifications', [SystemNotificationController::class, 'index'])->name('notifications.index');
+    Route::post('notifications/{notification}/read', [SystemNotificationController::class, 'markRead'])->name('notifications.read');
+    Route::post('notifications/read-all', [SystemNotificationController::class, 'markAllRead'])->name('notifications.read-all');
+    Route::get('my-articles/engagement', [MyArticleEngagementController::class, 'index'])->name('articles.my-engagement');
     
     // 订阅偏好设置
     Route::get('subscriptions/preferences', [SubscriptionController::class, 'preferences'])->name('subscriptions.preferences');

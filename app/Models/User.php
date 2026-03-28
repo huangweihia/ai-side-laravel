@@ -61,11 +61,51 @@ class User extends Authenticatable implements FilamentUser
     }
 
     /**
+     * VIP 订阅仍有效，且到期日在未来 N 天以内（含当天），用于后台「到期提醒」按钮等。
+     */
+    public function isVipExpiryWithinDays(int $days = 3): bool
+    {
+        if (!$this->subscription_ends_at || !$this->subscription_ends_at->isFuture()) {
+            return false;
+        }
+
+        return $this->subscription_ends_at->lte(now()->addDays($days)->endOfDay());
+    }
+
+    /**
+     * 距离 subscription_ends_at 的剩余天数（按日期差，与 Carbon diffInDays 一致）；无有效到期日返回 null。
+     */
+    public function subscriptionDaysRemaining(): ?int
+    {
+        if (!$this->subscription_ends_at || !$this->subscription_ends_at->isFuture()) {
+            return null;
+        }
+
+        return (int) now()->diffInDays($this->subscription_ends_at);
+    }
+
+    /**
      * 作者的文章
      */
     public function articles()
     {
         return $this->hasMany(Article::class, 'author_id');
+    }
+
+    /**
+     * 主页收到的留言
+     */
+    public function receivedProfileMessages()
+    {
+        return $this->hasMany(ProfileMessage::class, 'recipient_id');
+    }
+
+    /**
+     * 系统通知（站内信）
+     */
+    public function systemNotifications()
+    {
+        return $this->hasMany(SystemNotification::class);
     }
 
     /**

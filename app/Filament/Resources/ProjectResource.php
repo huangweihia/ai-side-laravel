@@ -19,7 +19,7 @@ class ProjectResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
     protected static ?string $navigationLabel = '项目管理';
     protected static ?string $modelLabel = '项目';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form
     {
@@ -34,6 +34,9 @@ class ProjectResource extends Resource
                         ->label('项目描述')
                         ->rows(3)
                         ->columnSpanFull(),
+                    Forms\Components\Toggle::make('is_vip')
+                        ->label('VIP 专属')
+                        ->default(false),
                     Forms\Components\Select::make('status')
                         ->label('状态')
                         ->options([
@@ -70,6 +73,10 @@ class ProjectResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('id')->label('ID')->sortable(),
                 Tables\Columns\TextColumn::make('name')->label('项目名称')->searchable(),
+                Tables\Columns\IconColumn::make('is_vip')
+                    ->label('VIP')
+                    ->boolean()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('comments_count')
                     ->label('评论数')
                     ->counts('comments')

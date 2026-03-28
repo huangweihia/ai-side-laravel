@@ -33,10 +33,18 @@
     @if($jobs->count())
         <div style="display: grid; gap: 20px;">
             @foreach($jobs as $job)
-                <a href="{{ route('jobs.show', $job) }}" 
-                   style="background: var(--dark-light); border-radius: 16px; padding: 24px; border: 1px solid rgba(255,255,255,0.08); text-decoration: none; color: inherit; transition: all 0.3s;"
-                   onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 40px rgba(0,0,0,0.3)'; this.style.borderColor='rgba(255,255,255,0.15)'"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='rgba(255,255,255,0.08)'">
+                @php
+                    $jobVipContactLocked = $job->is_contact_vip && !$job->canViewContact(auth()->user());
+                    $jobVipRedirect = route('vip', ['redirect' => route('jobs.show', $job)]);
+                @endphp
+                <div
+                    role="link"
+                    tabindex="0"
+                    onclick="window.location.href='{{ route('jobs.show', $job) }}'"
+                    onkeydown="if(event.key==='Enter'){window.location.href='{{ route('jobs.show', $job) }}'}"
+                    style="cursor: pointer; background: var(--dark-light); border-radius: 16px; padding: 24px; border: 1px solid rgba(255,255,255,0.08); color: inherit; transition: all 0.3s;"
+                    onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 10px 40px rgba(0,0,0,0.3)'; this.style.borderColor='rgba(255,255,255,0.15)'"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'; this.style.borderColor='rgba(255,255,255,0.08)'">
                     
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 280px;">
@@ -70,9 +78,15 @@
                                 </span>
                                 
                                 @if($job->is_contact_vip)
-                                    <span style="padding: 6px 14px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2)); border-radius: 20px; font-size: 13px; color: #fbbf24; font-weight: 600;">
-                                        ⭐ VIP 可见联系方式
-                                    </span>
+                                    @if($jobVipContactLocked)
+                                        <a href="{{ $jobVipRedirect }}" onclick="event.stopPropagation();" style="padding: 6px 14px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2)); border-radius: 20px; font-size: 13px; color: #fbbf24; font-weight: 600; text-decoration: none;">
+                                            ⭐ VIP 可见联系方式
+                                        </a>
+                                    @else
+                                        <span style="padding: 6px 14px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(245, 158, 11, 0.2)); border-radius: 20px; font-size: 13px; color: #fbbf24; font-weight: 600;">
+                                            ⭐ VIP 可见联系方式
+                                        </span>
+                                    @endif
                                 @endif
                             </div>
                         </div>
@@ -88,7 +102,7 @@
                             </button>
                         </div>
                     </div>
-                </a>
+                </div>
             @endforeach
         </div>
 

@@ -8,7 +8,9 @@ use App\Models\Category;
 use App\Models\User;
 use App\Models\Favorite;
 use App\Models\Comment;
+use App\Models\ProfileMessage;
 use App\Models\ViewHistory;
+use App\Models\VipUrgentNotificationLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -115,7 +117,20 @@ class HomeController extends Controller
             'histories' => ViewHistory::where('user_id', $user->id)->count(),
         ];
 
-        return view('users.show', compact('user', 'comments', 'stats'));
+        $profileMessages = null;
+        $urgentSentToday = false;
+        if (auth()->check() && (int) auth()->id() === (int) $user->id) {
+            $profileMessages = ProfileMessage::where('recipient_id', $user->id)
+                ->with('sender')
+                ->latest()
+                ->paginate(15);
+            $urgentSentToday = VipUrgentNotificationLog::query()
+                ->where('sender_user_id', $user->id)
+                ->whereDate('sent_at', now()->toDateString())
+                ->exists();
+        }
+
+        return view('users.show', compact('user', 'comments', 'stats', 'profileMessages', 'urgentSentToday'));
     }
 
     /**

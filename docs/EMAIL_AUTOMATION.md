@@ -140,13 +140,15 @@ EmailSubscription::create([
 
 后台管理 → 邮件模板 → 新建模板
 
-**Slug 规则：**
-- `daily-digest` - 日报模板
-- `weekly-digest` - 周报模板
-- `welcome` - 欢迎邮件
-- `password-reset` - 密码重置
+数据库表 `email_templates` 使用字段 **`key`**（唯一）作为业务标识，与代码中 `sendFromTemplateByKey` 一致（不是 `slug`）。
 
-**可用变量：**
+**常用 key（示例）：**
+- `daily_digest` / 日报相关 - 资讯日报
+- `weekly_summary` - 周报类
+- `welcome` - 欢迎邮件
+- `profile_message_urgent` - **主页留言 · VIP 紧急通知**（由迁移 `2026_03_28_100001_add_profile_message_urgent_email_template.php` 写入基础数据；变量为 `{{recipient_name}}`、`{{profile_owner_name}}`、`{{message_excerpt}}`、`{{urgent_note}}`、`{{profile_url}}`）
+
+**可用变量（订阅类示例，具体以各模板 `variables` 字段为准）：**
 - `{user.name}` - 用户昵称
 - `{user.email}` - 用户邮箱
 - `{date}` - 当前日期
@@ -258,5 +260,5 @@ REDIS_PASSWORD=
 ---
 
 **文档维护者：** AI Assistant  
-**最后更新：** 2026-03-27  
-**下次审查：** 根据实际发送效果调整
+**最后更新：** 2026-03-28（补充 `email_templates.key` 与 `profile_message_urgent` 事务模板说明）  
+**下次审查：** 根据实际发送效果调整；新增迁移写入的邮件模板时请同步本文与 `docs/DATABASE_SCHEMA.md`

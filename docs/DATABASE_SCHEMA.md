@@ -1,7 +1,7 @@
 # 📊 AI 副业情报局 - 数据库表结构文档
 
 > 本文档维护项目所有数据库表的结构、字段说明和版本变更记录  
-> 最后更新：2026-03-27  
+> 最后更新：2026-03-28  
 > 数据库：`ai_side_laravel`
 
 ---
@@ -11,6 +11,8 @@
 - [核心表](#核心表)
 - [内容表](#内容表)
 - [用户互动表](#用户互动表)
+- [用户主页留言与 VIP 紧急通知](#用户主页留言与-vip-紧急通知)
+- [系统通知表](#系统通知表)
 - [邮件系统表](#邮件系统表)
 - [知识库表](#知识库表)
 - [职位表](#职位表)
@@ -176,6 +178,7 @@
 | monetization | TEXT | ❌ | NULL | 变现方式 |
 | difficulty | ENUM | ✅ | 'medium' | 难度：easy/medium/hard |
 | is_featured | BOOLEAN | ✅ | false | 是否推荐 |
+| is_vip | BOOLEAN | ✅ | false | 是否 VIP 专属（详情与全文需会员权限） |
 | collected_at | TIMESTAMP | ✅ | CURRENT | 收录时间 |
 | created_at | TIMESTAMP | ❌ | NULL | 创建时间 |
 | updated_at | TIMESTAMP | ❌ | NULL | 更新时间 |
@@ -185,10 +188,12 @@
 - `stars` - Star 数索引
 - `score` - 分数索引
 - `is_featured` - 推荐状态索引
+- `is_vip` - VIP 筛选索引
 
 **变更记录：**
 - v1.0.0 - 初始创建
 - v1.1.0 - 添加 `revenue` 相关字段（已废弃）
+- v1.4.2 (2026-03-28) - 添加 `is_vip`（迁移 `2026_03_28_000001_add_is_vip_to_projects_table`）
 
 ---
 
@@ -299,6 +304,81 @@
 
 ---
 
+## 用户主页留言与 VIP 紧急通知
+
+### profile_messages - 用户主页留言表
+
+**描述：** 登录用户在其他用户公开主页上发送的留言（非多态评论）；主页主人仅在自己查看本人主页时于后台列表中可见。
+
+| 字段 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| id | BIGINT | ✅ | AUTO | 主键 ID |
+| recipient_id | BIGINT | ✅ | - | 主页主人用户 ID（外键 `users`，级联删除） |
+| sender_id | BIGINT | ✅ | - | 留言者用户 ID（外键 `users`，级联删除） |
+| body | TEXT | ✅ | - | 留言正文 |
+| read_at | TIMESTAMP | ❌ | NULL | 已读时间（预留） |
+| created_at | TIMESTAMP | ❌ | NULL | 创建时间 |
+| updated_at | TIMESTAMP | ❌ | NULL | 更新时间 |
+
+**索引：**
+- `recipient_id + created_at` - 主页收件列表排序
+- `sender_id` - 留言者查询
+
+**变更记录：**
+- v1.4.3 (2026-03-28) - 新增（迁移 `2026_03_28_100000_create_profile_messages_and_urgent_logs_tables`）
+
+---
+
+### vip_urgent_notification_logs - VIP 紧急通知发送日志表
+
+**描述：** 记录主页主人（VIP）通过「紧急通知」向留言者发送邮件的行为，用于 **每位 VIP 每天仅允许 1 次** 等业务校验（按 `sender_user_id` + `sent_at` 日期判断）。
+
+| 字段 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| id | BIGINT | ✅ | AUTO | 主键 ID |
+| sender_user_id | BIGINT | ✅ | - | 发起邮件的 VIP（主页主人）用户 ID（外键 `users`，级联删除） |
+| recipient_user_id | BIGINT | ✅ | - | 收件人（留言者）用户 ID（外键 `users`，级联删除） |
+| profile_message_id | BIGINT | ✅ | - | 关联的留言 ID（外键 `profile_messages`，级联删除） |
+| sent_at | TIMESTAMP | ✅ | - | 发送时间（业务上用于「当日是否已发送」） |
+| created_at | TIMESTAMP | ❌ | NULL | 创建时间 |
+| updated_at | TIMESTAMP | ❌ | NULL | 更新时间 |
+
+**索引：**
+- `sender_user_id + sent_at` - 按发送者与时间查询（日限）
+
+**变更记录：**
+- v1.4.3 (2026-03-28) - 新增（迁移 `2026_03_28_100000_create_profile_messages_and_urgent_logs_tables`）
+
+---
+
+## 系统通知表
+
+### system_notifications - 站内系统通知
+
+**描述：** 向用户推送互动与运营消息；`is_from_admin = true` 为后台发送，前台列表 **置顶** 且 **样式区分**。
+
+| 字段 | 类型 | 必填 | 默认值 | 说明 |
+|------|------|------|--------|------|
+| id | BIGINT | ✅ | AUTO | 主键 ID |
+| user_id | BIGINT | ✅ | - | 接收用户（外键 `users`） |
+| type | VARCHAR(50) | ✅ | - | `article_liked` / `article_favorited` / `admin_notice` 等 |
+| title | VARCHAR(255) | ✅ | - | 标题 |
+| body | TEXT | ❌ | NULL | 正文 |
+| meta | JSON | ❌ | NULL | 扩展（如 `article_id`、`actor_id`） |
+| is_from_admin | BOOLEAN | ✅ | false | 是否后台官方通知（置顶排序） |
+| read_at | TIMESTAMP | ❌ | NULL | 已读时间 |
+| created_at | TIMESTAMP | ❌ | NULL | 创建时间 |
+| updated_at | TIMESTAMP | ❌ | NULL | 更新时间 |
+
+**索引：**
+- `user_id + is_from_admin + created_at`
+- `user_id + read_at`
+
+**变更记录：**
+- v1.5.0 (2026-03-28) - 新增（迁移 `2026_03_28_140000_create_system_notifications_table`）
+
+---
+
 ## 邮件系统表
 
 ### email_settings - 邮件设置表
@@ -324,19 +404,53 @@
 
 ### email_templates - 邮件模板表
 
-**描述：** 存储邮件模板内容
+**描述：** 存储邮件模板内容；代码中通过 **`key`** 唯一标识调用（如 `EmailNotificationService::sendFromTemplateByKey`）。
 
 | 字段 | 类型 | 必填 | 默认值 | 说明 |
 |------|------|------|--------|------|
 | id | BIGINT | ✅ | AUTO | 主键 ID |
-| name | VARCHAR(255) | ✅ | - | 模板名称 |
-| slug | VARCHAR(100) | ✅ | - | 模板标识（唯一） |
-| subject | VARCHAR(255) | ✅ | - | 邮件主题 |
-| content | TEXT | ✅ | - | 模板内容（支持 Blade） |
-| variables | JSON | ❌ | NULL | 可用变量说明 |
+| name | VARCHAR(255) | ✅ | - | 模板名称（展示用） |
+| key | VARCHAR(255) | ✅ | - | 模板业务键（**唯一**，与代码常量一致） |
+| subject | VARCHAR(255) | ✅ | - | 邮件主题（支持 `{{变量}}` 占位） |
+| content | LONGTEXT | ✅ | - | HTML/文本正文（`{{变量}}` 占位替换） |
+| variables | JSON | ❌ | NULL | 可用变量名列表（数组，便于后台展示） |
 | is_active | BOOLEAN | ✅ | true | 是否启用 |
 | created_at | TIMESTAMP | ❌ | NULL | 创建时间 |
 | updated_at | TIMESTAMP | ❌ | NULL | 更新时间 |
+
+**索引：**
+- `key` - 唯一
+
+**迁移种子数据（基础数据，与迁移文件同步）：**
+
+| key | 说明 | 迁移文件 |
+|-----|------|----------|
+| `profile_message_urgent` | 主页留言 · VIP 紧急通知（发给留言者） | 迁移 `2026_03_28_100001_add_profile_message_urgent_email_template.php`；种子 `RestoreAllDataSeeder`、`EmailTemplatePresetSeeder` 同步同一 `key` |
+| `vip_expiry_reminder` | VIP 到期提醒（后台对用户手动发送） | 迁移 `2026_03_28_120000_add_vip_expiry_reminder_email_template.php`；种子 `RestoreAllDataSeeder`、`EmailTemplatePresetSeeder` 同步同一 `key` |
+
+**`profile_message_urgent` 占位变量：**
+
+| 变量名 | 含义 |
+|--------|------|
+| `recipient_name` | 收件人昵称 |
+| `profile_owner_name` | 主页主人昵称 |
+| `message_excerpt` | 留言摘要 |
+| `urgent_note` | 紧急附言或默认说明（由控制器传入） |
+| `profile_url` | 对方主页完整 URL |
+
+**`vip_expiry_reminder` 占位变量：**
+
+| 变量名 | 含义 |
+|--------|------|
+| `recipient_name` | 收件人昵称 |
+| `expiry_date` | VIP 到期时间（格式化字符串） |
+| `days_remaining` | 剩余天数（字符串，与 `users.subscription_ends_at` 计算一致） |
+| `vip_url` | 续费/VIP 页（服务层默认合并） |
+| `dashboard_url` | 个人中心（服务层默认合并） |
+
+**变更记录：**
+- v1.4.3 (2026-03-28) - 文档勘误：字段为 `key` 非 `slug`；`content` 为 LONGTEXT；补充迁移写入的 `profile_message_urgent` 模板说明
+- v1.4.4 (2026-03-28) - 补充迁移种子 `vip_expiry_reminder`（后台 VIP 到期提醒邮件）
 
 ---
 
@@ -576,6 +690,53 @@
 
 ## 版本变更历史
 
+### v1.5.0 (2026-03-28) - 系统通知与投稿互动页
+
+**新增表：**
+- ✅ `system_notifications` - 站内系统通知（互动 + 后台运营）
+
+**前台：**
+- 文章 VIP 区去掉积分解锁、扩大遮罩、移除文章评论；点赞/收藏为作者写入 `system_notifications`（非本人操作时）。
+- `GET /notifications` 系统通知列表；`GET /my-articles/engagement` 投稿已发布文章的点赞/收藏用户明细。
+- Filament「系统通知」可向指定用户发送官方通知（`is_from_admin`，列表置顶）。
+
+---
+
+### v1.4.4 (2026-03-28) - VIP 到期提醒邮件（后台）
+
+**基础数据（邮件模板，迁移写入）：**
+- ✅ `email_templates.key = vip_expiry_reminder` - 「VIP 到期提醒」（迁移 `2026_03_28_120000_add_vip_expiry_reminder_email_template.php`；`RestoreAllDataSeeder`、`EmailTemplatePresetSeeder` 已同步）
+
+**功能：**
+- Filament「用户管理」列表/编辑：当用户 `subscription_ends_at` 在未来且 **≤3 天** 时显示「发送 VIP 到期提醒」按钮，调用 `EmailNotificationService::sendFromTemplateByKey('vip_expiry_reminder', …)`。
+
+---
+
+### v1.4.3 (2026-03-28) - 用户主页留言与 VIP 紧急邮件
+
+**新增表：**
+- ✅ `profile_messages` - 用户主页留言
+- ✅ `vip_urgent_notification_logs` - VIP 紧急通知发送日志（配合每日 1 次限制）
+
+**基础数据（邮件模板，迁移写入）：**
+- ✅ `email_templates.key = profile_message_urgent` - 「主页留言 · VIP 紧急通知」模板（迁移 `2026_03_28_100001_add_profile_message_urgent_email_template.php`；全量恢复种子 `RestoreAllDataSeeder`、预设种子 `EmailTemplatePresetSeeder` 已同步）
+
+**说明：**
+- 留言路由：`POST users/{user}/messages`；紧急通知：`POST users/{user}/messages/{message}/urgent`（仅主页主人且 VIP，`ProfileMessageController`）。
+- 文档：`email_templates` 表结构以代码/迁移为准（`key` 唯一，无 `slug` 列）。
+
+---
+
+### v1.4.2 (2026-03-28) - 项目 VIP 标记
+
+**修改表：**
+- ✅ `projects` - 新增 `is_vip`（BOOLEAN，默认 false）及索引 `is_vip`
+
+**说明：**
+- 用于「VIP 专属项目」业务；详情页与列表权限需在 `ProjectController` / 视图中与会员逻辑配合使用。
+
+---
+
 ### v1.4.0 (2026-03-27) - 职位系统
 
 **新增表：**
@@ -704,5 +865,5 @@
 ---
 
 **文档维护者：** AI Assistant  
-**最后审查：** 2026-03-27  
+**最后审查：** 2026-03-28  
 **下次审查：** 每次数据库变更后

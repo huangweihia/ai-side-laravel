@@ -27,6 +27,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
+            ->brandName('AI 副业情报局')
             ->colors([
                 'primary' => Color::Amber,
             ])

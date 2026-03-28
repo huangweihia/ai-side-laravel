@@ -6,6 +6,7 @@ use App\Models\Comment;
 use App\Models\Favorite;
 use App\Models\Project;
 use App\Models\UserAction;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 
 class ProjectController extends Controller
@@ -15,37 +16,13 @@ class ProjectController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Project::query();
-        
-        // 分类筛选
-        if ($request->filled('category')) {
-            $query->whereHas('category', function ($q) use ($request) {
-                $q->where('slug', $request->category);
-            });
-        }
-        
-        // 搜索
-        if ($request->filled('search')) {
-            $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('full_name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%');
-            });
-        }
-        
-        // 难度筛选
-        if ($request->filled('difficulty')) {
-            $query->where('difficulty', $request->difficulty);
-        }
-        
-        // 变现能力筛选
-        if ($request->filled('monetization')) {
-            $query->where('monetization', $request->monetization);
-        }
-        
-        $projects = $query->latest()->paginate(12)->withQueryString();
-        
-        return view('projects.index', compact('projects'));
+        $query = $this->projectListQuery($request, false);
+        $projects = $query->paginate(12)->withQueryString();
+
+        return view('projects.index', [
+            'projects' => $projects,
+            'vipOnly' => false,
+        ]);
     }
 
     /**
@@ -109,17 +86,77 @@ class ProjectController extends Controller
                 ->all()
             : [];
 
-        return view('projects.show', compact('project', 'comments', 'commentsTotal', 'featuredComment', 'isFavorited', 'likedCommentIds', 'relatedProjects'));
+        $canViewFullProject = $project->userCanViewFullContent(auth()->user());
+
+        return view('projects.show', compact(
+            'project',
+            'comments',
+            'commentsTotal',
+            'featuredComment',
+            'isFavorited',
+            'likedCommentIds',
+            'relatedProjects',
+            'canViewFullProject'
+        ));
     }
 
     /**
-     * VIP 专属项目列表（路由占位：当前项目库无 is_vip 字段，与公开列表合并）
+     * VIP 专属项目列表（仅 is_vip = true）
      */
-    public function vipProjects()
+    public function vipProjects(Request $request)
     {
-        return redirect()
-            ->route('projects.index')
-            ->with('info', '项目 VIP 专区与公开列表一致展示；若后续增加 VIP 项目字段将在此筛选。');
+        $query = $this->projectListQuery($request, true);
+        $projects = $query->paginate(12)->withQueryString();
+
+        return view('projects.index', [
+            'projects' => $projects,
+            'vipOnly' => true,
+        ]);
+    }
+
+    /**
+     * 列表与 VIP 列表共用的查询构造
+     */
+    protected function projectListQuery(Request $request, bool $vipOnly): Builder
+    {
+        $query = Project::query();
+
+        if ($vipOnly) {
+            $query->where('is_vip', true);
+        }
+
+        if ($request->filled('category')) {
+            $query->whereHas('category', function ($q) use ($request) {
+                $q->where('slug', $request->category);
+            });
+        }
+
+        if ($request->filled('search')) {
+            $query->where(function ($q) use ($request) {
+                $q->where('name', 'like', '%' . $request->search . '%')
+                    ->orWhere('full_name', 'like', '%' . $request->search . '%')
+                    ->orWhere('description', 'like', '%' . $request->search . '%');
+            });
+        }
+
+        if ($request->filled('difficulty')) {
+            $query->where('difficulty', $request->difficulty);
+        }
+
+        if ($request->filled('monetization')) {
+            $query->where('monetization', $request->monetization);
+        }
+
+        if ($request->filled('sort')) {
+            match ($request->sort) {
+                'popular', 'stars' => $query->orderByDesc('stars'),
+                default => $query->latest('collected_at'),
+            };
+        } else {
+            $query->latest('collected_at');
+        }
+
+        return $query;
     }
 
     /**

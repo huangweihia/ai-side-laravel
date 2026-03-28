@@ -20,7 +20,7 @@ class CommentResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-oval-left';
     protected static ?string $navigationLabel = '评论管理';
     protected static ?string $modelLabel = '评论';
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 8;
 
     public static function getNavigationBadge(): ?string
     {

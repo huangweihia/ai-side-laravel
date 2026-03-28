@@ -66,7 +66,7 @@
                 <div style="display: grid; gap: 24px;">
                     @forelse($articles as $article)
                         @php
-                            $vipLocked = $article->is_vip && (!auth()->check() || !auth()->user()->isVip());
+                            $vipLocked = $article->is_vip && (!auth()->check() || (!auth()->user()->isVip() && !auth()->user()->isAdmin()));
                         @endphp
                         @if($vipLocked)
                         <div class="card article-card"
@@ -91,7 +91,7 @@
                                             <h2 style="font-size: 22px; color: white; margin: 0; line-height: 1.4;">
                                                 {{ $article->title }}
                                             </h2>
-                                            <span style="
+                                            <a href="{{ route('vip', ['redirect' => route('articles.show', $article->id)]) }}" style="
                                                 padding: 4px 10px;
                                                 background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
                                                 color: white;
@@ -101,7 +101,8 @@
                                                 text-transform: uppercase;
                                                 letter-spacing: 0.5px;
                                                 box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
-                                            ">👑 VIP</span>
+                                                text-decoration: none;
+                                            ">👑 VIP</a>
                                         </div>
                                         <p style="color: var(--gray-light); font-size: 14px; line-height: 1.8; margin: 0 0 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                             {{ $article->summary ?? '暂无摘要' }}
@@ -122,10 +123,10 @@
                                         </div>
                                     </div>
                                 </a>
-                                <button type="button" class="vip-readmore-btn" style="display: flex; align-items: center; gap: 8px; color: var(--primary-light); font-weight: 600; font-size: 14px; margin-top: 16px; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-align: left;">
+                                <a href="{{ route('vip', ['redirect' => route('articles.show', $article->id)]) }}" class="vip-readmore-link" style="display: flex; align-items: center; gap: 8px; color: var(--primary-light); font-weight: 600; font-size: 14px; margin-top: 16px; text-align: left; text-decoration: none;">
                                     <span>阅读全文</span>
                                     <span>→</span>
-                                </button>
+                                </a>
                             </div>
                         </div>
                         @else
@@ -223,8 +224,6 @@
     </div>
 </section>
 
-@include('components.vip-lock-modal')
-
 <script>
 function searchArticles() {
     const query = document.getElementById('searchInput').value.trim();
@@ -234,14 +233,6 @@ function searchArticles() {
         showToast('请输入搜索关键词', 'info');
     }
 }
-
-document.querySelectorAll('.vip-readmore-btn').forEach((btn) => {
-    btn.addEventListener('click', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        openVipModal();
-    });
-});
 
 // 回车搜索
 document.getElementById('searchInput')?.addEventListener('keypress', function(e) {

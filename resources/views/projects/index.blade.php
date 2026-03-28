@@ -3,6 +3,10 @@
 @section('title', 'AI 副业项目 - AI 副业情报局')
 
 @section('content')
+@php
+    $vipOnly = $vipOnly ?? false;
+    $projectsListRoute = $vipOnly ? 'projects.vip' : 'projects.index';
+@endphp
 <!-- Hero Section -->
 <section style="padding: 100px 0 60px; background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border-bottom: 1px solid rgba(255,255,255,0.1);">
     <div class="container">
@@ -11,16 +15,24 @@
                 🚀 发现下一个百万级副业
             </span>
             <h1 style="font-size: 56px; font-weight: 800; margin-bottom: 20px; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                AI 副业项目库
+                @if($vipOnly)
+                    👑 VIP 专属项目
+                @else
+                    AI 副业项目库
+                @endif
             </h1>
             <p style="font-size: 18px; color: var(--gray-light); line-height: 1.8; margin-bottom: 40px;">
-                精选 GitHub 热门 AI 项目，包含详细教程、技术栈和变现路径<br>
-                帮你找到适合自己的副业方向
+                @if($vipOnly)
+                    仅展示标记为 VIP 的项目；开通 VIP 后可查看完整变现分析、技术栈与资源。
+                @else
+                    精选 GitHub 热门 AI 项目，包含详细教程、技术栈和变现路径<br>
+                    帮你找到适合自己的副业方向
+                @endif
             </p>
             
             <!-- 搜索栏 -->
             <div style="max-width: 600px; margin: 0 auto;">
-                <form action="{{ route('projects.index') }}" method="GET" style="display: flex; gap: 12px;">
+                <form action="{{ route($projectsListRoute) }}" method="GET" style="display: flex; gap: 12px;">
                     <input 
                         type="text" 
                         name="search"
@@ -55,16 +67,16 @@
         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
             <!-- 分类筛选 -->
             <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="{{ route('projects.index') }}" style="padding: 10px 20px; background: {{ !request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ !request('category') ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">全部</a>
-                <a href="?category=ai-tools" style="padding: 10px 20px; background: {{ request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">🤖 AI 工具</a>
-                <a href="?category=side-projects" style="padding: 10px 20px; background: {{ request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'side-projects' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💡 副业项目</a>
-                <a href="?category=monetization" style="padding: 10px 20px; background: {{ request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'monetization' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💰 变现案例</a>
+                <a href="{{ route($projectsListRoute) }}" style="padding: 10px 20px; background: {{ !request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ !request('category') ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">全部</a>
+                <a href="{{ route($projectsListRoute, ['category' => 'ai-tools']) }}" style="padding: 10px 20px; background: {{ request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">🤖 AI 工具</a>
+                <a href="{{ route($projectsListRoute, ['category' => 'side-projects']) }}" style="padding: 10px 20px; background: {{ request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'side-projects' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💡 副业项目</a>
+                <a href="{{ route($projectsListRoute, ['category' => 'monetization']) }}" style="padding: 10px 20px; background: {{ request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'monetization' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💰 变现案例</a>
             </div>
             
             <!-- 排序选项 -->
             <div style="display: flex; align-items: center; gap: 12px; color: var(--gray-light); font-size: 14px;">
                 <span>共 <strong style="color: var(--primary-light);">{{ $projects->total() }}</strong> 个项目</span>
-                <select onchange="location.href='?sort='+this.value" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 14px; cursor: pointer;">
+                <select onchange="(function(s){const p=new URLSearchParams(window.location.search);p.set('sort',s);location.href=window.location.pathname+'?'+p.toString();})(this.value)" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 14px; cursor: pointer;">
                     <option value="latest" {{ request('sort') === 'latest' ? 'selected' : '' }}>📅 最新</option>
                     <option value="popular" {{ request('sort') === 'popular' ? 'selected' : '' }}>🔥 最热</option>
                     <option value="stars" {{ request('sort') === 'stars' ? 'selected' : '' }}>⭐ Stars</option>
@@ -79,6 +91,53 @@
     <div class="container">
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 30px;">
             @forelse($projects as $project)
+                @php
+                    $vipLocked = $project->is_vip && (!auth()->check() || (!auth()->user()->isVip() && !auth()->user()->isAdmin()));
+                    $vipRedirect = route('vip', ['redirect' => route('projects.show', $project->id)]);
+                @endphp
+                @if($vipLocked)
+                <div class="card project-card" data-vip-locked="1" style="display: block; padding: 0; overflow: hidden; transition: all 0.3s ease; position: relative;" onmouseover="this.style.transform='translateY(-8px)';this.style.boxShadow='0 20px 60px rgba(99,102,241,0.3)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                    <div style="height: 6px; background: linear-gradient(90deg, {{ ['6366f1', '8b5cf6', 'ec4899', '10b981', 'f59e0b'][array_rand([0,1,2,3,4])] }} 0%, {{ ['8b5cf6', 'ec4899', '6366f1', '14b8a6', 'ef4444'][array_rand([0,1,2,3,4])] }} 100%);"></div>
+                    <div style="padding: 30px;">
+                        <a href="{{ route('projects.show', $project->id) }}" style="text-decoration: none; color: inherit; display: block;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, {{ ['6366f1', '8b5cf6', 'ec4899'][array_rand([0,1,2])] }} 0%, {{ ['8b5cf6', 'ec4899', '6366f1'][array_rand([0,1,2])] }} 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                        {{ ['🤖', '💡', '🚀', '⚡', '🎯'][array_rand([0,1,2,3,4])] }}
+                                    </div>
+                                    <div>
+                                        <h3 style="font-size: 20px; color: white; margin: 0; font-weight: 700;">{{ $project->full_name ?? $project->name }}</h3>
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                                            <span style="font-size: 12px; color: var(--gray-light);">{{ $project->language ?? 'Unknown' }}</span>
+                                            <a href="{{ $vipRedirect }}" style="padding: 2px 8px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 10px; font-size: 11px; color: white; font-weight: 600; text-decoration: none;">👑 VIP</a>
+                                            @if($project->is_featured)
+                                                <span style="padding: 2px 8px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 10px; font-size: 11px; color: white; font-weight: 600;">⭐ 精选</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="color: var(--gray-light); font-size: 15px; line-height: 1.8; margin-bottom: 24px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                {{ \Illuminate\Support\Str::limit(strip_tags($project->description ?? ''), 200) }}
+                            </p>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
+                                @foreach(array_slice($project->tags ?? [], 0, 4) as $tag)
+                                    <span style="padding: 4px 12px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 12px; font-weight: 500;">{{ $tag }}</span>
+                                @endforeach
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                                <div style="display: flex; gap: 16px; font-size: 13px; color: var(--gray);">
+                                    <span style="display: flex; align-items: center; gap: 6px;"><span>⭐</span> {{ number_format($project->stars ?? 0) }}</span>
+                                    <span style="display: flex; align-items: center; gap: 6px;"><span>🍴</span> {{ number_format($project->forks ?? 0) }}</span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="{{ $vipRedirect }}" class="vip-readmore-link" style="display: flex; align-items: center; gap: 8px; color: var(--primary-light); font-weight: 600; font-size: 14px; margin-top: 16px; text-align: left; text-decoration: none;">
+                            <span>查看详情</span><span>→</span>
+                        </a>
+                    </div>
+                </div>
+                @else
                 <a href="{{ route('projects.show', $project->id) }}" class="card" style="display: block; padding: 0; overflow: hidden; text-decoration: none; transition: all 0.3s ease; position: relative;" onmouseover="this.style.transform='translateY(-8px)';this.style.boxShadow='0 20px 60px rgba(99,102,241,0.3)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
                     <!-- 顶部渐变条 -->
                     <div style="height: 6px; background: linear-gradient(90deg, {{ ['6366f1', '8b5cf6', 'ec4899', '10b981', 'f59e0b'][array_rand([0,1,2,3,4])] }} 0%, {{ ['8b5cf6', 'ec4899', '6366f1', '14b8a6', 'ef4444'][array_rand([0,1,2,3,4])] }} 100%);"></div>
@@ -94,6 +153,9 @@
                                     <h3 style="font-size: 20px; color: white; margin: 0; font-weight: 700;">{{ $project->full_name ?? $project->name }}</h3>
                                     <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
                                         <span style="font-size: 12px; color: var(--gray-light);">{{ $project->language ?? 'Unknown' }}</span>
+                                        @if($project->is_vip)
+                                            <a href="{{ route('vip', ['redirect' => route('projects.show', $project->id)]) }}" style="padding: 2px 8px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 10px; font-size: 11px; color: white; font-weight: 600; text-decoration: none;">👑 VIP</a>
+                                        @endif
                                         @if($project->is_featured)
                                             <span style="padding: 2px 8px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 10px; font-size: 11px; color: white; font-weight: 600;">⭐ 精选</span>
                                         @endif
@@ -132,6 +194,7 @@
                         </div>
                     </div>
                 </a>
+                @endif
             @empty
                 <div style="grid-column: 1 / -1; text-align: center; padding: 100px 20px;">
                     <div style="font-size: 80px; margin-bottom: 24px;">📭</div>
@@ -176,6 +239,7 @@
         </div>
     </div>
 </section>
+
 @endsection
 
 <style>

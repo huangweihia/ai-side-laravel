@@ -43,10 +43,10 @@
                     </div>
                     
                     @if($job->is_contact_vip && !$canViewContact)
-                        <div style="padding: 12px 20px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15)); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 12px; text-align: center;">
+                        <a href="{{ route('vip', ['redirect' => route('jobs.show', $job)]) }}" style="display: block; padding: 12px 20px; background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.15)); border: 1px solid rgba(251, 191, 36, 0.3); border-radius: 12px; text-align: center; text-decoration: none;">
                             <div style="font-size: 24px; margin-bottom: 4px;">⭐</div>
-                            <div style="font-size: 13px; color: #fbbf24; font-weight: 600;">VIP 可见联系方式</div>
-                        </div>
+                            <div style="font-size: 13px; color: #fbbf24; font-weight: 600;">VIP 可见联系方式 · 点击开通</div>
+                        </a>
                     @endif
                 </div>
 
@@ -114,7 +114,7 @@
                         <div style="font-size: 48px; margin-bottom: 16px;">🔒</div>
                         <h3 style="font-size: 18px; font-weight: 700; color: var(--white); margin-bottom: 8px;">联系方式仅对 VIP 开放</h3>
                         <p style="color: var(--gray-light); margin-bottom: 24px;">升级 VIP 立即可查看联系方式，直接联系招聘方</p>
-                        <a href="{{ route('vip') }}" 
+                        <a href="{{ route('vip', ['redirect' => route('jobs.show', $job)]) }}" 
                            style="display: inline-block; padding: 14px 32px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: white; border-radius: 12px; text-decoration: none; font-weight: 700; font-size: 15px; transition: all 0.3s; box-shadow: 0 4px 15px rgba(251, 191, 36, 0.4);"
                            onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(251, 191, 36, 0.5)'"
                            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(251, 191, 36, 0.4)'">

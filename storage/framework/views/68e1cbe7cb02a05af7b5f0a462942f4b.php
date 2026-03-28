@@ -68,10 +68,18 @@
                     <span>👁️</span>
                     <span>浏览历史</span>
                 </a>
+                <a href="<?php echo e(route('notifications.index')); ?>" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">
+                    <span>🔔</span>
+                    <span>系统通知</span>
+                </a>
                 <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->user()?->isVip() || auth()->user()?->isAdmin()): ?>
                 <a href="<?php echo e(route('submissions.index')); ?>" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">
                     <span>📝</span>
                     <span>VIP 投稿</span>
+                </a>
+                <a href="<?php echo e(route('articles.my-engagement')); ?>" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">
+                    <span>📊</span>
+                    <span>投稿文章互动</span>
                 </a>
                 <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                 <a href="<?php echo e(route('subscriptions.preferences')); ?>" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">

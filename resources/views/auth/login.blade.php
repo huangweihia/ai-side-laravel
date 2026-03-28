@@ -23,7 +23,10 @@
 
         <form method="POST" action="{{ route('login') }}">
             @csrf
-            
+            @if(request()->filled('redirect'))
+                <input type="hidden" name="redirect" value="{{ request('redirect') }}">
+            @endif
+
             <div class="form-group">
                 <label class="form-label" for="email">邮箱地址</label>
                 <input class="form-input" id="email" type="email" name="email" value="{{ old('email') }}" required autofocus placeholder="your@email.com">

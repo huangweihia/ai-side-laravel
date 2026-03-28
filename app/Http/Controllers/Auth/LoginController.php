@@ -29,6 +29,16 @@ class LoginController extends Controller
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
 
+            $redirectTo = $request->input('redirect');
+            if (is_string($redirectTo) && $redirectTo !== '') {
+                $target = parse_url($redirectTo);
+                $base = parse_url((string) config('app.url'));
+                if (($target['host'] ?? null) === ($base['host'] ?? null)
+                    && (($target['scheme'] ?? 'https') === ($base['scheme'] ?? 'https') || in_array($target['scheme'] ?? '', ['http', 'https'], true))) {
+                    return redirect()->to($redirectTo);
+                }
+            }
+
             return redirect()->intended('/dashboard');
         }
 

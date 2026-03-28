@@ -133,7 +133,7 @@
             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             
             
-            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($article->source_url): ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($canViewFullArticle && $article->source_url): ?>
             <div style="
                 padding: 16px 20px;
                 background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
@@ -179,29 +179,35 @@
             <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             
             
-            <?php if (isset($component)) { $__componentOriginal35b860c22501c7c6fb1f0b24f8759256 = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal35b860c22501c7c6fb1f0b24f8759256 = $attributes; } ?>
-<?php $component = Illuminate\View\AnonymousComponent::resolve(['view' => 'components.vip-article-overlay','data' => ['article' => $article]] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? (array) $attributes->getIterator() : [])); ?>
-<?php $component->withName('vip-article-overlay'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag && $constructor = (new ReflectionClass(Illuminate\View\AnonymousComponent::class))->getConstructor()): ?>
-<?php $attributes = $attributes->except(collect($constructor->getParameters())->map->getName()->all()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['article' => \Illuminate\View\Compilers\BladeCompiler::sanitizeComponentAttribute($article)]); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal35b860c22501c7c6fb1f0b24f8759256)): ?>
-<?php $attributes = $__attributesOriginal35b860c22501c7c6fb1f0b24f8759256; ?>
-<?php unset($__attributesOriginal35b860c22501c7c6fb1f0b24f8759256); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal35b860c22501c7c6fb1f0b24f8759256)): ?>
-<?php $component = $__componentOriginal35b860c22501c7c6fb1f0b24f8759256; ?>
-<?php unset($__componentOriginal35b860c22501c7c6fb1f0b24f8759256); ?>
-<?php endif; ?>
+            <div style="margin-top: 30px;">
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($canViewFullArticle): ?>
+                    <?php echo $article->content; ?>
+
+                <?php else: ?>
+                    <div style="padding: 28px 24px; border-radius: 16px; border: 2px solid rgba(251, 191, 36, 0.45); background: linear-gradient(135deg, rgba(30, 41, 59, 0.06) 0%, rgba(15, 23, 42, 0.04) 100%);">
+                        <div style="font-size: 40px; text-align: center; margin-bottom: 12px;">👑</div>
+                        <p style="color: #475569; font-size: 16px; line-height: 1.85; margin: 0 0 20px;">
+                            <?php echo e($article->summary ?? '本文为 VIP 专属内容，开通会员或使用积分解锁后可阅读全文。'); ?>
+
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+                            <a href="<?php echo e(route('vip', ['redirect' => request()->fullUrl()])); ?>" style="padding: 12px 28px; border-radius: 12px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #fff; font-weight: 700; font-size: 15px; text-decoration: none; display: inline-block;">
+                                开通 VIP 阅读全文
+                            </a>
+                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(auth()->guard()->check()): ?>
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if(!auth()->user()->isVip()): ?>
+                                <button type="button" onclick="unlockArticleBody(<?php echo e($article->id); ?>)" style="padding: 12px 28px; border-radius: 12px; border: 2px dashed #94a3b8; background: #fff; color: #475569; font-weight: 700; cursor: pointer; font-size: 15px;">
+                                    使用积分解锁（100 积分）
+                                </button>
+                                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                        </div>
+                    </div>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+            </div>
             
             
-            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($article->meta_keywords): ?>
+            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($canViewFullArticle && $article->meta_keywords): ?>
             <div style="margin-top: 40px; padding-top: 24px; border-top: 2px solid #e2e8f0;">
                 <div style="color: #64748b; font-size: 14px; margin-bottom: 12px;">标签：</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
@@ -478,6 +484,28 @@
 </div>
 
 <script>
+<?php if(!$canViewFullArticle): ?>
+function unlockArticleBody(articleId) {
+    fetch(`/interactions/articles/${articleId}/unlock`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin',
+    })
+        .then((r) => r.json())
+        .then((data) => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || '解锁失败');
+            }
+        })
+        .catch(() => alert('网络异常，请稍后重试'));
+}
+<?php endif; ?>
 // 阅读进度条
 window.addEventListener('scroll', function() {
     const article = document.querySelector('.container');

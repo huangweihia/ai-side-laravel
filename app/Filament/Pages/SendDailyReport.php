@@ -9,7 +9,7 @@ class SendDailyReport extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-ennelope';
     protected static string $view = 'filament.pages.send-daily-report';
-    protected static ?string $navigationLabel = 'test';
+    protected static ?string $navigationLabel = '日报发送（测试）';
     protected static ?int $navigationSort = 99;
     protected static bool $shouldRegisterNavigation = false;
     

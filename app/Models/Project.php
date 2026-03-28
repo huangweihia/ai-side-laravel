@@ -24,6 +24,7 @@ class Project extends Model
         'difficulty',
         'revenue',
         'is_featured',
+        'is_vip',
         'collected_at',
         'income_range',
         'time_commitment',
@@ -38,6 +39,7 @@ class Project extends Model
         'score' => 'decimal:2',
         'tags' => 'array',
         'is_featured' => 'boolean',
+        'is_vip' => 'boolean',
         'collected_at' => 'datetime',
         'monetization_paths' => 'array',
         'tech_stack' => 'array',
@@ -75,6 +77,24 @@ class Project extends Model
     {
         if (!$user) return false;
         return $this->favorites()->where('user_id', $user->id)->exists();
+    }
+
+    /**
+     * 是否可查看 VIP 项目完整详情（变现分析、技术栈、外链等）
+     */
+    public function userCanViewFullContent(?User $user): bool
+    {
+        if (!$this->is_vip) {
+            return true;
+        }
+        if (!$user) {
+            return false;
+        }
+        if ($user->isAdmin()) {
+            return true;
+        }
+
+        return $user->isVip();
     }
 
     /**

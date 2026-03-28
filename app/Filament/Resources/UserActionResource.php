@@ -18,7 +18,7 @@ class UserActionResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-bolt';
     protected static ?string $navigationLabel = '行为日志';
     protected static ?string $modelLabel = '行为';
-    protected static ?int $navigationSort = 8;
+    protected static ?int $navigationSort = 10;
 
     public static function getNavigationBadge(): ?string
     {

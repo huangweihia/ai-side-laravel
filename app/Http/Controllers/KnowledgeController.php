@@ -65,8 +65,8 @@ class KnowledgeController extends Controller
             abort(403, '知识库未公开');
         }
         
-        if ($knowledgeBase->is_vip_only && (!auth()->check() || !auth()->user()->isVip())) {
-            return redirect()->route('vip.index')
+        if ($knowledgeBase->is_vip_only && (!auth()->check() || (!auth()->user()->isVip() && !auth()->user()->isAdmin()))) {
+            return redirect()->route('vip', ['redirect' => request()->fullUrl()])
                 ->with('error', '此知识库仅 VIP 用户可访问');
         }
         
@@ -89,8 +89,8 @@ class KnowledgeController extends Controller
             abort(403, '文档未公开');
         }
         
-        if ($knowledgeBase->is_vip_only && (!auth()->check() || !auth()->user()->isVip())) {
-            return redirect()->route('vip.index')
+        if ($knowledgeBase->is_vip_only && (!auth()->check() || (!auth()->user()->isVip() && !auth()->user()->isAdmin()))) {
+            return redirect()->route('vip', ['redirect' => request()->fullUrl()])
                 ->with('error', '此文档仅 VIP 用户可访问');
         }
         
@@ -132,6 +132,14 @@ class KnowledgeController extends Controller
                 'success' => false,
                 'message' => '请先登录后评论',
             ], 401);
+        }
+
+        $knowledgeBase = $document->knowledgeBase;
+        if (!$knowledgeBase->is_public) {
+            return response()->json(['success' => false, 'message' => '无权评论'], 403);
+        }
+        if ($knowledgeBase->is_vip_only && (!$user->isVip() && !$user->isAdmin())) {
+            return response()->json(['success' => false, 'message' => '仅 VIP 可参与讨论'], 403);
         }
         
         $request->validate([

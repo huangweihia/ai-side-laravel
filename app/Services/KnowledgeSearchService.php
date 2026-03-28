@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\KnowledgeDocument;
 use App\Models\KnowledgeSearchLog;
+use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 
@@ -19,8 +20,11 @@ class KnowledgeSearchService
      */
     public function search(string $query, ?int $userId = null, int $limit = 10): array
     {
+        $user = $userId ? User::find($userId) : null;
+        $canAccessVipKnowledge = $user && ($user->isVip() || $user->isAdmin());
+
         // 1. 全文检索（数据库）
-        $dbResults = $this->searchFromDatabase($query, $limit);
+        $dbResults = $this->searchFromDatabase($query, $limit, $canAccessVipKnowledge);
         
         // 2. MCP 搜索（外部信息补充）
         $mcpResults = $this->searchFromMCP($query, 5);
@@ -45,12 +49,19 @@ class KnowledgeSearchService
     /**
      * 从数据库检索
      */
-    private function searchFromDatabase(string $query, int $limit): array
+    private function searchFromDatabase(string $query, int $limit, bool $canAccessVipKnowledge): array
     {
-        $results = KnowledgeDocument::query()
-            ->where('content', 'like', "%{$query}%")
-            ->orWhere('title', 'like', "%{$query}%")
-            ->with('knowledgeBase.user')
+        $q = KnowledgeDocument::query()
+            ->where(function ($sub) use ($query) {
+                $sub->where('content', 'like', "%{$query}%")
+                    ->orWhere('title', 'like', "%{$query}%");
+            });
+
+        if (!$canAccessVipKnowledge) {
+            $q->whereHas('knowledgeBase', fn ($kb) => $kb->where('is_vip_only', false));
+        }
+
+        $results = $q->with('knowledgeBase.user')
             ->limit($limit)
             ->get();
         

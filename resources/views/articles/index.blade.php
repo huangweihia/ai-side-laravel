@@ -65,12 +65,76 @@
                 <!-- 文章卡片列表 -->
                 <div style="display: grid; gap: 24px;">
                     @forelse($articles as $article)
+                        @php
+                            $vipLocked = $article->is_vip && (!auth()->check() || !auth()->user()->isVip());
+                        @endphp
+                        @if($vipLocked)
+                        <div class="card article-card"
+                           data-article-id="{{ $article->id }}"
+                           data-article-url="{{ route('articles.show', $article->id) }}"
+                           data-is-vip="1"
+                           data-vip-locked="1"
+                           style="display: grid; grid-template-columns: 240px 1fr; gap: 24px; padding: 0; overflow: hidden; transition: all 0.3s ease;"
+                           onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 40px rgba(99,102,241,0.2)'"
+                           onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                            <a href="{{ route('articles.show', $article->id) }}"
+                               style="height: 160px; background: linear-gradient(135deg, {{ ['6366f1', '8b5cf6', 'ec4899', '10b981'][array_rand([0,1,2,3])] }} 0%, {{ ['8b5cf6', 'ec4899', '6366f1', '14b8a6'][array_rand([0,1,2,3])] }} 100%); display: flex; align-items: center; justify-content: center; font-size: 64px; text-decoration: none;">
+                                {{ ['📝', '💡', '🤖', '💰', '📰'][array_rand([0,1,2,3,4])] }}
+                            </a>
+                            <div style="padding: 24px; display: flex; flex-direction: column; justify-content: space-between;">
+                                <a href="{{ route('articles.show', $article->id) }}" style="text-decoration: none; color: inherit;">
+                                    <div>
+                                        <span style="display: inline-block; padding: 4px 12px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 12px; font-weight: 600; margin-bottom: 12px;">
+                                            {{ $article->category?->name ?? '未分类' }}
+                                        </span>
+                                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                                            <h2 style="font-size: 22px; color: white; margin: 0; line-height: 1.4;">
+                                                {{ $article->title }}
+                                            </h2>
+                                            <span style="
+                                                padding: 4px 10px;
+                                                background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+                                                color: white;
+                                                border-radius: 6px;
+                                                font-size: 11px;
+                                                font-weight: 700;
+                                                text-transform: uppercase;
+                                                letter-spacing: 0.5px;
+                                                box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4);
+                                            ">👑 VIP</span>
+                                        </div>
+                                        <p style="color: var(--gray-light); font-size: 14px; line-height: 1.8; margin: 0 0 16px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                            {{ $article->summary ?? '暂无摘要' }}
+                                        </p>
+                                        <div style="display: flex; align-items: center; gap: 20px; font-size: 13px; color: var(--gray);">
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span>👤</span> {{ $article->author?->name ?? '匿名' }}
+                                            </span>
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span>📅</span> {{ $article->published_at?->diffForHumans() ?? '近期' }}
+                                            </span>
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span>👁️</span> {{ rand(100, 5000) }}
+                                            </span>
+                                            <span style="display: flex; align-items: center; gap: 6px;">
+                                                <span>❤️</span> {{ rand(10, 500) }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                                <button type="button" class="vip-readmore-btn" style="display: flex; align-items: center; gap: 8px; color: var(--primary-light); font-weight: 600; font-size: 14px; margin-top: 16px; background: none; border: none; padding: 0; cursor: pointer; font-family: inherit; text-align: left;">
+                                    <span>阅读全文</span>
+                                    <span>→</span>
+                                </button>
+                            </div>
+                        </div>
+                        @else
                         <a href="{{ route('articles.show', $article->id) }}"
                            class="card article-card"
                            data-article-id="{{ $article->id }}"
                            data-article-url="{{ route('articles.show', $article->id) }}"
                            data-is-vip="{{ $article->is_vip ? '1' : '0' }}"
-                           data-vip-locked="{{ ($article->is_vip && (!auth()->check() || !auth()->user()->isVip())) ? '1' : '0' }}"
+                           data-vip-locked="0"
                            style="display: grid; grid-template-columns: 240px 1fr; gap: 24px; padding: 0; overflow: hidden; text-decoration: none; transition: all 0.3s ease;"
                            onmouseover="this.style.transform='translateY(-4px)';this.style.boxShadow='0 20px 40px rgba(99,102,241,0.2)'"
                            onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
@@ -138,6 +202,7 @@
                                 </div>
                             </div>
                         </a>
+                        @endif
                     @empty
                         <div class="card" style="padding: 60px; text-align: center;">
                             <div style="font-size: 64px; margin-bottom: 20px;">📭</div>
@@ -153,10 +218,12 @@
                         {{ $articles->links('pagination::simple-bootstrap-4') }}
                     </div>
                 @endif
-            </main>
+            </div>
         </div>
     </div>
 </section>
+
+@include('components.vip-lock-modal')
 
 <script>
 function searchArticles() {
@@ -168,51 +235,10 @@ function searchArticles() {
     }
 }
 
-function goVipPage() {
-    const redirectUrl = encodeURIComponent(window.location.href);
-    window.location.href = `{{ route('vip') }}?redirect=${redirectUrl}`;
-}
-
-function buildVipModalHtml() {
-    return `
-        <div id="vip-lock-modal" style="position: fixed; inset: 0; z-index: 9999; display: flex; align-items: center; justify-content: center; background: rgba(2,6,23,0.72); backdrop-filter: blur(4px); padding: 16px;" onclick="if(event.target.id==='vip-lock-modal'){closeVipModal();}">
-            <div style="position: relative; width: min(92vw, 460px); background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 2px solid #fbbf24; border-radius: 18px; padding: 30px 26px; color: white; box-shadow: 0 20px 60px rgba(251,191,36,.3);">
-                <button type="button" onclick="closeVipModal()" aria-label="关闭" style="position:absolute; right:12px; top:10px; width:30px; height:30px; border:none; border-radius:50%; background:rgba(255,255,255,.12); color:#fff; cursor:pointer; font-size:16px;">×</button>
-                <div style="font-size:56px; text-align:center; margin-bottom:14px;">👑</div>
-                <h3 style="margin:0 0 10px; font-size:30px; text-align:center; font-weight:800;">VIP 专属内容</h3>
-                <p style="margin:0 0 18px; text-align:center; color:#cbd5e1; line-height:1.7;">该文章为 VIP 专属，开通 VIP 即可立即解锁完整内容。</p>
-
-                <div style="padding:16px; background:rgba(251,191,36,.1); border-radius:12px; margin-bottom:20px;">
-                    <div style="color:#fbbf24; font-size:14px; margin-bottom:8px;"><span style="color:#10b981;">✓</span> 无限阅读 VIP 文章</div>
-                    <div style="color:#fbbf24; font-size:14px; margin-bottom:8px;"><span style="color:#10b981;">✓</span> 无限次知识检索</div>
-                    <div style="color:#fbbf24; font-size:14px; margin-bottom:8px;"><span style="color:#10b981;">✓</span> 专属邮件推送</div>
-                    <div style="color:#fbbf24; font-size:14px;"><span style="color:#10b981;">✓</span> 优先客服支持</div>
-                </div>
-
-                <button type="button" onclick="goVipPage()" style="width:100%; padding:14px 20px; border:none; border-radius:12px; background:linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color:#fff; font-size:17px; font-weight:800; cursor:pointer; box-shadow:0 8px 25px rgba(251,191,36,.4);">立即开通 VIP</button>
-                <p style="text-align:center; color:#94a3b8; font-size:13px; margin:14px 0 0;">💡 首月仅需 <span style="color:#fbbf24; font-weight:700; font-size:15px;">¥9.9</span> | 平均每天 ¥0.33</p>
-            </div>
-        </div>
-    `;
-}
-
-function closeVipModal() {
-    const modal = document.getElementById('vip-lock-modal');
-    if (modal) {
-        modal.remove();
-        document.body.style.overflow = '';
-    }
-}
-
-function openVipModal() {
-    if (document.getElementById('vip-lock-modal')) return;
-    document.body.insertAdjacentHTML('beforeend', buildVipModalHtml());
-    document.body.style.overflow = 'hidden';
-}
-
-document.querySelectorAll('.article-card[data-vip-locked="1"]').forEach((card) => {
-    card.addEventListener('click', function (e) {
+document.querySelectorAll('.vip-readmore-btn').forEach((btn) => {
+    btn.addEventListener('click', function (e) {
         e.preventDefault();
+        e.stopPropagation();
         openVipModal();
     });
 });
@@ -232,7 +258,7 @@ document.getElementById('searchInput')?.addEventListener('keypress', function(e)
     .card[style*="grid-template-columns: 240px"] {
         grid-template-columns: 1fr !important;
     }
-    .card[style*="grid-template-columns: 240px"] > div:first-child {
+    .card[style*="grid-template-columns: 240px"] > *:first-child {
         height: 200px !important;
     }
     aside {

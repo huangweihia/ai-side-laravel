@@ -95,8 +95,8 @@ class ArticleController extends Controller
         // 相关文章推荐
         $relatedArticles = $article->getRelatedArticles(5);
 
-        // 如果是 VIP 文章且用户不是 VIP，显示部分内容
-        $isVipContent = $article->is_vip && (!auth()->check() || !auth()->user()->isVip());
+        // VIP 全文：后端鉴权，视图不得输出未授权正文
+        $canViewFullArticle = $article->userCanViewFullContent(auth()->user());
 
         $likedCommentIds = auth()->check()
             ? UserAction::query()
@@ -108,7 +108,7 @@ class ArticleController extends Controller
                 ->all()
             : [];
 
-        return view('articles.show', compact('article', 'comments', 'commentsTotal', 'featuredComment', 'isFavorited', 'isLiked', 'likedCommentIds', 'relatedArticles', 'isVipContent'));
+        return view('articles.show', compact('article', 'comments', 'commentsTotal', 'featuredComment', 'isFavorited', 'isLiked', 'likedCommentIds', 'relatedArticles', 'canViewFullArticle'));
     }
 
     /**

@@ -132,8 +132,8 @@
             </figure>
             @endif
             
-            {{-- 文章来源 --}}
-            @if($article->source_url)
+            {{-- 文章来源（VIP 未授权时不展示外链，避免绕过正文限制） --}}
+            @if($canViewFullArticle && $article->source_url)
             <div style="
                 padding: 16px 20px;
                 background: linear-gradient(135deg, rgba(99, 102, 241, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
@@ -178,13 +178,34 @@
             </div>
             @endif
             
-            {{-- 文章内容 --}}
+            {{-- 文章内容：未授权时仅输出摘要（纯文本），不输出 HTML 正文 --}}
             <div style="margin-top: 30px;">
-                {!! $article->content !!}
+                @if($canViewFullArticle)
+                    {!! $article->content !!}
+                @else
+                    <div style="padding: 28px 24px; border-radius: 16px; border: 2px solid rgba(251, 191, 36, 0.45); background: linear-gradient(135deg, rgba(30, 41, 59, 0.06) 0%, rgba(15, 23, 42, 0.04) 100%);">
+                        <div style="font-size: 40px; text-align: center; margin-bottom: 12px;">👑</div>
+                        <p style="color: #475569; font-size: 16px; line-height: 1.85; margin: 0 0 20px;">
+                            {{ $article->summary ?? '本文为 VIP 专属内容，开通会员或使用积分解锁后可阅读全文。' }}
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+                            <button type="button" onclick="openVipModal()" style="padding: 12px 28px; border: none; border-radius: 12px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #fff; font-weight: 700; cursor: pointer; font-size: 15px;">
+                                开通 VIP 阅读全文
+                            </button>
+                            @auth
+                                @if(!auth()->user()->isVip())
+                                <button type="button" onclick="unlockArticleBody({{ $article->id }})" style="padding: 12px 28px; border-radius: 12px; border: 2px dashed #94a3b8; background: #fff; color: #475569; font-weight: 700; cursor: pointer; font-size: 15px;">
+                                    使用积分解锁（100 积分）
+                                </button>
+                                @endif
+                            @endauth
+                        </div>
+                    </div>
+                @endif
             </div>
             
             {{-- 标签 --}}
-            @if($article->meta_keywords)
+            @if($canViewFullArticle && $article->meta_keywords)
             <div style="margin-top: 40px; padding-top: 24px; border-top: 2px solid #e2e8f0;">
                 <div style="color: #64748b; font-size: 14px; margin-bottom: 12px;">标签：</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
@@ -454,7 +475,33 @@
     
 </div>
 
+@if(!$canViewFullArticle)
+@include('components.vip-lock-modal')
+@endif
+
 <script>
+@if(!$canViewFullArticle)
+function unlockArticleBody(articleId) {
+    fetch(`/interactions/articles/${articleId}/unlock`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+            'Accept': 'application/json',
+        },
+        credentials: 'same-origin',
+    })
+        .then((r) => r.json())
+        .then((data) => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert(data.message || '解锁失败');
+            }
+        })
+        .catch(() => alert('网络异常，请稍后重试'));
+}
+@endif
 // 阅读进度条
 window.addEventListener('scroll', function() {
     const article = document.querySelector('.container');

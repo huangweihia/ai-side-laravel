@@ -99,11 +99,19 @@ class InteractionController extends Controller
             return response()->json(['success' => false, 'message' => '该文章无需解锁'], 400);
         }
 
+        if ($article->userCanViewFullContent($user)) {
+            return response()->json([
+                'success' => true,
+                'message' => '您已可阅读全文',
+                'content' => $article->content,
+            ]);
+        }
+
         // 检查是否已解锁
         $unlocked = UserAction::hasActioned($user->id, 'unlock', $article);
         
         if ($unlocked) {
-            return response()->json(['success' => true, 'message' => '已解锁']);
+            return response()->json(['success' => true, 'message' => '已解锁', 'content' => $article->content]);
         }
 
         // 积分价格（根据文章设定，默认 100 积分）

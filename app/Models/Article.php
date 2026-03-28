@@ -97,6 +97,30 @@ class Article extends Model
     }
 
     /**
+     * 是否可查看 VIP 全文（后端鉴权：非 VIP 或未解锁则不得输出正文）
+     */
+    public function userCanViewFullContent(?User $user): bool
+    {
+        if (!$this->is_vip) {
+            return true;
+        }
+        if (!$user) {
+            return false;
+        }
+        if ($user->isAdmin()) {
+            return true;
+        }
+        if ($this->author_id && (int) $user->id === (int) $this->author_id) {
+            return true;
+        }
+        if ($user->isVip()) {
+            return true;
+        }
+
+        return UserAction::hasActioned($user->id, 'unlock', $this);
+    }
+
+    /**
      * 获取相关文章（同分类，排除自己）
      */
     public function getRelatedArticles($limit = 5)

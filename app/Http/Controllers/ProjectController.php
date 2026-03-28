@@ -113,6 +113,16 @@ class ProjectController extends Controller
     }
 
     /**
+     * VIP 专属项目列表（路由占位：当前项目库无 is_vip 字段，与公开列表合并）
+     */
+    public function vipProjects()
+    {
+        return redirect()
+            ->route('projects.index')
+            ->with('info', '项目 VIP 专区与公开列表一致展示；若后续增加 VIP 项目字段将在此筛选。');
+    }
+
+    /**
      * 收藏/取消收藏项目
      */
     public function toggleFavorite($id)

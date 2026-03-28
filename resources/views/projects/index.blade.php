@@ -61,26 +61,22 @@
     </div>
 </section>
 
-<!-- Filter Bar -->
+<!-- Filter Bar（与文章列表：首行分类，次行统计 + 最新/最热） -->
 <section style="padding: 30px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-            <!-- 分类筛选 -->
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="{{ route($projectsListRoute) }}" style="padding: 10px 20px; background: {{ !request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ !request('category') ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">全部</a>
-                <a href="{{ route($projectsListRoute, ['category' => 'ai-tools']) }}" style="padding: 10px 20px; background: {{ request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">🤖 AI 工具</a>
-                <a href="{{ route($projectsListRoute, ['category' => 'side-projects']) }}" style="padding: 10px 20px; background: {{ request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'side-projects' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💡 副业项目</a>
-                <a href="{{ route($projectsListRoute, ['category' => 'monetization']) }}" style="padding: 10px 20px; background: {{ request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'monetization' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💰 变现案例</a>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+            <a href="{{ route($projectsListRoute, array_filter(request()->only(['search', 'sort']))) }}" style="padding: 10px 20px; background: {{ !request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ !request('category') ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">全部</a>
+            <a href="{{ route($projectsListRoute, array_merge(array_filter(request()->only(['search', 'sort'])), ['category' => 'ai-tools'])) }}" style="padding: 10px 20px; background: {{ request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">🤖 AI 工具</a>
+            <a href="{{ route($projectsListRoute, array_merge(array_filter(request()->only(['search', 'sort'])), ['category' => 'side-projects'])) }}" style="padding: 10px 20px; background: {{ request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'side-projects' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💡 副业项目</a>
+            <a href="{{ route($projectsListRoute, array_merge(array_filter(request()->only(['search', 'sort'])), ['category' => 'monetization'])) }}" style="padding: 10px 20px; background: {{ request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'monetization' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💰 变现案例</a>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div style="color: var(--gray-light); font-size: 14px;">
+                共 <span style="color: var(--primary-light); font-weight: 600;">{{ $projects->total() }}</span> 个项目
             </div>
-            
-            <!-- 排序选项 -->
-            <div style="display: flex; align-items: center; gap: 12px; color: var(--gray-light); font-size: 14px;">
-                <span>共 <strong style="color: var(--primary-light);">{{ $projects->total() }}</strong> 个项目</span>
-                <select onchange="(function(s){const p=new URLSearchParams(window.location.search);p.set('sort',s);location.href=window.location.pathname+'?'+p.toString();})(this.value)" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 14px; cursor: pointer;">
-                    <option value="latest" {{ request('sort') === 'latest' ? 'selected' : '' }}>📅 最新</option>
-                    <option value="popular" {{ request('sort') === 'popular' ? 'selected' : '' }}>🔥 最热</option>
-                    <option value="stars" {{ request('sort') === 'stars' ? 'selected' : '' }}>⭐ Stars</option>
-                </select>
+            <div style="display: flex; gap: 12px;">
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'latest']) }}" style="padding: 8px 16px; background: {{ request('sort') === 'latest' || !request('sort') ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('sort') === 'latest' || !request('sort') ? 'white' : 'var(--gray-light)' }}; border: {{ request('sort') === 'latest' || !request('sort') ? 'none' : '1px solid rgba(255,255,255,0.1)' }}; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none;">📅 最新</a>
+                <a href="{{ request()->fullUrlWithQuery(['sort' => 'popular']) }}" style="padding: 8px 16px; background: {{ request('sort') === 'popular' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('sort') === 'popular' ? 'white' : 'var(--gray-light)' }}; border: {{ request('sort') === 'popular' ? 'none' : '1px solid rgba(255,255,255,0.1)' }}; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none;">🔥 最热</a>
             </div>
         </div>
     </div>
@@ -166,7 +162,7 @@
                         
                         <!-- 描述 -->
                         <p style="color: var(--gray-light); font-size: 15px; line-height: 1.8; margin-bottom: 24px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
-                            {{ $project->description }}
+                            {{ \Illuminate\Support\Str::limit(strip_tags($project->description ?? ''), 200) }}
                         </p>
                         
                         <!-- 标签 -->

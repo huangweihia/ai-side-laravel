@@ -1,0 +1,19 @@
+{
+  "name": "AI 内容自动采集",
+  "schedule": {
+    "kind": "cron",
+    "expr": "0 2 * * *",
+    "tz": "Asia/Shanghai"
+  },
+  "payload": {
+    "kind": "agentTurn",
+    "message": "请使用 web_search 搜索最新的 AI 相关内容，整理后推送到 Laravel 项目。\n\n任务要求：\n1. 搜索 5 篇最新的 AI 大模型相关文章\n2. 搜索 10 个热门的 GitHub AI 项目\n3. 搜索 10 个 AI 相关招聘职位\n4. 生成 1 篇 AI 技术教程文档\n\n数据格式要求：\n- 文章：{\"title\":\"标题\",\"summary\":\"摘要\",\"content\":\"内容\",\"url\":\"链接\",\"cover_image\":\"封面图\"}\n- 项目：{\"name\":\"项目名\",\"description\":\"描述\",\"url\":\"GitHub 链接\",\"stars\":数字,\"forks\":数字,\"language\":\"语言\"}\n- 职位：{\"title\":\"职位\",\"company_name\":\"公司\",\"salary\":\"薪资\",\"city\":\"城市\",\"experience\":\"经验\",\"education\":\"学历\",\"description\":\"描述\",\"url\":\"链接\",\"tags\":[\"标签\"]}\n- 知识库：{\"title\":\"标题\",\"content\":\"HTML 内容\"}\n\n推送方式：\n分别调用以下 Webhook（POST）：\nURL: http://localhost:8081/api/openclaw/webhook\nHeader: X-API-Token: openclaw-ai-fetcher-2026\nContent-Type: application/json\n\nBody 示例（文章）：\n{\n  \"type\": \"articles\",\n  \"items\": [{\"title\":\"...\",\"summary\":\"...\",\"content\":\"...\",\"url\":\"...\"}]\n}\n\n请确保返回的数据是有效的 JSON 格式。",
+    "model": "bailian/qwen3.5-plus",
+    "thinking": "medium"
+  },
+  "sessionTarget": "isolated",
+  "enabled": true,
+  "delivery": {
+    "mode": "announce"
+  }
+}

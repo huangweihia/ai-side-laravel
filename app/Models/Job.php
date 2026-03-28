@@ -24,6 +24,7 @@ class Job extends Model
         'contact_phone',
         'contact_wechat',
         'is_contact_vip',
+        'is_vip_only',
         'is_published',
         'view_count',
         'apply_count',
@@ -32,6 +33,7 @@ class Job extends Model
 
     protected $casts = [
         'is_contact_vip' => 'boolean',
+        'is_vip_only' => 'boolean',
         'is_published' => 'boolean',
         'published_at' => 'datetime',
     ];
@@ -50,6 +52,14 @@ class Job extends Model
     public function comments()
     {
         return $this->morphMany(Comment::class, 'commentable');
+    }
+
+    /**
+     * 职位申请记录
+     */
+    public function applications()
+    {
+        return $this->hasMany(JobApplication::class, 'job_id');
     }
 
     /**
@@ -72,6 +82,24 @@ class Job extends Model
         }
         
         // VIP 用户可以查看
+        return $user->isVip();
+    }
+
+    /**
+     * 是否可查看完整职位正文（含 VIP 专属）
+     */
+    public function userCanViewFullContent(?User $user): bool
+    {
+        if (! $this->is_vip_only) {
+            return true;
+        }
+        if (! $user) {
+            return false;
+        }
+        if ($user->isAdmin() || $user->id === $this->user_id) {
+            return true;
+        }
+
         return $user->isVip();
     }
 

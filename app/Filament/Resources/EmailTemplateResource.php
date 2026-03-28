@@ -17,8 +17,8 @@ class EmailTemplateResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = '邮件模板';
     protected static ?string $modelLabel = '邮件模板';
-    protected static ?int $navigationSort = 6;
-    protected static ?string $navigationGroup = '系统设置';
+    protected static ?int $navigationSort = 20;
+    protected static ?string $navigationGroup = '邮件系统';
 
     public static function form(Form $form): Form
     {

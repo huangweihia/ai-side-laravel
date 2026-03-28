@@ -50,11 +50,20 @@
                     @endif
                 </div>
 
-                {{-- 职位描述 --}}
+                {{-- 职位描述（富文本；VIP 专属时未开通仅展示摘要） --}}
                 @if($job->description)
                     <div style="margin-bottom: 24px;">
                         <h2 style="font-size: 18px; font-weight: 700; color: var(--white); margin: 0 0 12px;">📋 职位描述</h2>
-                        <div style="color: var(--gray-light); line-height: 1.8; white-space: pre-wrap;">{{ $job->description }}</div>
+                        @if(!$job->is_vip_only || $canViewFullContent)
+                            <div class="job-html-content" style="color: var(--gray-light); line-height: 1.85;">{!! $job->description !!}</div>
+                        @else
+                            <p style="color: var(--gray-light); line-height: 1.8;">{{ \Illuminate\Support\Str::limit(strip_tags($job->description), 320) }}</p>
+                            <div style="margin-top: 16px; padding: 20px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.08); text-align: center;">
+                                <div style="font-size: 22px; margin-bottom: 8px;">👑</div>
+                                <div style="font-size: 14px; color: #fbbf24; font-weight: 700; margin-bottom: 8px;">正文为 VIP 专属内容</div>
+                                <a href="{{ route('vip', ['redirect' => request()->fullUrl()]) }}" style="display: inline-block; padding: 10px 22px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); color: #0f172a; border-radius: 10px; font-weight: 700; text-decoration: none;">开通 VIP 查看完整描述</a>
+                            </div>
+                        @endif
                     </div>
                 @endif
 
@@ -62,7 +71,12 @@
                 @if($job->requirements)
                     <div>
                         <h2 style="font-size: 18px; font-weight: 700; color: var(--white); margin: 0 0 12px;">✅ 任职要求</h2>
-                        <div style="color: var(--gray-light); line-height: 1.8; white-space: pre-wrap;">{{ $job->requirements }}</div>
+                        @if(!$job->is_vip_only || $canViewFullContent)
+                            <div style="color: var(--gray-light); line-height: 1.8; white-space: pre-wrap;">{{ $job->requirements }}</div>
+                        @else
+                            <p style="color: var(--gray-light); line-height: 1.8;">{{ \Illuminate\Support\Str::limit($job->requirements, 200) }}</p>
+                            <p style="font-size: 13px; color: var(--gray); margin-top: 8px;">完整任职要求与正文均为 VIP 可见</p>
+                        @endif
                     </div>
                 @endif
             </div>
@@ -151,8 +165,8 @@
             @endauth
 
             {{-- 评论区 --}}
-            <div style="background: var(--dark-light); border-radius: 16px; padding: 32px; margin-top: 40px; border: 1px solid rgba(255,255,255,0.08);">
-                <h2 style="font-size: 20px; font-weight: 700; color: var(--white); margin: 0 0 24px;">
+            <div style="margin-top: 40px;">
+                <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0 0 24px;">
                     💬 评论 (<span id="comment-count">{{ $commentsTotal }}</span>)
                 </h2>
                 
@@ -160,47 +174,107 @@
                     <div style="margin-bottom: 32px;">
                         <textarea id="comment-content" 
                                   placeholder="分享你的看法..."
-                                  style="width: 100%; min-height: 100px; padding: 16px; border: 2px solid rgba(255,255,255,0.15); border-radius: 12px; font-size: 14px; background: rgba(0,0,0,0.2); color: var(--white); resize: vertical;"
-                                  onfocus="this.style.borderColor='var(--primary)'"
-                                  onblur="this.style.borderColor='rgba(255,255,255,0.15)'"></textarea>
+                                  style="
+                                      width: 100%;
+                                      min-height: 100px;
+                                      padding: 16px;
+                                      border: 2px solid #e2e8f0;
+                                      border-radius: 12px;
+                                      font-size: 14px;
+                                      font-family: inherit;
+                                      resize: vertical;
+                                      transition: border-color 0.3s;
+                                  "
+                                  onfocus="this.style.borderColor='#667eea'"
+                                  onblur="this.style.borderColor='#e2e8f0'"></textarea>
                         <div style="text-align: right; margin-top: 12px;">
                             <button onclick="submitComment()"
-                                    style="padding: 12px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 50px; font-size: 14px; font-weight: 700; cursor: pointer;">
+                                    style="
+                                        padding: 12px 32px;
+                                        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                                        color: white;
+                                        border: none;
+                                        border-radius: 50px;
+                                        font-size: 14px;
+                                        font-weight: 700;
+                                        cursor: pointer;
+                                        transition: all 0.3s;
+                                    "
+                                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 8px 25px rgba(102, 126, 234, 0.4)'"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                                 发表评论
                             </button>
                         </div>
                     </div>
                 @else
-                    <div style="text-align: center; padding: 32px; background: rgba(99, 102, 241, 0.1); border-radius: 12px; margin-bottom: 32px;">
-                        <p style="color: var(--gray-light); margin-bottom: 16px;">登录后才能发表评论</p>
+                    <div style="text-align: center; padding: 32px; background: rgba(102, 126, 234, 0.05); border-radius: 12px; margin-bottom: 32px;">
+                        <p style="color: #64748b; margin-bottom: 16px;">登录后才能发表评论</p>
                         <a href="{{ route('login') }}?redirect={{ urlencode(request()->fullUrl()) }}" 
-                           style="display: inline-block; padding: 12px 32px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border-radius: 50px; text-decoration: none; font-weight: 700;">
+                           style="
+                               display: inline-block;
+                               padding: 12px 32px;
+                               background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                               color: white;
+                               border-radius: 50px;
+                               text-decoration: none;
+                               font-weight: 700;
+                           ">
                             立即登录
                         </a>
                     </div>
                 @endauth
 
                 {{-- 评论列表 --}}
-                <div id="comment-list" style="display: grid; gap: 20px;">
+                <div id="comment-list" style="display: grid; gap: 16px;">
                     @forelse($comments as $comment)
-                        <div style="padding: 20px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                        <div class="comment-item" style="
+                            padding: 20px;
+                            border-radius: 12px;
+                            background: #f0f7ff;
+                            word-wrap: break-word;
+                            word-break: break-word;
+                            overflow-wrap: break-word;
+                        ">
                             <div style="display: flex; gap: 16px; align-items: flex-start;">
-                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white;">
-                                    {{ substr($comment->user->name ?? 'U', 0, 1) }}
-                                </div>
-                                <div style="flex: 1;">
+                                <a href="{{ route('users.show', $comment->user_id) }}" title="查看用户主页" style="flex-shrink: 0; text-decoration: none;">
+                                    <img src="{{ $comment->user?->avatarUrl() }}" alt="" width="40" height="40" loading="lazy" decoding="async"
+                                        style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: block; border: 1px solid rgba(99,102,241,0.25); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                </a>
+                                <div style="flex: 1; min-width: 0;">
                                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                         <div>
-                                            <span style="color: var(--white); font-weight: 600;">{{ $comment->user->name ?? '匿名用户' }}</span>
-                                            <span style="color: var(--gray); font-size: 13px; margin-left: 12px;">{{ $comment->created_at->diffForHumans() }}</span>
+                                            <a href="{{ route('users.show', $comment->user_id) }}" style="color: #1e293b; font-weight: 600; font-size: 15px; text-decoration: none;">{{ $comment->user->name ?? '匿名用户' }}</a>
+                                            <span style="color: #94a3b8; font-size: 13px; margin-left: 12px;">{{ $comment->created_at->format('Y-m-d H:i') }}</span>
+                                        </div>
+                                        <div style="display: flex; gap: 8px; align-items:center;">
+                                            <button type="button"
+                                                onclick="toggleCommentLike({{ $comment->id }}, this)"
+                                                style="
+                                                    border: 1px solid #e2e8f0;
+                                                    background: #fff;
+                                                    border-radius: 999px;
+                                                    padding: 4px 10px;
+                                                    color: #ef4444;
+                                                    cursor: pointer;
+                                                    font-size: 12px;
+                                                    font-weight: 600;
+                                                    transition: all 0.2s;
+                                                    opacity: 1;
+                                                    visibility: visible;
+                                                "
+                                                class="reply-btn"
+                                                onmouseover="this.style.background='#f1f5f9'; this.style.opacity='1'"
+                                                onmouseout="this.style.background='#fff'; this.style.opacity='0'">
+                                                👍 {{ $comment->like_count ?? 0 }}
+                                            </button>
                                         </div>
                                     </div>
-                                    <p style="color: var(--gray-light); line-height: 1.6; margin: 0;">{{ $comment->content }}</p>
+                                    <p style="color: #64748b; line-height: 1.6; margin: 0; font-size: 14px;">{{ $comment->content }}</p>
                                 </div>
                             </div>
                         </div>
                     @empty
-                        <div id="comment-empty" style="text-align: center; padding: 60px; color: var(--gray-light);">
+                        <div id="comment-empty" style="text-align: center; padding: 60px; color: #64748b;">
                             <div style="font-size: 64px; margin-bottom: 16px;">💬</div>
                             <p>暂无评论，快来抢沙发吧！</p>
                         </div>

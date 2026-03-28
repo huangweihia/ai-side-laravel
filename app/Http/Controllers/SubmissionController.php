@@ -24,7 +24,7 @@ class SubmissionController extends Controller
 
     public function store(Request $request)
     {
-        $request->validate([
+        $rules = [
             'type' => 'required|in:document,project,job,knowledge',
             'title' => 'required|string|max:255',
             'summary' => 'nullable|string|max:500',
@@ -32,10 +32,32 @@ class SubmissionController extends Controller
             'is_paid' => 'nullable|boolean',
             'price' => 'nullable|numeric|min:0|max:999999.99',
             'currency' => 'nullable|string|size:3',
-        ]);
+        ];
+
+        if ($request->input('type') === 'job') {
+            $rules['company_name'] = 'required|string|max:200';
+            $rules['job_title'] = 'required|string|max:200';
+            $rules['salary_range'] = 'nullable|string|max:100';
+            $rules['location'] = 'nullable|string|max:100';
+            $rules['job_requirements'] = 'nullable|string|max:10000';
+        }
+
+        $request->validate($rules);
 
         $isPaid = (bool) $request->boolean('is_paid');
         $price = $isPaid ? (float) ($request->input('price') ?: 0) : 0;
+
+        $payload = [
+            'client_ip' => $request->ip(),
+        ];
+
+        if ($request->input('type') === 'job') {
+            $payload['company_name'] = $request->input('company_name');
+            $payload['job_title'] = $request->input('job_title');
+            $payload['salary_range'] = $request->input('salary_range');
+            $payload['location'] = $request->input('location');
+            $payload['job_requirements'] = $request->input('job_requirements');
+        }
 
         ContentSubmission::create([
             'user_id' => auth()->id(),
@@ -47,9 +69,7 @@ class SubmissionController extends Controller
             'price' => $price,
             'currency' => strtoupper($request->input('currency', 'CNY')),
             'status' => 'pending',
-            'payload' => [
-                'client_ip' => $request->ip(),
-            ],
+            'payload' => $payload,
         ]);
 
         return redirect()->route('dashboard')->with('success', '投稿已提交，等待管理员审核。');
@@ -105,14 +125,36 @@ class SubmissionController extends Controller
             return back()->with('error', '只有被驳回的投稿才能重新编辑');
         }
         
-        $request->validate([
+        $rules = [
             'type' => 'required|in:document,project,job,knowledge',
             'title' => 'required|string|max:255',
             'summary' => 'nullable|string|max:500',
             'content' => 'required|string',
             'is_paid' => 'nullable|boolean',
+        ];
+
+        if ($request->input('type') === 'job') {
+            $rules['company_name'] = 'required|string|max:200';
+            $rules['job_title'] = 'required|string|max:200';
+            $rules['salary_range'] = 'nullable|string|max:100';
+            $rules['location'] = 'nullable|string|max:100';
+            $rules['job_requirements'] = 'nullable|string|max:10000';
+        }
+
+        $request->validate($rules);
+
+        $payload = array_merge($submission->payload ?? [], [
+            'client_ip' => $request->ip(),
         ]);
-        
+
+        if ($request->input('type') === 'job') {
+            $payload['company_name'] = $request->input('company_name');
+            $payload['job_title'] = $request->input('job_title');
+            $payload['salary_range'] = $request->input('salary_range');
+            $payload['location'] = $request->input('location');
+            $payload['job_requirements'] = $request->input('job_requirements');
+        }
+
         $submission->update([
             'type' => $request->input('type'),
             'title' => $request->input('title'),
@@ -121,6 +163,7 @@ class SubmissionController extends Controller
             'is_paid' => (bool) $request->boolean('is_paid'),
             'status' => 'pending', // 重置状态为待审核
             'review_note' => null, // 清空审核备注
+            'payload' => $payload,
         ]);
         
         return redirect()->route('submissions.index')

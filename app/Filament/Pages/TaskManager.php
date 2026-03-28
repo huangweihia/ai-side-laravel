@@ -13,8 +13,8 @@ class TaskManager extends Page
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
     protected static string $view = 'filament.pages.task-manager';
     protected static ?string $navigationLabel = '任务管理';
-    protected static ?int $navigationSort = 3;
-    protected static ?string $navigationGroup = '系统管理';
+    protected static ?int $navigationSort = 10;
+    protected static ?string $navigationGroup = '系统';
     
     public function getTasksProperty()
     {

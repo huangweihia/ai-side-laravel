@@ -26,11 +26,6 @@ class UserAction extends Model
         return $this->morphTo();
     }
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
-
     /**
      * 检查用户是否已执行该行为
      */

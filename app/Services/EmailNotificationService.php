@@ -3,14 +3,23 @@
 namespace App\Services;
 
 use App\Models\EmailLog;
+use App\Models\EmailSubscription;
 use App\Models\EmailTemplate;
 use App\Models\User;
 use Illuminate\Support\Facades\Mail;
 
 class EmailNotificationService
 {
+    /**
+     * 模板邮件（欢迎、VIP 提醒、紧急通知等）仅在用户开启「系统通知」订阅时发送。
+     * 日报/周报由独立命令按 subscribed_to_daily / subscribed_to_weekly 筛选，不走本方法。
+     */
     public function sendFromTemplateByKey(string $templateKey, User $user, array $extraData = [], ?string $type = null): bool
     {
+        if (! EmailSubscription::wantsSystemNotifications($user)) {
+            return false;
+        }
+
         $template = EmailTemplate::query()
             ->where('key', $templateKey)
             ->where('is_active', true)

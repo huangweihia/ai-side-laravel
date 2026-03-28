@@ -83,7 +83,26 @@ class EmailSubscription extends Model
      */
     public function isSubscribedToNotifications(): bool
     {
-        return $this->subscribed_to_notifications && !$this->unsubscribed_at;
+        return $this->subscribed_to_notifications && ! $this->unsubscribed_at;
+    }
+
+    /**
+     * 是否允许接收「系统通知」类站内信与模板邮件（与前台「系统通知」开关一致）。
+     * 无邮件订阅记录则视为不允许，避免未显式订阅的用户收到通知。
+     */
+    public static function wantsSystemNotifications(?User $user): bool
+    {
+        if (! $user) {
+            return false;
+        }
+
+        $sub = static::query()
+            ->where(function ($q) use ($user): void {
+                $q->where('user_id', $user->id)->orWhere('email', $user->email);
+            })
+            ->first();
+
+        return $sub !== null && $sub->isSubscribedToNotifications();
     }
 
     /**

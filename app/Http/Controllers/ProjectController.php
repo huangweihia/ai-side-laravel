@@ -45,10 +45,15 @@ class ProjectController extends Controller
         $featuredComment = $project->comments()
             ->whereNull('parent_id')
             ->where('is_hidden', false)
+            ->withCount('replies')
             ->with(['user', 'replies.user', 'replies.replyTo.user'])
-            ->orderByDesc('like_count')
+            ->orderByDesc('replies_count')
             ->orderByDesc('id')
             ->first();
+
+        if ($featuredComment && (int) $featuredComment->replies_count < 1) {
+            $featuredComment = null;
+        }
 
         $commentsQuery = $project->comments()
             ->whereNull('parent_id')

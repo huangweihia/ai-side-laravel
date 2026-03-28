@@ -18,10 +18,10 @@
 
 <div class="container" style="max-width: 1200px; margin: 0 auto; padding: 40px 20px;">
     
-    <div style="display: grid; grid-template-columns: 1fr 350px; gap: 40px;">
+    <div style="display: grid; grid-template-columns: 1fr 320px; gap: 40px;">
         
         {{-- 左侧：文章内容 --}}
-        <div>
+        <div style="min-width: 0;">
             {{-- 返回按钮 --}}
             <a href="{{ route('articles.index') }}" 
                style="display: inline-flex; align-items: center; gap: 8px; color: #667eea; text-decoration: none; font-weight: 600; margin-bottom: 24px;"
@@ -225,7 +225,7 @@
 
             @if($showComments)
             {{-- 评论区（VIP 锁文且未解锁时不展示） --}}
-            <div style="background: white; border-radius: 16px; padding: 24px; margin-top: 40px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+            <div style="margin-top: 40px;">
                 <h2 style="font-size: 20px; font-weight: 700; color: #1e293b; margin: 0 0 24px;">
                     💬 评论 (<span id="comment-count">{{ $commentsTotal ?? $comments->count() }}</span>)
                 </h2>
@@ -298,7 +298,19 @@
                     </div>
                 @endauth
 
-                <div id="comment-list" style="display: grid; gap: 20px;">
+                <style>
+                    .comment-item .reply-btn {
+                        opacity: 0;
+                        transition: opacity 0.15s ease;
+                    }
+                    .comment-item-head:hover .reply-btn,
+                    .comment-item-head:focus-within .reply-btn,
+                    .reply-item:hover .reply-btn,
+                    .reply-item:focus-within .reply-btn {
+                        opacity: 1;
+                    }
+                </style>
+                <div id="comment-list" style="display: grid; gap: 16px;">
                     @php
                         $totalComments = $comments->count();
                         $showLastN = 5;
@@ -309,52 +321,54 @@
 
                     @forelse($comments as $idx => $comment)
                         @php
-                            $isVisible = !$shouldCollapse || $idx >= $startIndex;
+                            $isFeatured = isset($featuredComment) && $featuredComment && $featuredComment->id === $comment->id;
+                            $isVisible = !$shouldCollapse || $idx >= $startIndex || $isFeatured;
                         @endphp
                         <div class="comment-item"
                              data-comment-id="{{ $comment->id }}"
                              data-parent-name="{{ $comment->user->name ?? '匿名用户' }}"
-                             style="padding: 20px; border-bottom: 1px solid #e2e8f0; {{ !$isVisible ? 'display:none;' : '' }}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
+                             style="
+                                padding: 20px; 
+                                border-radius: 12px; 
+                                background: #f0f7ff;
+                                {{ !$isVisible ? 'display:none;' : '' }};
+                                word-wrap: break-word; 
+                                word-break: break-word; 
+                                overflow-wrap: break-word;
+                            ">
                             @if(isset($featuredComment) && $featuredComment && $featuredComment->id === $comment->id)
                                 <div style="display: inline-flex; align-items: center; gap: 6px; margin-bottom: 12px; padding: 4px 10px; border-radius: 999px; background: rgba(245, 158, 11, 0.12); color: #d97706; font-size: 12px; font-weight: 700;">
                                     <span>🏆</span><span>精品评论</span>
                                 </div>
                             @endif
                             <div style="display: flex; gap: 16px; align-items: flex-start;">
-                                <div style="
-                                    width: 48px;
-                                    height: 48px;
-                                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-                                    border-radius: 50%;
-                                    display: flex;
-                                    align-items: center;
-                                    justify-content: center;
-                                    font-size: 20px;
-                                    font-weight: 700;
-                                    color: white;
-                                ">
-                                    {{ substr($comment->user->name ?? 'U', 0, 1) }}
-                                </div>
-                                <div style="flex: 1;">
-                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                <a href="{{ route('users.show', $comment->user_id) }}" title="查看用户主页" style="flex-shrink: 0; text-decoration: none;">
+                                    <img src="{{ $comment->user?->avatarUrl() }}" alt="" width="40" height="40" loading="lazy" decoding="async"
+                                        style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; display: block; border: 1px solid rgba(99,102,241,0.25); background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                </a>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div class="comment-item-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                                         <div>
-                                            <a href="{{ route('users.show', $comment->user_id) }}" style="color: #1e293b; font-weight: 600; text-decoration:none;">{{ $comment->user->name ?? '匿名用户' }}</a>
-                                            <span style="color: #94a3b8; font-size: 13px; margin-left: 12px;">{{ $comment->created_at->diffForHumans() }}</span>
+                                            <a href="{{ route('users.show', $comment->user_id) }}" style="color: #1e293b; font-weight: 600; text-decoration:none; font-size: 15px;">{{ $comment->user->name ?? '匿名用户' }}</a>
+                                            <span style="color: #94a3b8; font-size: 13px; margin-left: 12px;">{{ $comment->created_at->format('Y-m-d H:i') }}</span>
                                         </div>
-                                        <div style="display: flex; gap: 8px; align-items:center; color: #64748b; font-size: 13px;">
+                                        <div style="display: flex; gap: 8px; align-items:center;">
                                             <button type="button"
                                                 onclick="toggleCommentLike({{ $comment->id }}, this)"
-                                                style="border: 1px solid {{ in_array($comment->id, $likedCommentIds ?? []) ? 'rgba(239, 68, 68, 0.4)' : '#e2e8f0' }}; background: {{ in_array($comment->id, $likedCommentIds ?? []) ? 'rgba(239, 68, 68, 0.12)' : '#fff' }}; border-radius: 999px; padding: 6px 10px; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 600;">
+                                                style="border: 1px solid {{ in_array($comment->id, $likedCommentIds ?? []) ? 'rgba(239, 68, 68, 0.4)' : '#e2e8f0' }}; background: {{ in_array($comment->id, $likedCommentIds ?? []) ? 'rgba(239, 68, 68, 0.12)' : '#fff' }}; border-radius: 999px; padding: 4px 10px; color: #ef4444; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s;">
                                                 👍 <span class="comment-like-count">{{ $comment->like_count ?? 0 }}</span>
                                             </button>
                                             <button type="button"
                                                 onclick="startArticleReply({{ $comment->id }}, '{{ addslashes($comment->user->name ?? '匿名用户') }}')"
-                                                style="border: 1px solid #e2e8f0; background: #fff; border-radius: 999px; padding: 6px 10px; color: #667eea; cursor: pointer; font-size: 12px; font-weight: 600;">
+                                                style="border: 1px solid #e2e8f0; background: #fff; border-radius: 999px; padding: 4px 10px; color: #667eea; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; "
+                                                class="reply-btn"
+                                                
+                                                >
                                                 回复
                                             </button>
                                         </div>
                                     </div>
-                                    <p style="color: #64748b; line-height: 1.6; margin: 0;">{{ $comment->content }}</p>
+                                    <p style="color: #64748b; line-height: 1.6; margin: 0; font-size: 14px;">{{ $comment->content }}</p>
 
                                     @if($comment->replies->count())
                                         @php
@@ -363,26 +377,35 @@
                                             $showLastNReplies = 3;
                                             $replyStartIndex = $shouldCollapseReplies ? max(0, $replyCount - $showLastNReplies) : 0;
                                         @endphp
-                                        <div class="replies-container" data-comment-id="{{ $comment->id }}" style="margin-top: 16px; padding-left: 24px; border-left: 2px solid #e2e8f0;">
+                                        <div class="replies-container" data-comment-id="{{ $comment->id }}" style="margin-top: 16px; padding-left: 24px; border-left: 2px solid #dbeafe;">
                                             @foreach($comment->replies as $ridx => $reply)
                                                 @php
                                                     $isReplyVisible = !$shouldCollapseReplies || $ridx >= $replyStartIndex;
                                                 @endphp
-                                                <div class="reply-item" style="padding: 12px 0; border-bottom: 1px solid #f1f5f9; {{ !$isReplyVisible ? 'display:none;' : '' }}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
-                                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap:8px;">
-                                                        <div style="display: flex; gap: 12px; align-items: center;">
-                                                            <span style="color: #1e293b; font-weight: 600; font-size: 14px;">{{ $reply->user->name ?? '匿名用户' }}</span>
-                                                            <span style="color: #94a3b8; font-size: 12px;">{{ $reply->created_at->diffForHumans() }}</span>
+                                                <div class="reply-item" style="padding: 12px 0; border-bottom: 1px solid #e2e8f0; {{ !$isReplyVisible ? 'display:none;' : '' }}; word-wrap: break-word; word-break: break-word; overflow-wrap: break-word;">
+                                                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap:8px;">
+                                                        <div style="display: flex; gap: 10px; align-items: center; min-width: 0;">
+                                                            <a href="{{ route('users.show', $reply->user_id) }}" title="查看用户主页" style="flex-shrink: 0;">
+                                                                <img src="{{ $reply->user?->avatarUrl() }}" alt="" width="32" height="32" loading="lazy" decoding="async"
+                                                                    style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block; border: 1px solid rgba(99,102,241,0.2); background: #e2e8f0;">
+                                                            </a>
+                                                            <div style="min-width: 0;">
+                                                                <a href="{{ route('users.show', $reply->user_id) }}" style="color: #1e293b; font-weight: 600; font-size: 14px; text-decoration: none;">{{ $reply->user->name ?? '匿名用户' }}</a>
+                                                                <span style="color: #94a3b8; font-size: 12px; margin-left: 8px;">{{ $reply->created_at->format('Y-m-d H:i') }}</span>
+                                                            </div>
                                                         </div>
                                                         <button type="button"
                                                             onclick="startArticleReply({{ $comment->id }}, '{{ addslashes($reply->user->name ?? '匿名用户') }}', {{ $reply->id }})"
-                                                            style="border: 1px solid #e2e8f0; background: #fff; border-radius: 999px; padding: 4px 10px; color: #667eea; cursor: pointer; font-size: 12px; font-weight: 600;">
+                                                            style="border: 1px solid #e2e8f0; background: #fff; border-radius: 999px; padding: 4px 10px; color: #667eea; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s; "
+                                                            class="reply-btn"
+                                                            
+                                                            >
                                                             回复
                                                         </button>
                                                     </div>
                                                     @if($reply->replyTo)
-                                                        <div style="margin-bottom:6px; padding:6px 10px; border-radius:8px; background:#f8fafc; color:#64748b; font-size:12px;">
-                                                            引用 {{ $reply->replyTo->user->name ?? '匿名用户' }}：{{ \Illuminate\Support\Str::limit($reply->replyTo->content, 40) }}
+                                                        <div style="margin-bottom:6px; padding:6px 10px; border-radius:8px; background:#fff; color:#64748b; font-size:12px;">
+                                                            <span style="color: #667eea; font-weight: 600;">{{ $reply->replyTo->user->name ?? '匿名用户' }}</span>：{{ \Illuminate\Support\Str::limit($reply->replyTo->content, 40) }}
                                                         </div>
                                                     @endif
                                                     <p style="color: #64748b; font-size: 14px; line-height: 1.5; margin: 0;">{{ $reply->content }}</p>
@@ -392,9 +415,9 @@
                                             @if($shouldCollapseReplies)
                                                 <div style="padding: 8px 0;">
                                                     <button type="button" onclick="toggleArticleRepliesExpand('{{ $comment->id }}', {{ $replyCount }})"
-                                                        style="padding: 6px 14px; border-radius: 999px; border: 1px solid #e2e8f0; background: #f8fafc; color: #667eea; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s;"
+                                                        style="padding: 6px 14px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #667eea; cursor: pointer; font-size: 12px; font-weight: 600; transition: all 0.2s;"
                                                         onmouseover="this.style.background='#f1f5f9'; this.style.transform='translateY(-1px)'"
-                                                        onmouseout="this.style.background='#f8fafc'; this.style.transform='translateY(0)'">
+                                                        onmouseout="this.style.background='#fff'; this.style.transform='translateY(0)'">
                                                         查看全部 {{ $replyCount }} 条回复
                                                     </button>
                                                 </div>
@@ -415,9 +438,9 @@
                 @if($shouldCollapse)
                     <div style="text-align:center; margin-top: 20px;">
                         <button id="toggle-comments-btn" type="button" onclick="toggleArticleCommentsExpand()"
-                            style="padding: 10px 24px; border-radius: 999px; border: 1px solid #e2e8f0; background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); color: #475569; cursor:pointer; font-weight:600; font-size: 14px; transition: all 0.2s;"
-                            onmouseover="this.style.background='linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%)'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'"
-                            onmouseout="this.style.background='linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%)'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+                            style="padding: 10px 24px; border-radius: 999px; border: 1px solid #e2e8f0; background: #fff; color: #667eea; cursor:pointer; font-weight:600; font-size: 14px; transition: all 0.2s;"
+                            onmouseover="this.style.background='#f1f5f9'; this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(0,0,0,0.08)'"
+                            onmouseout="this.style.background='#fff'; this.style.transform='translateY(0)'; this.style.boxShadow='none'">
                             查看全部 {{ $totalComments }} 条评论
                         </button>
                     </div>
@@ -458,6 +481,48 @@
                             </div>
                         </a>
                     @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- 广告位（右侧边栏留白区，置于相关文章下方） --}}
+            @if(isset($adSlot) && $adSlot->shouldDisplaySidebar())
+            <div class="article-ad-slot-wrap" style="margin-top: 8px;">
+                <div class="site-ad-sidebar-card">
+                    <div class="site-ad-sidebar-head">
+                        <span class="site-ad-sidebar-head-label">推广</span>
+                        <button type="button" class="site-ad-sidebar-close" onclick="this.closest('.article-ad-slot-wrap').remove()" aria-label="关闭">×</button>
+                    </div>
+                    <div class="site-ad-sidebar-body">
+                        @if($adSlot->display_mode === 'html' && filled($adSlot->html_content))
+                            <div class="site-ad-sidebar-html">{!! $adSlot->html_content !!}</div>
+                        @else
+                            <div class="site-ad-sidebar-meta">
+                                <span class="site-ad-sidebar-badge">广告</span>
+                            </div>
+                            @php $adResolvedImg = $adSlot->resolvedImageUrl(); @endphp
+                            @if($adResolvedImg)
+                                <div class="site-ad-sidebar-img">
+                                    @if($adSlot->link_url)
+                                        <a href="{{ $adSlot->link_url }}" target="_blank" rel="noopener noreferrer">
+                                            <img src="{{ $adResolvedImg }}" alt="">
+                                        </a>
+                                    @else
+                                        <img src="{{ $adResolvedImg }}" alt="">
+                                    @endif
+                                </div>
+                            @endif
+                            @if(filled($adSlot->title))
+                                <h3 class="site-ad-sidebar-title">{{ $adSlot->title }}</h3>
+                            @endif
+                            @if(filled($adSlot->body))
+                                <div class="site-ad-sidebar-text">{!! nl2br(e($adSlot->body)) !!}</div>
+                            @endif
+                            @if(filled($adSlot->cta_label) && filled($adSlot->link_url))
+                                <a href="{{ $adSlot->link_url }}" class="site-ad-sidebar-cta" target="_blank" rel="noopener noreferrer">{{ $adSlot->cta_label }} <span aria-hidden="true">›</span></a>
+                            @endif
+                        @endif
+                    </div>
                 </div>
             </div>
             @endif
@@ -604,6 +669,17 @@ const ARTICLE_SHOW_LAST_N = 5;
 const ARTICLE_SHOW_LAST_N_REPLIES = 3;
 const articleReplyExpandedState = {};
 
+function commentUserAvatarUrl(user, fallbackName) {
+    const name = fallbackName || user?.name || 'U';
+    const a = user?.avatar;
+    if (a && String(a).trim()) {
+        const s = String(a).trim();
+        if (s.startsWith('http://') || s.startsWith('https://')) return s;
+        return s.startsWith('/') ? s : '/' + s.replace(/^\//, '');
+    }
+    return 'https://ui-avatars.com/api/?name=' + encodeURIComponent(name) + '&background=6366f1&color=fff&size=128';
+}
+
 function toggleArticleCommentsExpand() {
     const items = document.querySelectorAll('#comment-list .comment-item');
     const btn = document.getElementById('toggle-comments-btn');
@@ -697,17 +773,26 @@ function promptLoginForArticleComment() {
 
 function renderArticleReplyItem(reply) {
     const userName = reply?.user?.name ?? '匿名用户';
+    const uid = reply?.user_id ?? reply?.user?.id ?? '';
+    const profileUrl = uid ? `{{ url('/users') }}/${uid}` : '#';
+    const avatarSrc = commentUserAvatarUrl(reply?.user, userName);
     const quotedUser = reply?.reply_to?.user?.name || '';
     const quotedContent = reply?.reply_to?.content || '';
 
     return `
-        <div style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap:8px;">
-                <div style="display: flex; gap: 12px; align-items: center;">
-                    <span style="color: #1e293b; font-weight: 600; font-size: 14px;">${userName}</span>
-                    <span style="color: #94a3b8; font-size: 12px;">刚刚</span>
+        <div class="reply-item" style="padding: 12px 0; border-bottom: 1px solid #f1f5f9;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap:8px;">
+                <div style="display: flex; gap: 10px; align-items: center; min-width: 0;">
+                    <a href="${profileUrl}" title="查看用户主页" style="flex-shrink: 0;">
+                        <img src="${avatarSrc}" alt="" width="32" height="32" decoding="async" style="width:32px;height:32px;border-radius:50%;object-fit:cover;display:block;border:1px solid rgba(99,102,241,0.2);background:#e2e8f0;">
+                    </a>
+                    <div style="min-width:0;">
+                        <a href="${profileUrl}" style="color: #1e293b; font-weight: 600; font-size: 14px; text-decoration: none;">${userName}</a>
+                        <span style="color: #94a3b8; font-size: 12px; margin-left: 8px;">刚刚</span>
+                    </div>
                 </div>
                 <button type="button"
+                    class="reply-btn"
                     onclick="startArticleReply(${reply?.parent_id ?? 0}, '${String(userName).replace(/'/g, "\\'")}', ${reply?.id ?? 0})"
                     style="border: 1px solid #e2e8f0; background: #fff; border-radius: 999px; padding: 4px 10px; color: #667eea; cursor: pointer; font-size: 12px; font-weight: 600;">
                     回复
@@ -783,19 +868,21 @@ function toggleCommentLike(commentId, btnEl) {
 
 function renderArticleCommentItem(comment) {
     const userName = comment?.user?.name ?? '匿名用户';
-    const userInitial = userName ? userName.substring(0, 1) : 'U';
     const content = comment?.content ?? '';
+    const uid = comment?.user_id ?? comment?.user?.id ?? '';
+    const profileUrl = uid ? `{{ url('/users') }}/${uid}` : '#';
+    const avatarSrc = commentUserAvatarUrl(comment?.user, userName);
 
     return `
         <div class="comment-item" data-comment-id="${comment?.id ?? ''}" style="padding: 20px; border-bottom: 1px solid #e2e8f0;">
             <div style="display: flex; gap: 16px; align-items: flex-start;">
-                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; color: white;">
-                    ${userInitial}
-                </div>
+                <a href="${profileUrl}" title="查看用户主页" style="flex-shrink:0; text-decoration:none;">
+                    <img src="${avatarSrc}" alt="" width="48" height="48" decoding="async" style="width:48px;height:48px;border-radius:50%;object-fit:cover;display:block;border:1px solid rgba(225, 231, 239, 0.9);background:linear-gradient(135deg,#667eea,#764ba2);">
+                </a>
                 <div style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                    <div class="comment-item-head" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
                         <div>
-                            <span style="color: #1e293b; font-weight: 600;">${userName}</span>
+                            <a href="${profileUrl}" style="color: #1e293b; font-weight: 600; text-decoration: none;">${userName}</a>
                             <span style="color: #94a3b8; font-size: 13px; margin-left: 12px;">刚刚</span>
                         </div>
                         <div style="display: flex; gap: 8px; align-items:center; color: #64748b; font-size: 13px;">
@@ -805,6 +892,7 @@ function renderArticleCommentItem(comment) {
                                 👍 <span class="comment-like-count">${comment?.like_count ?? 0}</span>
                             </button>
                             <button type="button"
+                                class="reply-btn"
                                 onclick="startArticleReply(${comment?.id ?? 0}, '${String(userName).replace(/'/g, "\\'")}')"
                                 style="border: 1px solid #e2e8f0; background: #fff; border-radius: 999px; padding: 6px 10px; color: #667eea; cursor: pointer; font-size: 12px; font-weight: 600;">
                                 回复

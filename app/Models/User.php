@@ -199,4 +199,21 @@ class User extends Authenticatable implements FilamentUser
             'last_login_ip' => $ip ?? request()->ip(),
         ]);
     }
+
+    /**
+     * 评论/列表等处展示用头像地址（站内路径或外链，无图则用 ui-avatars）
+     */
+    public function avatarUrl(): string
+    {
+        $a = $this->avatar;
+        if (filled($a)) {
+            if (str_starts_with($a, 'http://') || str_starts_with($a, 'https://')) {
+                return $a;
+            }
+
+            return str_starts_with($a, '/') ? $a : '/' . ltrim($a, '/');
+        }
+
+        return 'https://ui-avatars.com/api/?name=' . rawurlencode($this->name ?? 'U') . '&background=6366f1&color=fff&size=128';
+    }
 }

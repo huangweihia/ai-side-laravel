@@ -20,7 +20,8 @@ class ArticleResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationLabel = '文章管理';
     protected static ?string $modelLabel = '文章';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = '内容管理';
+    protected static ?int $navigationSort = 20;
 
     public static function form(Form $form): Form
     {

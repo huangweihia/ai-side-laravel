@@ -3,6 +3,16 @@
 @section('title', 'VIP 会员 - AI 副业情报局')
 
 @section('content')
+@if(session('success'))
+    <div class="container" style="max-width: 1000px; margin: 20px auto 0; padding: 0 20px;">
+        <div style="padding: 14px 18px; border-radius: 12px; background: rgba(16,185,129,0.15); color: #6ee7b7; font-weight: 600;">{{ session('success') }}</div>
+    </div>
+@endif
+@if(session('error'))
+    <div class="container" style="max-width: 1000px; margin: 20px auto 0; padding: 0 20px;">
+        <div style="padding: 14px 18px; border-radius: 12px; background: rgba(239,68,68,0.15); color: #fca5a5;">{{ session('error') }}</div>
+    </div>
+@endif
 <!-- Page Header -->
 <section style="padding: 80px 0; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); text-align: center;">
     <div class="container">
@@ -16,13 +26,13 @@
 <!-- Pricing Cards -->
 <section style="padding: 80px 0;">
     <div class="container">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; max-width: 1000px; margin: 0 auto;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; max-width: 1100px; margin: 0 auto;">
             
             <!-- 月度会员 -->
             <div class="card" style="padding: 40px; text-align: center; border: 2px solid rgba(255,255,255,0.1);">
                 <div style="font-size: 24px; margin-bottom: 10px; color: var(--gray-light);">月度会员</div>
                 <div style="font-size: 56px; font-weight: 800; color: var(--primary); margin-bottom: 10px;">
-                    ¥39<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;">/月</span>
+                    ¥{{ number_format((float) config('wechat_pay.plans.monthly.amount_yuan', 39), 0) }}<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;">/月</span>
                 </div>
                 <ul style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
                     <li style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">✅ 解锁全部项目库</li>
@@ -31,21 +41,34 @@
                     <li style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">❌ 专属资源下载</li>
                     <li style="padding: 12px 0;">❌ 一对一指导</li>
                 </ul>
-                <button class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px;">
-                    立即开通
-                </button>
+                @auth
+                    <a href="{{ route('vip.pay', 'monthly') }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; display: inline-block; text-decoration: none; box-sizing: border-box;">
+                        微信扫码开通
+                    </a>
+                @else
+                    <a href="{{ route('login', ['redirect' => route('vip.pay', 'monthly')]) }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; display: inline-block; text-decoration: none; box-sizing: border-box;">
+                        登录后开通
+                    </a>
+                @endauth
             </div>
 
             <!-- 年度会员 -->
-            <div class="card" style="padding: 40px; text-align: center; background: linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(245,158,11,0.1) 100%); border: 2px solid #fbbf24;">
+            <div class="card" style="position: relative; padding: 40px; text-align: center; background: linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(245,158,11,0.1) 100%); border: 2px solid #fbbf24;">
                 <div style="position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #fbbf24; color: white; padding: 4px 20px; border-radius: 20px; font-size: 13px; font-weight: 600;">
                     🔥 最受欢迎
                 </div>
                 <div style="font-size: 24px; margin-bottom: 10px; color: var(--gray-light);">年度会员</div>
                 <div style="font-size: 56px; font-weight: 800; color: var(--primary); margin-bottom: 10px;">
-                    ¥399<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;">/年</span>
+                    ¥{{ number_format((float) config('wechat_pay.plans.yearly.amount_yuan', 399), 0) }}<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;">/年</span>
                 </div>
-                <div style="color: #10b981; font-size: 14px; margin-bottom: 20px;">省 ¥78（相当于 8.3 折）</div>
+                @php
+                    $m = (float) config('wechat_pay.plans.monthly.amount_yuan', 39);
+                    $y = (float) config('wechat_pay.plans.yearly.amount_yuan', 399);
+                    $save = max(0, $m * 12 - $y);
+                @endphp
+                @if($save > 0)
+                <div style="color: #10b981; font-size: 14px; margin-bottom: 20px;">相较连续包月约省 ¥{{ number_format($save, 0) }}</div>
+                @endif
                 <ul style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
                     <li style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">✅ 解锁全部项目库</li>
                     <li style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">✅ 解锁全部文章</li>
@@ -53,9 +76,37 @@
                     <li style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">✅ 专属资源下载</li>
                     <li style="padding: 12px 0;">❌ 一对一指导</li>
                 </ul>
-                <button class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);">
-                    立即开通
-                </button>
+                @auth
+                    <a href="{{ route('vip.pay', 'yearly') }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
+                        微信扫码开通
+                    </a>
+                @else
+                    <a href="{{ route('login', ['redirect' => route('vip.pay', 'yearly')]) }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
+                        登录后开通
+                    </a>
+                @endauth
+            </div>
+
+            <!-- 终身会员 -->
+            <div class="card" style="padding: 40px; text-align: center; border: 2px solid rgba(139, 92, 246, 0.45);">
+                <div style="font-size: 24px; margin-bottom: 10px; color: var(--gray-light);">终身会员</div>
+                <div style="font-size: 56px; font-weight: 800; color: #a78bfa; margin-bottom: 10px;">
+                    ¥{{ number_format((float) config('wechat_pay.plans.lifetime.amount_yuan', 1999), 0) }}<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;"> 一次买断</span>
+                </div>
+                <ul style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
+                    <li style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">✅ 含月度/年度全部权益</li>
+                    <li style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">✅ 长期内容更新</li>
+                    <li style="padding: 12px 0;">✅ 无需续费烦恼</li>
+                </ul>
+                @auth
+                    <a href="{{ route('vip.pay', 'lifetime') }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
+                        微信扫码开通
+                    </a>
+                @else
+                    <a href="{{ route('login', ['redirect' => route('vip.pay', 'lifetime')]) }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
+                        登录后开通
+                    </a>
+                @endauth
             </div>
 
         </div>
@@ -108,7 +159,7 @@
             </div>
             <div class="card" style="padding: 24px;">
                 <h3 style="font-size: 18px; margin-bottom: 12px;">Q: 支持哪些支付方式？</h3>
-                <p style="color: var(--gray-light); line-height: 1.8;">A: 目前支持支付宝、微信支付和银行卡支付。支付页面会提供多种选择。</p>
+                <p style="color: var(--gray-light); line-height: 1.8;">A: 已接入<strong>微信 Native 扫码支付</strong>（需在服务器配置商户参数）。其他渠道后续陆续开放。</p>
             </div>
         </div>
     </div>

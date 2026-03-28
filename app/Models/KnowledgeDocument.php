@@ -32,6 +32,11 @@ class KnowledgeDocument extends Model
         return $this->belongsTo(KnowledgeBase::class);
     }
 
+    public function comments()
+    {
+        return $this->morphMany(Comment::class, 'commentable');
+    }
+
     public function incrementViewCount()
     {
         $this->increment('view_count');

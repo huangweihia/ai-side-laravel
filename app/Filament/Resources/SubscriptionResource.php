@@ -3,20 +3,33 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SubscriptionResource\Pages;
-use App\Models\Subscription;
+use App\Models\EmailSubscription;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
+/**
+ * 后台「订阅」对应前台邮件订阅（email_subscriptions / EmailSubscription）。
+ * 付费会员套餐请使用 Subscription 模型另建资源，勿与此混用。
+ */
 class SubscriptionResource extends Resource
 {
-    protected static ?string $model = Subscription::class;
-    protected static ?string $navigationIcon = 'heroicon-o-credit-card';
-    protected static ?string $navigationLabel = '订阅管理';
-    protected static ?string $modelLabel = '订阅';
-    protected static ?int $navigationSort = 6;
+    protected static ?string $model = EmailSubscription::class;
+
+    protected static ?string $navigationIcon = 'heroicon-o-envelope';
+
+    protected static ?string $navigationLabel = '邮件订阅';
+
+    protected static ?string $modelLabel = '邮件订阅';
+
+    protected static ?string $pluralModelLabel = '邮件订阅';
+
+    protected static ?string $navigationGroup = '订阅与会员';
+
+    protected static ?int $navigationSort = 10;
 
     public static function form(Form $form): Form
     {
@@ -25,45 +38,38 @@ class SubscriptionResource extends Resource
                 Forms\Components\Section::make('订阅信息')
                     ->schema([
                         Forms\Components\Select::make('user_id')
-                            ->label('用户')
+                            ->label('关联用户')
                             ->relationship('user', 'name')
                             ->searchable()
                             ->preload()
-                            ->required(),
+                            ->nullable(),
                         Forms\Components\TextInput::make('email')
                             ->label('邮箱')
                             ->email()
+                            ->required()
                             ->maxLength(255),
-                        Forms\Components\Select::make('status')
-                            ->label('状态')
-                            ->options([
-                                'active' => '有效',
-                                'cancelled' => '已取消',
-                                'expired' => '已过期',
-                            ])
-                            ->default('active')
-                            ->required(),
-                        Forms\Components\Select::make('plan')
-                            ->label('套餐')
-                            ->options([
-                                'monthly' => '月度会员',
-                                'yearly' => '年度会员',
-                                'lifetime' => '终身会员',
-                            ])
-                            ->default('monthly')
-                            ->required(),
+                        Forms\Components\Toggle::make('subscribed_to_daily')
+                            ->label('每日日报')
+                            ->default(true),
+                        Forms\Components\Toggle::make('subscribed_to_weekly')
+                            ->label('每周汇总')
+                            ->default(true),
+                        Forms\Components\Toggle::make('subscribed_to_notifications')
+                            ->label('系统通知邮件')
+                            ->default(true),
                     ])->columns(2),
 
-                Forms\Components\Section::make('时间设置')
+                Forms\Components\Section::make('退订')
                     ->schema([
-                        Forms\Components\DateTimePicker::make('starts_at')
-                            ->label('开始时间')
-                            ->default(now()),
-                        Forms\Components\DateTimePicker::make('ends_at')
-                            ->label('结束时间'),
-                        Forms\Components\DateTimePicker::make('cancelled_at')
-                            ->label('取消时间')
-                            ->disabled(),
+                        Forms\Components\TextInput::make('unsubscribe_token')
+                            ->label('退订令牌')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->hiddenOn('create'),
+                        Forms\Components\DateTimePicker::make('unsubscribed_at')
+                            ->label('全局退订时间')
+                            ->nullable()
+                            ->helperText('非空表示用户曾一键退订全部；清空可视为重新激活（需同时打开上方开关）'),
                     ])->columns(2),
             ]);
     }
@@ -77,43 +83,26 @@ class SubscriptionResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('用户')
+                    ->placeholder('—')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('email')
                     ->label('邮箱')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('plan')
-                    ->label('套餐')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'yearly' => 'success',
-                        'lifetime' => 'warning',
-                        default => 'primary',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'monthly' => '📅 月度',
-                        'yearly' => '📆 年度',
-                        'lifetime' => '♾️ 终身',
-                        default => $state,
-                    }),
-                Tables\Columns\TextColumn::make('status')
-                    ->label('状态')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'active' => 'success',
-                        'cancelled' => 'danger',
-                        'expired' => 'gray',
-                        default => 'warning',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'active' => '✅ 有效',
-                        'cancelled' => '❌ 已取消',
-                        'expired' => '⏰ 已过期',
-                        default => $state,
-                    }),
-                Tables\Columns\TextColumn::make('ends_at')
-                    ->label('到期时间')
-                    ->dateTime('Y-m-d')
+                    ->searchable()
+                    ->copyable(),
+                Tables\Columns\IconColumn::make('subscribed_to_daily')
+                    ->label('日报')
+                    ->boolean(),
+                Tables\Columns\IconColumn::make('subscribed_to_weekly')
+                    ->label('周报')
+                    ->boolean(),
+                Tables\Columns\IconColumn::make('subscribed_to_notifications')
+                    ->label('通知')
+                    ->boolean(),
+                Tables\Columns\TextColumn::make('unsubscribed_at')
+                    ->label('退订时间')
+                    ->dateTime('Y-m-d H:i')
+                    ->placeholder('—')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('创建时间')
@@ -122,39 +111,21 @@ class SubscriptionResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('status')
-                    ->label('状态')
-                    ->options([
-                        'active' => '有效',
-                        'cancelled' => '已取消',
-                        'expired' => '已过期',
-                    ]),
-                Tables\Filters\SelectFilter::make('plan')
-                    ->label('套餐')
-                    ->options([
-                        'monthly' => '月度',
-                        'yearly' => '年度',
-                        'lifetime' => '终身',
-                    ]),
+                Tables\Filters\TernaryFilter::make('subscribed_to_daily')
+                    ->label('日报'),
+                Tables\Filters\TernaryFilter::make('subscribed_to_weekly')
+                    ->label('周报'),
+                Tables\Filters\Filter::make('active')
+                    ->label('仅活跃订阅')
+                    ->query(fn (Builder $q): Builder => $q->whereNull('unsubscribed_at')),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\Action::make('extend')
-                    ->label('延长')
-                    ->icon('heroicon-m-calendar')
-                    ->color('success')
-                    ->visible(fn ($record) => $record->status === 'active')
-                    ->form([
-                        Forms\Components\TextInput::make('days')
-                            ->label('延长天数')
-                            ->numeric()
-                            ->default(30)
-                            ->required(),
-                    ])
-                    ->action(fn ($record, $data) => $record->update([
-                        'ends_at' => $record->ends_at?->addDays($data['days']) ?? now()->addDays($data['days']),
-                    ]))
-                    ->requiresConfirmation(),
+                Tables\Actions\Action::make('unsubscribe_link')
+                    ->label('退订链接')
+                    ->icon('heroicon-m-link')
+                    ->url(fn (EmailSubscription $record): string => $record->getUnsubscribeUrl())
+                    ->openUrlInNewTab(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

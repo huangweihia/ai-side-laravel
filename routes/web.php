@@ -14,6 +14,8 @@ use App\Http\Controllers\HistoryController;
 use App\Http\Controllers\ProfileMessageController;
 use App\Http\Controllers\SystemNotificationController;
 use App\Http\Controllers\MyArticleEngagementController;
+use App\Http\Controllers\Payments\WechatNativePaymentController;
+use App\Http\Controllers\AnnouncementController;
 
 /*
 |--------------------------------------------------------------------------
@@ -49,12 +51,13 @@ Route::get('self-check', function () {
 })->middleware('auth')->name('self-check');
 
 // 公开页面
-Route::get('vip', function() {
+Route::get('vip', function () {
     return view('vip');
 })->name('vip');
 
-// 知识库（暂时占位）
-Route::get('knowledge', [\App\Http\Controllers\KnowledgeController::class, 'index'])->name('knowledge.index');
+// 微信支付异步通知（无登录、无 CSRF）
+Route::post('payments/wechat/notify', [WechatNativePaymentController::class, 'notify'])
+    ->name('payments.wechat.notify');
 
 // 职位
 Route::get('jobs', [\App\Http\Controllers\JobController::class, 'index'])->name('jobs.index');
@@ -73,6 +76,8 @@ Route::get('contact', function() {
 Route::get('privacy', function() {
     return view('privacy');
 })->name('privacy');
+
+Route::get('announcements/{announcement:slug}', [AnnouncementController::class, 'show'])->name('announcements.show');
 
 Route::get('learning', function() {
     return view('articles.index');
@@ -116,6 +121,10 @@ Route::middleware('auth')->group(function () {
     // 个人中心
     Route::get('dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
     Route::post('profile/upload-avatar', [HomeController::class, 'uploadAvatar'])->name('profile.upload-avatar');
+
+    // 我发布的职位及收到的申请（发布者）
+    Route::get('my/jobs', [\App\Http\Controllers\JobController::class, 'myJobs'])->name('my.jobs.index');
+    Route::get('my/jobs/{job}/applications', [\App\Http\Controllers\JobController::class, 'myJobApplications'])->name('my.jobs.applications');
     
     // 项目列表（公开）
     Route::get('projects', [ProjectController::class, 'index'])->name('projects.index');
@@ -135,6 +144,7 @@ Route::middleware('auth')->group(function () {
     Route::post('articles/{id}/favorite', [ArticleController::class, 'toggleFavorite'])->name('articles.favorite');
     Route::post('articles/{id}/like', [ArticleController::class, 'toggleLike'])->name('articles.like');
     Route::post('articles/{id}/comments', [ArticleController::class, 'storeComment'])->name('articles.comments.store');
+    Route::post('knowledge/doc/{document}/comments', [KnowledgeController::class, 'storeComment'])->name('knowledge.documents.comments.store');
 
     // 系统通知、投稿文章互动数据
     Route::get('notifications', [SystemNotificationController::class, 'index'])->name('notifications.index');
@@ -145,6 +155,14 @@ Route::middleware('auth')->group(function () {
     // 订阅偏好设置
     Route::get('subscriptions/preferences', [SubscriptionController::class, 'preferences'])->name('subscriptions.preferences');
     Route::post('subscriptions/preferences', [SubscriptionController::class, 'updatePreferences'])->name('subscriptions.update');
+
+    // VIP 微信 Native 扫码支付
+    Route::get('vip/pay/{plan}', [WechatNativePaymentController::class, 'selectPlan'])
+        ->where('plan', 'monthly|yearly|lifetime')
+        ->name('vip.pay');
+    Route::post('payments/wechat/create', [WechatNativePaymentController::class, 'create'])->name('payments.wechat.create');
+    Route::get('payments/wechat/order/{orderNo}', [WechatNativePaymentController::class, 'show'])->name('payments.wechat.show');
+    Route::get('payments/wechat/order/{orderNo}/status', [WechatNativePaymentController::class, 'status'])->name('payments.wechat.status');
     
     // VIP 专属内容
     Route::middleware('vip')->group(function () {
@@ -173,9 +191,8 @@ Route::get('admin/email-manager/export', function() {
 Route::prefix('knowledge')->group(function () {
     Route::get('/', [KnowledgeController::class, 'index'])->name('knowledge.index');
     Route::get('/search', [KnowledgeController::class, 'search'])->name('knowledge.search');
-    Route::get('/{knowledgeBase}', [KnowledgeController::class, 'show'])->name('knowledge.show');
     Route::get('/doc/{document}', [KnowledgeController::class, 'showDocument'])->name('knowledge.documents.show');
-Route::post('/doc/{document}/comments', [KnowledgeController::class, 'storeComment'])->name('knowledge.documents.comments.store');
+    Route::get('/{knowledgeBase}', [KnowledgeController::class, 'show'])->name('knowledge.show');
 });
 
 // 互动功能路由（需要登录）

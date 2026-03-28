@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\EmailSubscription;
 use App\Models\ProfileMessage;
 use App\Models\User;
 use App\Models\VipUrgentNotificationLog;
@@ -53,6 +54,10 @@ class ProfileMessageController extends Controller
         $recipientUser = $message->sender;
         if (!$recipientUser) {
             return back()->with('error', '收件用户不存在');
+        }
+
+        if (! EmailSubscription::wantsSystemNotifications($recipientUser)) {
+            return back()->with('error', '对方未开启「系统通知」邮件偏好，无法发送紧急通知邮件');
         }
 
         $defaultNote = '请登录网站查看对方主页或站内互动。本通知为对方通过 VIP 紧急通道发送。';

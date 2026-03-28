@@ -16,8 +16,8 @@ class EmailSettingResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-envelope-open';
     protected static ?string $navigationLabel = '邮件配置';
     protected static ?string $modelLabel = '邮件配置';
-    protected static ?int $navigationSort = 5;
-    protected static ?string $navigationGroup = '系统设置';
+    protected static ?int $navigationSort = 30;
+    protected static ?string $navigationGroup = '邮件系统';
 
     public static function form(Form $form): Form
     {

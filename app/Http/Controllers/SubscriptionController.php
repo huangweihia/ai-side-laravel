@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\EmailSubscription;
 use Illuminate\Http\Request;
-use Filament\Notifications\Notification;
+use Illuminate\Validation\ValidationException;
 
 class SubscriptionController extends Controller
 {
@@ -80,38 +80,58 @@ class SubscriptionController extends Controller
     }
 
     /**
-     * 更新订阅偏好
+     * 更新订阅偏好（支持 JSON/AJAX：请求头 Accept: application/json）
      */
     public function updatePreferences(Request $request)
     {
         $user = auth()->user();
         $subscription = EmailSubscription::getByEmail($user->email);
-        
-        if (!$subscription) {
+
+        if (! $subscription) {
             $subscription = EmailSubscription::create([
                 'user_id' => $user->id,
                 'email' => $user->email,
             ]);
         }
-        
-        $request->validate([
-            'subscribed_to_daily' => 'boolean',
-            'subscribed_to_weekly' => 'boolean',
-            'subscribed_to_notifications' => 'boolean',
-        ]);
-        
+
+        try {
+            $request->validate([
+                'subscribed_to_daily' => 'sometimes|boolean',
+                'subscribed_to_weekly' => 'sometimes|boolean',
+                'subscribed_to_notifications' => 'sometimes|boolean',
+            ]);
+        } catch (ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '验证失败',
+                    'errors' => $e->errors(),
+                ], 422);
+            }
+            throw $e;
+        }
+
         $subscription->update([
             'subscribed_to_daily' => $request->boolean('subscribed_to_daily'),
             'subscribed_to_weekly' => $request->boolean('subscribed_to_weekly'),
             'subscribed_to_notifications' => $request->boolean('subscribed_to_notifications'),
             'unsubscribed_at' => null,
         ]);
-        
-        Notification::make()
-            ->title('订阅偏好已更新')
-            ->success()
-            ->send();
-        
-        return redirect()->route('subscriptions.preferences');
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => '订阅偏好已更新',
+                'subscription' => [
+                    'subscribed_to_daily' => $subscription->subscribed_to_daily,
+                    'subscribed_to_weekly' => $subscription->subscribed_to_weekly,
+                    'subscribed_to_notifications' => $subscription->subscribed_to_notifications,
+                ],
+            ]);
+        }
+
+        return redirect()
+            ->route('subscriptions.preferences')
+            ->with('success', '订阅偏好已更新');
     }
 }

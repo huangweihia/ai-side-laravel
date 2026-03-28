@@ -18,8 +18,8 @@ class SmtpConfigResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-envelope-open';
     protected static ?string $navigationLabel = 'SMTP 配置';
     protected static ?string $modelLabel = 'SMTP 配置';
-    protected static ?int $navigationSort = 4;
-    protected static ?string $navigationGroup = '系统设置';
+    protected static ?int $navigationSort = 40;
+    protected static ?string $navigationGroup = '邮件系统';
     protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Form $form): Form

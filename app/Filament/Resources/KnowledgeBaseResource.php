@@ -17,8 +17,8 @@ class KnowledgeBaseResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-book-open';
     protected static ?string $navigationLabel = '知识库管理';
     protected static ?string $modelLabel = '知识库';
-    protected static ?int $navigationSort = 11;
     protected static ?string $navigationGroup = '内容管理';
+    protected static ?int $navigationSort = 70;
 
     public static function form(Form $form): Form
     {

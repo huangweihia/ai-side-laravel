@@ -16,7 +16,8 @@ class CategoryResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-tag';
     protected static ?string $navigationLabel = '分类管理';
     protected static ?string $modelLabel = '分类';
-    protected static ?int $navigationSort = 5;
+    protected static ?string $navigationGroup = '内容管理';
+    protected static ?int $navigationSort = 40;
 
     public static function form(Form $form): Form
     {

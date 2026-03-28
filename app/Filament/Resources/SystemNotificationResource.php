@@ -3,7 +3,9 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SystemNotificationResource\Pages;
+use App\Models\EmailSubscription;
 use App\Models\SystemNotification;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -22,9 +24,9 @@ class SystemNotificationResource extends Resource
 
     protected static ?string $pluralModelLabel = '系统通知';
 
-    protected static ?string $navigationGroup = '用户管理';
+    protected static ?string $navigationGroup = '用户与互动';
 
-    protected static ?int $navigationSort = 12;
+    protected static ?int $navigationSort = 50;
 
     public static function form(Form $form): Form
     {
@@ -36,7 +38,15 @@ class SystemNotificationResource extends Resource
                         ->relationship('user', 'name')
                         ->searchable()
                         ->preload()
-                        ->required(),
+                        ->required()
+                        ->rules([
+                            function (string $attribute, $value, \Closure $fail): void {
+                                $user = User::query()->find($value);
+                                if ($user && ! EmailSubscription::wantsSystemNotifications($user)) {
+                                    $fail('该用户未在「邮件订阅偏好」中开启系统通知，无法创建站内通知。');
+                                }
+                            },
+                        ]),
                     Forms\Components\TextInput::make('title')
                         ->label('标题')
                         ->required()

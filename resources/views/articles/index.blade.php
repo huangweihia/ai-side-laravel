@@ -38,29 +38,28 @@
 <section style="padding: 40px 0;">
     <div class="container">
         <div>
-            <!-- 顶部筛选栏 -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 20px;">
-                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                    <a href="{{ route('articles.index') }}" style="padding: 10px 20px; background: {{ !request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ !request('category') ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">📝 全部</a>
-                    <a href="?category=ai-tools" style="padding: 10px 20px; background: {{ request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">🤖 AI 工具</a>
-                    <a href="?category=side-projects" style="padding: 10px 20px; background: {{ request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'side-projects' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">💡 副业</a>
-                    <a href="?category=learning" style="padding: 10px 20px; background: {{ request('category') === 'learning' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'learning' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">📖 教程</a>
-                    <a href="?category=monetization" style="padding: 10px 20px; background: {{ request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'monetization' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">💰 变现</a>
-                    <a href="?category=news" style="padding: 10px 20px; background: {{ request('category') === 'news' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'news' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">📰 资讯</a>
-                </div>
+            <!-- 顶部筛选栏：首行分类 -->
+            <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+                <a href="{{ route('articles.index', request()->only(['search', 'sort'])) }}" style="padding: 10px 20px; background: {{ !request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ !request('category') ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">📝 全部</a>
+                <a href="{{ request()->fullUrlWithQuery(['category' => 'ai-tools']) }}" style="padding: 10px 20px; background: {{ request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">🤖 AI 工具</a>
+                <a href="{{ request()->fullUrlWithQuery(['category' => 'side-projects']) }}" style="padding: 10px 20px; background: {{ request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'side-projects' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">💡 副业</a>
+                <a href="{{ request()->fullUrlWithQuery(['category' => 'learning']) }}" style="padding: 10px 20px; background: {{ request('category') === 'learning' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'learning' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">📖 教程</a>
+                <a href="{{ request()->fullUrlWithQuery(['category' => 'monetization']) }}" style="padding: 10px 20px; background: {{ request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'monetization' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">💰 变现</a>
+                <a href="{{ request()->fullUrlWithQuery(['category' => 'news']) }}" style="padding: 10px 20px; background: {{ request('category') === 'news' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('category') === 'news' ? 'white' : 'var(--gray-light)' }}; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none;">📰 资讯</a>
             </div>
 
-            <!-- 文章列表 -->
-                <!-- 排序选项 -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+            <!-- 次行：统计 + 最新/最热 -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; flex-wrap: wrap; gap: 16px;">
                     <div style="color: var(--gray-light); font-size: 14px;">
                         共 <span style="color: var(--primary-light); font-weight: 600;">{{ $articles->total() }}</span> 篇文章
                     </div>
                     <div style="display: flex; gap: 12px;">
-                        <button style="padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer;">📅 最新</button>
-                        <button style="padding: 8px 16px; background: rgba(255,255,255,0.05); color: var(--gray-light); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; font-size: 13px; cursor: pointer;">🔥 最热</button>
+                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'latest']) }}" style="padding: 8px 16px; background: {{ request('sort') !== 'popular' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('sort') !== 'popular' ? 'white' : 'var(--gray-light)' }}; border: {{ request('sort') !== 'popular' ? 'none' : '1px solid rgba(255,255,255,0.1)' }}; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none;">📅 最新</a>
+                        <a href="{{ request()->fullUrlWithQuery(['sort' => 'popular']) }}" style="padding: 8px 16px; background: {{ request('sort') === 'popular' ? 'var(--primary)' : 'rgba(255,255,255,0.05)' }}; color: {{ request('sort') === 'popular' ? 'white' : 'var(--gray-light)' }}; border: {{ request('sort') === 'popular' ? 'none' : '1px solid rgba(255,255,255,0.1)' }}; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none;">🔥 最热</a>
                     </div>
                 </div>
+
+            <!-- 文章列表 -->
 
                 <!-- 文章卡片列表 -->
                 <div style="display: grid; gap: 24px;">

@@ -113,6 +113,14 @@ class Project extends Model
     }
 
     /**
+     * 供 Blade / API 使用：`$project->difficulty_label`
+     */
+    public function getDifficultyLabelAttribute(): string
+    {
+        return $this->getDifficultyLabel();
+    }
+
+    /**
      * 获取收入范围标签
      */
     public function getIncomeLabel(): string

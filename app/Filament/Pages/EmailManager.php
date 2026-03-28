@@ -22,8 +22,8 @@ class EmailManager extends Page implements HasForms
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
     protected static string $view = 'filament.pages.email-manager';
     protected static ?string $navigationLabel = '邮件管理';
-    protected static ?int $navigationSort = 6;
-    protected static ?string $navigationGroup = '系统设置';
+    protected static ?int $navigationSort = 10;
+    protected static ?string $navigationGroup = '邮件系统';
     
     public ?string $recipient = '';
     public ?string $sendTime = '10:00';
@@ -338,8 +338,13 @@ class EmailManager extends Page implements HasForms
     
     private function canSendTemplate($template, $subscription): bool
     {
-        if (!$subscription) return true;
-        
+        if (! $subscription) {
+            return match ($template->key) {
+                'daily_digest_classic', 'daily_digest_modern', 'weekly_summary', 'notification' => false,
+                default => true,
+            };
+        }
+
         return match ($template->key) {
             'daily_digest_classic', 'daily_digest_modern' => $subscription->isSubscribedToDaily(),
             'weekly_summary' => $subscription->isSubscribedToWeekly(),

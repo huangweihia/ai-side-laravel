@@ -1,6 +1,10 @@
 <?php $__env->startSection('title', 'AI 副业项目 - AI 副业情报局'); ?>
 
 <?php $__env->startSection('content'); ?>
+<?php
+    $vipOnly = $vipOnly ?? false;
+    $projectsListRoute = $vipOnly ? 'projects.vip' : 'projects.index';
+?>
 <!-- Hero Section -->
 <section style="padding: 100px 0 60px; background: linear-gradient(135deg, rgba(99,102,241,0.15) 0%, rgba(139,92,246,0.15) 100%); border-bottom: 1px solid rgba(255,255,255,0.1);">
     <div class="container">
@@ -9,16 +13,24 @@
                 🚀 发现下一个百万级副业
             </span>
             <h1 style="font-size: 56px; font-weight: 800; margin-bottom: 20px; background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-                AI 副业项目库
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($vipOnly): ?>
+                    👑 VIP 专属项目
+                <?php else: ?>
+                    AI 副业项目库
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </h1>
             <p style="font-size: 18px; color: var(--gray-light); line-height: 1.8; margin-bottom: 40px;">
-                精选 GitHub 热门 AI 项目，包含详细教程、技术栈和变现路径<br>
-                帮你找到适合自己的副业方向
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($vipOnly): ?>
+                    仅展示标记为 VIP 的项目；开通 VIP 后可查看完整变现分析、技术栈与资源。
+                <?php else: ?>
+                    精选 GitHub 热门 AI 项目，包含详细教程、技术栈和变现路径<br>
+                    帮你找到适合自己的副业方向
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             </p>
             
             <!-- 搜索栏 -->
             <div style="max-width: 600px; margin: 0 auto;">
-                <form action="<?php echo e(route('projects.index')); ?>" method="GET" style="display: flex; gap: 12px;">
+                <form action="<?php echo e(route($projectsListRoute)); ?>" method="GET" style="display: flex; gap: 12px;">
                     <input 
                         type="text" 
                         name="search"
@@ -47,26 +59,22 @@
     </div>
 </section>
 
-<!-- Filter Bar -->
+<!-- Filter Bar（与文章列表：首行分类，次行统计 + 最新/最热） -->
 <section style="padding: 30px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
     <div class="container">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
-            <!-- 分类筛选 -->
-            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                <a href="<?php echo e(route('projects.index')); ?>" style="padding: 10px 20px; background: <?php echo e(!request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(!request('category') ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">全部</a>
-                <a href="?category=ai-tools" style="padding: 10px 20px; background: <?php echo e(request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">🤖 AI 工具</a>
-                <a href="?category=side-projects" style="padding: 10px 20px; background: <?php echo e(request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'side-projects' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💡 副业项目</a>
-                <a href="?category=monetization" style="padding: 10px 20px; background: <?php echo e(request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'monetization' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💰 变现案例</a>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 24px;">
+            <a href="<?php echo e(route($projectsListRoute, array_filter(request()->only(['search', 'sort'])))); ?>" style="padding: 10px 20px; background: <?php echo e(!request('category') ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(!request('category') ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">全部</a>
+            <a href="<?php echo e(route($projectsListRoute, array_merge(array_filter(request()->only(['search', 'sort'])), ['category' => 'ai-tools']))); ?>" style="padding: 10px 20px; background: <?php echo e(request('category') === 'ai-tools' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'ai-tools' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">🤖 AI 工具</a>
+            <a href="<?php echo e(route($projectsListRoute, array_merge(array_filter(request()->only(['search', 'sort'])), ['category' => 'side-projects']))); ?>" style="padding: 10px 20px; background: <?php echo e(request('category') === 'side-projects' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'side-projects' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💡 副业项目</a>
+            <a href="<?php echo e(route($projectsListRoute, array_merge(array_filter(request()->only(['search', 'sort'])), ['category' => 'monetization']))); ?>" style="padding: 10px 20px; background: <?php echo e(request('category') === 'monetization' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('category') === 'monetization' ? 'white' : 'var(--gray-light)'); ?>; border-radius: 12px; font-size: 14px; font-weight: 600; text-decoration: none; transition: all 0.2s;">💰 变现案例</a>
+        </div>
+        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div style="color: var(--gray-light); font-size: 14px;">
+                共 <span style="color: var(--primary-light); font-weight: 600;"><?php echo e($projects->total()); ?></span> 个项目
             </div>
-            
-            <!-- 排序选项 -->
-            <div style="display: flex; align-items: center; gap: 12px; color: var(--gray-light); font-size: 14px;">
-                <span>共 <strong style="color: var(--primary-light);"><?php echo e($projects->total()); ?></strong> 个项目</span>
-                <select onchange="location.href='?sort='+this.value" style="padding: 10px 16px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; color: white; font-size: 14px; cursor: pointer;">
-                    <option value="latest" <?php echo e(request('sort') === 'latest' ? 'selected' : ''); ?>>📅 最新</option>
-                    <option value="popular" <?php echo e(request('sort') === 'popular' ? 'selected' : ''); ?>>🔥 最热</option>
-                    <option value="stars" <?php echo e(request('sort') === 'stars' ? 'selected' : ''); ?>>⭐ Stars</option>
-                </select>
+            <div style="display: flex; gap: 12px;">
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'latest'])); ?>" style="padding: 8px 16px; background: <?php echo e(request('sort') === 'latest' || !request('sort') ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('sort') === 'latest' || !request('sort') ? 'white' : 'var(--gray-light)'); ?>; border: <?php echo e(request('sort') === 'latest' || !request('sort') ? 'none' : '1px solid rgba(255,255,255,0.1)'); ?>; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none;">📅 最新</a>
+                <a href="<?php echo e(request()->fullUrlWithQuery(['sort' => 'popular'])); ?>" style="padding: 8px 16px; background: <?php echo e(request('sort') === 'popular' ? 'var(--primary)' : 'rgba(255,255,255,0.05)'); ?>; color: <?php echo e(request('sort') === 'popular' ? 'white' : 'var(--gray-light)'); ?>; border: <?php echo e(request('sort') === 'popular' ? 'none' : '1px solid rgba(255,255,255,0.1)'); ?>; border-radius: 8px; font-size: 13px; cursor: pointer; text-decoration: none;">🔥 最热</a>
             </div>
         </div>
     </div>
@@ -77,6 +85,55 @@
     <div class="container">
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(380px, 1fr)); gap: 30px;">
             <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__empty_1 = true; $__currentLoopData = $projects; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $project): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
+                <?php
+                    $vipLocked = $project->is_vip && (!auth()->check() || (!auth()->user()->isVip() && !auth()->user()->isAdmin()));
+                    $vipRedirect = route('vip', ['redirect' => route('projects.show', $project->id)]);
+                ?>
+                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($vipLocked): ?>
+                <div class="card project-card" data-vip-locked="1" style="display: block; padding: 0; overflow: hidden; transition: all 0.3s ease; position: relative;" onmouseover="this.style.transform='translateY(-8px)';this.style.boxShadow='0 20px 60px rgba(99,102,241,0.3)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
+                    <div style="height: 6px; background: linear-gradient(90deg, <?php echo e(['6366f1', '8b5cf6', 'ec4899', '10b981', 'f59e0b'][array_rand([0,1,2,3,4])]); ?> 0%, <?php echo e(['8b5cf6', 'ec4899', '6366f1', '14b8a6', 'ef4444'][array_rand([0,1,2,3,4])]); ?> 100%);"></div>
+                    <div style="padding: 30px;">
+                        <a href="<?php echo e(route('projects.show', $project->id)); ?>" style="text-decoration: none; color: inherit; display: block;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px;">
+                                <div style="display: flex; align-items: center; gap: 12px;">
+                                    <div style="width: 48px; height: 48px; background: linear-gradient(135deg, <?php echo e(['6366f1', '8b5cf6', 'ec4899'][array_rand([0,1,2])]); ?> 0%, <?php echo e(['8b5cf6', 'ec4899', '6366f1'][array_rand([0,1,2])]); ?> 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px;">
+                                        <?php echo e(['🤖', '💡', '🚀', '⚡', '🎯'][array_rand([0,1,2,3,4])]); ?>
+
+                                    </div>
+                                    <div>
+                                        <h3 style="font-size: 20px; color: white; margin: 0; font-weight: 700;"><?php echo e($project->full_name ?? $project->name); ?></h3>
+                                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; flex-wrap: wrap;">
+                                            <span style="font-size: 12px; color: var(--gray-light);"><?php echo e($project->language ?? 'Unknown'); ?></span>
+                                            <a href="<?php echo e($vipRedirect); ?>" style="padding: 2px 8px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 10px; font-size: 11px; color: white; font-weight: 600; text-decoration: none;">👑 VIP</a>
+                                            <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($project->is_featured): ?>
+                                                <span style="padding: 2px 8px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 10px; font-size: 11px; color: white; font-weight: 600;">⭐ 精选</span>
+                                            <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <p style="color: var(--gray-light); font-size: 15px; line-height: 1.8; margin-bottom: 24px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                                <?php echo e(\Illuminate\Support\Str::limit(strip_tags($project->description ?? ''), 200)); ?>
+
+                            </p>
+                            <div style="display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px;">
+                                <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php $__currentLoopData = array_slice($project->tags ?? [], 0, 4); $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $tag): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <span style="padding: 4px 12px; background: rgba(99,102,241,0.1); color: var(--primary-light); border-radius: 20px; font-size: 12px; font-weight: 500;"><?php echo e($tag); ?></span>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.05);">
+                                <div style="display: flex; gap: 16px; font-size: 13px; color: var(--gray);">
+                                    <span style="display: flex; align-items: center; gap: 6px;"><span>⭐</span> <?php echo e(number_format($project->stars ?? 0)); ?></span>
+                                    <span style="display: flex; align-items: center; gap: 6px;"><span>🍴</span> <?php echo e(number_format($project->forks ?? 0)); ?></span>
+                                </div>
+                            </div>
+                        </a>
+                        <a href="<?php echo e($vipRedirect); ?>" class="vip-readmore-link" style="display: flex; align-items: center; gap: 8px; color: var(--primary-light); font-weight: 600; font-size: 14px; margin-top: 16px; text-align: left; text-decoration: none;">
+                            <span>查看详情</span><span>→</span>
+                        </a>
+                    </div>
+                </div>
+                <?php else: ?>
                 <a href="<?php echo e(route('projects.show', $project->id)); ?>" class="card" style="display: block; padding: 0; overflow: hidden; text-decoration: none; transition: all 0.3s ease; position: relative;" onmouseover="this.style.transform='translateY(-8px)';this.style.boxShadow='0 20px 60px rgba(99,102,241,0.3)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
                     <!-- 顶部渐变条 -->
                     <div style="height: 6px; background: linear-gradient(90deg, <?php echo e(['6366f1', '8b5cf6', 'ec4899', '10b981', 'f59e0b'][array_rand([0,1,2,3,4])]); ?> 0%, <?php echo e(['8b5cf6', 'ec4899', '6366f1', '14b8a6', 'ef4444'][array_rand([0,1,2,3,4])]); ?> 100%);"></div>
@@ -93,6 +150,9 @@
                                     <h3 style="font-size: 20px; color: white; margin: 0; font-weight: 700;"><?php echo e($project->full_name ?? $project->name); ?></h3>
                                     <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px;">
                                         <span style="font-size: 12px; color: var(--gray-light);"><?php echo e($project->language ?? 'Unknown'); ?></span>
+                                        <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($project->is_vip): ?>
+                                            <a href="<?php echo e(route('vip', ['redirect' => route('projects.show', $project->id)])); ?>" style="padding: 2px 8px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 10px; font-size: 11px; color: white; font-weight: 600; text-decoration: none;">👑 VIP</a>
+                                        <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
                                         <?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if BLOCK]><![endif]--><?php endif; ?><?php if($project->is_featured): ?>
                                             <span style="padding: 2px 8px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); border-radius: 10px; font-size: 11px; color: white; font-weight: 600;">⭐ 精选</span>
                                         <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
@@ -135,6 +195,7 @@
                         </div>
                     </div>
                 </a>
+                <?php endif; ?><?php if(\Livewire\Mechanisms\ExtendBlade\ExtendBlade::isRenderingLivewireComponent()): ?><!--[if ENDBLOCK]><![endif]--><?php endif; ?>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                 <div style="grid-column: 1 / -1; text-align: center; padding: 100px 20px;">
                     <div style="font-size: 80px; margin-bottom: 24px;">📭</div>
@@ -180,6 +241,7 @@
         </div>
     </div>
 </section>
+
 <?php $__env->stopSection(); ?>
 
 <style>

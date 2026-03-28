@@ -11,8 +11,8 @@ class PointsManager extends Page
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     protected static string $view = 'filament.pages.points-manager';
     protected static ?string $navigationLabel = '积分管理';
-    protected static ?int $navigationSort = 2;
-    protected static ?string $navigationGroup = '用户管理';
+    protected static ?int $navigationSort = 20;
+    protected static ?string $navigationGroup = '用户与互动';
 
     public function getTransactionsProperty()
     {

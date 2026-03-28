@@ -41,7 +41,7 @@ docker-compose exec php php artisan make:filament-user
 # 后台：http://localhost:8081/admin
 ```
 
-**详细部署文档**：[DEPLOY.md](DEPLOY.md)
+**详细部署文档**：[docs/02-部署文档/完整部署手册.md](docs/02-部署文档/完整部署手册.md)
 
 ---
 
@@ -119,7 +119,7 @@ ai-side-laravel/
 │   └── php/Dockerfile       # PHP 容器配置
 ├── docker-compose.yml       # Docker 编排
 ├── .env.example             # 环境变量示例
-├── DEPLOY.md                # 部署文档
+├── docs/                    # 项目文档（部署见 docs/02-部署文档/完整部署手册.md）
 └── README.md                # 本文件
 ```
 
@@ -177,10 +177,9 @@ docker-compose exec php php artisan test --coverage-html=coverage
 
 ## 📖 文档
 
-- **[DEPLOY.md](DEPLOY.md)** - 部署文档（Docker 新手专用）
-- **[TESTING.md](TESTING.md)** - 测试文档
-- **[DEVELOPMENT_PLAN.md](DEVELOPMENT_PLAN.md)** - 开发计划
-- **[PROJECT_STATUS.md](PROJECT_STATUS.md)** - 项目状态
+- **[docs/README.md](docs/README.md)** - 文档索引
+- **[docs/02-部署文档/完整部署手册.md](docs/02-部署文档/完整部署手册.md)** - 部署与上线（唯一权威）
+- **[docs/03-测试文档/](docs/03-测试文档/)** - 测试相关说明
 
 ---
 

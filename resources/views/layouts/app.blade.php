@@ -11,6 +11,7 @@
     <style>
         /* ========== 默认皮肤：深空蓝 ========== */
         :root {
+            --site-marquee-offset: 0px;
             --primary: #6366f1;
             --primary-dark: #4f46e5;
             --primary-light: #818cf8;
@@ -84,6 +85,10 @@
             --gradient-dark: linear-gradient(135deg, #1a1512 0%, #2a2218 100%);
         }
 
+        body.has-site-marquee {
+            --site-marquee-offset: 38px;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
@@ -102,10 +107,248 @@
         /* Container */
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
+        /* 顶部滚动公告（关闭后仅本页隐藏，刷新后仍会出现） */
+        .site-marquee-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 38px;
+            z-index: 1001;
+            display: flex;
+            align-items: stretch;
+            background: linear-gradient(90deg, rgba(99, 102, 241, 0.35), rgba(236, 72, 153, 0.25));
+            border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+            font-size: 13px;
+        }
+        .site-marquee-bar a.site-marquee-link {
+            flex: 1;
+            min-width: 0;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            color: var(--white);
+            padding: 0 8px 0 12px;
+        }
+        .site-marquee-bar .site-marquee-viewport {
+            overflow: hidden;
+            width: 100%;
+            mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+        }
+        .site-marquee-bar .site-marquee-track {
+            display: inline-block;
+            white-space: nowrap;
+            padding-right: 4rem;
+            animation: site-marquee-x 18s linear infinite;
+        }
+        @keyframes site-marquee-x {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .site-marquee-bar .site-marquee-close {
+            flex-shrink: 0;
+            width: 40px;
+            border: none;
+            background: rgba(0, 0, 0, 0.2);
+            color: var(--gray-light);
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            z-index: 2;
+        }
+        .site-marquee-bar .site-marquee-close:hover {
+            color: var(--white);
+            background: rgba(0, 0, 0, 0.35);
+        }
+        /* 无广告：主区仍居中 1200px */
+        .layout-page-grid:not(.layout-with-sidebar) {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px 48px;
+        }
+        /* 有广告：四列 [左留白][主内容 ≤1200][推广加宽][右留白]，推广在主题列右侧，减少遮挡标题区 */
+        .layout-page-grid.layout-with-sidebar {
+            display: grid;
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto;
+            padding: 0 max(20px, env(safe-area-inset-right, 0px)) 48px max(20px, env(safe-area-inset-left, 0px));
+            box-sizing: border-box;
+            grid-template-columns: minmax(8px, 1fr) minmax(0, 1200px) minmax(300px, 400px) minmax(16px, 1fr);
+            gap: 0 28px;
+            align-items: start;
+        }
+        .layout-page-grid.layout-with-sidebar .layout-page-primary {
+            grid-column: 2;
+            min-width: 0;
+        }
+        .layout-page-grid.layout-with-sidebar .site-ad-sidebar {
+            grid-column: 3;
+            position: sticky;
+            top: calc(80px + var(--site-marquee-offset, 0px) + 16px);
+            z-index: 35;
+            max-height: calc(100vh - 100px);
+            overflow-y: auto;
+        }
+        @media (max-width: 1199px) {
+            .layout-page-grid.layout-with-sidebar {
+                grid-template-columns: 1fr;
+                gap: 24px 0;
+                padding-left: 24px;
+                padding-right: 24px;
+            }
+            .layout-page-grid.layout-with-sidebar .layout-page-primary {
+                grid-column: 1;
+            }
+            .layout-page-grid.layout-with-sidebar .site-ad-sidebar {
+                grid-column: 1;
+                position: static;
+                max-width: 400px;
+                width: 100%;
+                margin: 0 auto;
+                max-height: none;
+                overflow: visible;
+            }
+        }
+        .layout-page-primary {
+            min-width: 0;
+            width: 100%;
+        }
+        .site-ad-sidebar-card {
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            background: var(--dark-light);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            max-width: 100%;
+            min-width: 280px;
+        }
+        .site-ad-sidebar-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 6px 10px;
+            background: rgba(0, 0, 0, 0.2);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+        }
+        .site-ad-sidebar-head-label {
+            font-size: 10px;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--gray-light);
+            opacity: 0.85;
+        }
+        .site-ad-sidebar-close {
+            border: none;
+            background: transparent;
+            color: var(--gray-light);
+            cursor: pointer;
+            font-size: 20px;
+            line-height: 1;
+            padding: 2px 6px;
+            border-radius: 6px;
+            transition: color 0.15s, background 0.15s;
+        }
+        .site-ad-sidebar-close:hover {
+            color: var(--white);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .site-ad-sidebar-body {
+            padding: 10px;
+            position: relative;
+            background: rgba(15, 23, 42, 0.35);
+        }
+        .skin-light .site-ad-sidebar-body {
+            background: #fff;
+        }
+        .site-ad-sidebar-meta {
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 6px;
+        }
+        .site-ad-sidebar-badge {
+            font-size: 10px;
+            font-weight: 600;
+            color: #fff;
+            background: #16a34a;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .site-ad-sidebar-img {
+            border-radius: 6px;
+            overflow: hidden;
+            margin-bottom: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .site-ad-sidebar-img img {
+            width: 100%;
+            min-height: 260px;
+            max-height: 440px;
+            height: auto;
+            object-fit: cover;
+            display: block;
+            vertical-align: middle;
+        }
+        .site-ad-sidebar-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--white);
+            margin: 0 0 6px;
+            line-height: 1.35;
+        }
+        .skin-light .site-ad-sidebar-title {
+            color: #0f172a;
+        }
+        .site-ad-sidebar-text {
+            font-size: 12px;
+            line-height: 1.5;
+            color: var(--gray-light);
+            margin-bottom: 10px;
+        }
+        .skin-light .site-ad-sidebar-text {
+            color: #475569;
+        }
+        .site-ad-sidebar-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #fff;
+            background: var(--primary);
+            text-decoration: none;
+            transition: filter 0.15s, transform 0.15s;
+        }
+        .site-ad-sidebar-cta:hover {
+            filter: brightness(1.08);
+            transform: translateY(-1px);
+            color: #fff;
+        }
+        .site-ad-sidebar-html {
+            font-size: 14px;
+            line-height: 1.5;
+            color: var(--gray-light);
+        }
+        .site-ad-sidebar-html img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        .skin-panel-floating {
+            position: fixed;
+            top: calc(80px + var(--site-marquee-offset, 0px));
+            right: 20px;
+            z-index: 100000;
+        }
+
         /* Navigation */
         .navbar {
             position: fixed;
-            top: 0;
+            top: var(--site-marquee-offset, 0px);
             left: 0;
             right: 0;
             z-index: 1000;
@@ -205,7 +448,7 @@
         .btn-lg { padding: 16px 32px; font-size: 16px; }
 
         /* Main Content */
-        .main { padding-top: 80px; min-height: 100vh; }
+        .main { padding-top: calc(80px + var(--site-marquee-offset, 0px)); min-height: 100vh; }
 
         /* Hero Section */
         .hero {
@@ -552,7 +795,35 @@
         }
     </style>
 </head>
-<body>
+<body @class(['has-site-marquee' => isset($marqueeAnnouncements) && $marqueeAnnouncements->isNotEmpty()])>
+    @if(isset($marqueeAnnouncements) && $marqueeAnnouncements->isNotEmpty())
+        @php
+            $marqueeFirst = $marqueeAnnouncements->first();
+            $marqueeLine = $marqueeAnnouncements->map(fn ($a) => $a->marquee_line)->implode('　｜　');
+            $marqueeDup = $marqueeLine . '　　　' . $marqueeLine;
+        @endphp
+        <div id="site-marquee-bar" class="site-marquee-bar" role="region" aria-label="站点公告">
+            <a href="{{ route('announcements.show', $marqueeFirst->slug) }}" class="site-marquee-link">
+                <div class="site-marquee-viewport">
+                    <span class="site-marquee-track">{{ $marqueeDup }}</span>
+                </div>
+            </a>
+            <button type="button" class="site-marquee-close" id="site-marquee-close" aria-label="关闭公告条">×</button>
+        </div>
+        <script>
+        (function () {
+            var btn = document.getElementById('site-marquee-close');
+            var bar = document.getElementById('site-marquee-bar');
+            if (!btn || !bar) return;
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                bar.remove();
+                document.body.classList.remove('has-site-marquee');
+            });
+        })();
+        </script>
+    @endif
     <nav class="navbar">
         <div class="navbar-content">
             <a href="{{ route('home') }}" class="navbar-brand">
@@ -601,7 +872,7 @@
     </nav>
 
     {{-- 皮肤切换面板 --}}
-    <div id="skin-panel" style="display: none; position: fixed; top: 80px; right: 20px; background: var(--dark-light); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 16px; z-index: 100000; box-shadow: 0 20px 60px rgba(0,0,0,0.4); min-width: 200px;" onclick="event.stopPropagation()">
+    <div id="skin-panel" class="skin-panel-floating" style="display: none; background: var(--dark-light); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); min-width: 200px;" onclick="event.stopPropagation()">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.08);">
             <span style="font-weight: 700; color: var(--white); font-size: 14px;">🎨 选择皮肤</span>
             <button onclick="toggleSkinPanel()" style="background: transparent; border: none; color: var(--gray-light); font-size: 20px; cursor: pointer; padding: 0; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 6px; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.1)'; this.style.color='var(--white)'" onmouseout="this.style.background='transparent'; this.style.color='var(--gray-light)'">×</button>
@@ -630,8 +901,55 @@
         </div>
     </div>
 
+    @php
+        $showAdSidebar = isset($adSlot) && $adSlot->shouldDisplaySidebar() && ! ($hideGlobalAdSlot ?? false);
+    @endphp
     <main class="main">
-        @yield('content')
+        <div class="layout-page-grid{{ $showAdSidebar ? ' layout-with-sidebar' : '' }}">
+            <div class="layout-page-primary">
+                @yield('content')
+            </div>
+            @if($showAdSidebar)
+                <aside id="site-ad-sidebar" class="site-ad-sidebar" aria-label="推广">
+                    <div class="site-ad-sidebar-card">
+                        <div class="site-ad-sidebar-head">
+                            <span class="site-ad-sidebar-head-label">推广</span>
+                            <button type="button" class="site-ad-sidebar-close" onclick="closeSiteAdSidebar()" aria-label="关闭">×</button>
+                        </div>
+                        <div class="site-ad-sidebar-body">
+                            @if($adSlot->display_mode === 'html' && filled($adSlot->html_content))
+                                <div class="site-ad-sidebar-html">{!! $adSlot->html_content !!}</div>
+                            @else
+                                <div class="site-ad-sidebar-meta">
+                                    <span class="site-ad-sidebar-badge">广告</span>
+                                </div>
+                                @php $adResolvedImg = $adSlot->resolvedImageUrl(); @endphp
+                                @if($adResolvedImg)
+                                    <div class="site-ad-sidebar-img">
+                                        @if($adSlot->link_url)
+                                            <a href="{{ $adSlot->link_url }}" target="_blank" rel="noopener noreferrer">
+                                                <img src="{{ $adResolvedImg }}" alt="">
+                                            </a>
+                                        @else
+                                            <img src="{{ $adResolvedImg }}" alt="">
+                                        @endif
+                                    </div>
+                                @endif
+                                @if(filled($adSlot->title))
+                                    <h3 class="site-ad-sidebar-title">{{ $adSlot->title }}</h3>
+                                @endif
+                                @if(filled($adSlot->body))
+                                    <div class="site-ad-sidebar-text">{!! nl2br(e($adSlot->body)) !!}</div>
+                                @endif
+                                @if(filled($adSlot->cta_label) && filled($adSlot->link_url))
+                                    <a href="{{ $adSlot->link_url }}" class="site-ad-sidebar-cta" target="_blank" rel="noopener noreferrer">{{ $adSlot->cta_label }} <span aria-hidden="true">›</span></a>
+                                @endif
+                            @endif
+                        </div>
+                    </div>
+                </aside>
+            @endif
+        </div>
     </main>
 
     <footer class="footer">
@@ -665,6 +983,14 @@
     </footer>
 
     <script>
+    /** 关闭右侧推广位：仅当前页有效，刷新后重新展示（不使用 localStorage） */
+    function closeSiteAdSidebar() {
+        var el = document.getElementById('site-ad-sidebar');
+        var grid = document.querySelector('.layout-page-grid');
+        if (el) el.remove();
+        if (grid) grid.classList.remove('layout-with-sidebar');
+    }
+
     // 皮肤切换功能（注意：打开面板时必须阻止冒泡，否则 document 上的关闭逻辑会在同一次点击里立刻把面板关掉）
     function toggleSkinPanel() {
         const panel = document.getElementById('skin-panel');

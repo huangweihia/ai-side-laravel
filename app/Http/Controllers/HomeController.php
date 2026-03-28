@@ -105,12 +105,6 @@ class HomeController extends Controller
     {
         $user = User::findOrFail($id);
 
-        $comments = Comment::where('user_id', $user->id)
-            ->with('commentable')
-            ->latest()
-            ->limit(20)
-            ->get();
-
         $stats = [
             'comments' => Comment::where('user_id', $user->id)->count(),
             'favorites' => Favorite::where('user_id', $user->id)->count(),
@@ -130,7 +124,7 @@ class HomeController extends Controller
                 ->exists();
         }
 
-        return view('users.show', compact('user', 'comments', 'stats', 'profileMessages', 'urgentSentToday'));
+        return view('users.show', compact('user', 'stats', 'profileMessages', 'urgentSentToday'));
     }
 
     /**

@@ -7,6 +7,7 @@ use App\Models\Article;
 use App\Models\Project;
 use App\Models\EmailLog;
 use App\Models\EmailSubscription;
+use App\Models\Subscription;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -42,10 +43,15 @@ class StatsOverviewWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-envelope')
                 ->color('success'),
             
-            Stat::make('订阅用户', EmailSubscription::whereNull('unsubscribed_at')->count())
-                ->description('活跃订阅 ' . EmailSubscription::where('subscribed_to_daily', true)->whereNull('unsubscribed_at')->count())
+            Stat::make('邮件列表订阅', EmailSubscription::whereNull('unsubscribed_at')->count())
+                ->description('开通过日报 ' . EmailSubscription::where('subscribed_to_daily', true)->whereNull('unsubscribed_at')->count() . ' 人')
                 ->descriptionIcon('heroicon-m-bell')
                 ->color('primary'),
+
+            Stat::make('付费会员（有效）', Subscription::query()->active()->count())
+                ->description('subscriptions 表 · 后台「付费会员」管理')
+                ->descriptionIcon('heroicon-m-credit-card')
+                ->color('warning'),
         ];
     }
 }

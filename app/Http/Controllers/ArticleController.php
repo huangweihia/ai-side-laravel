@@ -35,7 +35,13 @@ class ArticleController extends Controller
 
         $query->where('is_published', true);
 
-        $articles = $query->latest('published_at')->paginate(10)->withQueryString();
+        if ($request->get('sort') === 'popular') {
+            $query->orderByDesc('view_count')->orderByDesc('like_count')->orderByDesc('published_at');
+        } else {
+            $query->latest('published_at');
+        }
+
+        $articles = $query->paginate(10)->withQueryString();
 
         return view('articles.index', compact('articles'));
     }
@@ -77,10 +83,15 @@ class ArticleController extends Controller
             $featuredComment = $article->comments()
                 ->whereNull('parent_id')
                 ->where('is_hidden', false)
+                ->withCount('replies')
                 ->with(['user', 'replies.user', 'replies.replyTo.user'])
-                ->orderByDesc('like_count')
+                ->orderByDesc('replies_count')
                 ->orderByDesc('id')
                 ->first();
+
+            if ($featuredComment && (int) $featuredComment->replies_count < 1) {
+                $featuredComment = null;
+            }
 
             $commentsQuery = $article->comments()
                 ->whereNull('parent_id')
@@ -108,18 +119,19 @@ class ArticleController extends Controller
                 : [];
         }
 
-        return view('articles.show', compact(
-            'article',
-            'isFavorited',
-            'isLiked',
-            'relatedArticles',
-            'canViewFullArticle',
-            'showComments',
-            'comments',
-            'commentsTotal',
-            'featuredComment',
-            'likedCommentIds'
-        ));
+        return view('articles.show', [
+            'article' => $article,
+            'isFavorited' => $isFavorited,
+            'isLiked' => $isLiked,
+            'relatedArticles' => $relatedArticles,
+            'canViewFullArticle' => $canViewFullArticle,
+            'showComments' => $showComments,
+            'comments' => $comments,
+            'commentsTotal' => $commentsTotal,
+            'featuredComment' => $featuredComment,
+            'likedCommentIds' => $likedCommentIds,
+            'hideGlobalAdSlot' => true,
+        ]);
     }
 
     /**

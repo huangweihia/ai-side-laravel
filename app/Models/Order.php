@@ -20,6 +20,7 @@ class Order extends Model
         'payment_method',
         'payment_time',
         'paid_amount',
+        'wechat_transaction_id',
         'remark',
     ];
 
@@ -45,6 +46,14 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * 当 product_type 为 subscription 时，product_id 指向 subscriptions.id
+     */
+    public function subscription()
+    {
+        return $this->belongsTo(Subscription::class, 'product_id');
+    }
+
     public function isPaid(): bool
     {
         return $this->status === 'paid';
@@ -53,10 +62,10 @@ class Order extends Model
     public function getStatusLabel(): string
     {
         return [
-            'pending' => '瀵板懏鏁禒?,
-            'paid' => '瀹稿弶鏁禒?,
-            'cancelled' => '瀹告彃褰囧☉?,
-            'refunded' => '瀹告煡鈧偓濞?,
+            'pending' => '待支付',
+            'paid' => '已支付',
+            'cancelled' => '已取消',
+            'refunded' => '已退款',
         ][$this->status] ?? $this->status;
     }
 }

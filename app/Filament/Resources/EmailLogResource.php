@@ -16,7 +16,8 @@ class EmailLogResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-envelope';
     protected static ?string $navigationLabel = '邮件日志';
     protected static ?string $modelLabel = '邮件日志';
-    protected static ?int $navigationSort = 6;
+    protected static ?string $navigationGroup = '邮件系统';
+    protected static ?int $navigationSort = 50;
 
     public static function form(Form $form): Form
     {

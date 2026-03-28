@@ -15,3 +15,6 @@ Route::middleware(['auth:sanctum'])->group(function () {
     Route::post('/articles/{article}/favorite', [ArticleInteractionController::class, 'toggleFavorite']);
     Route::post('/articles/{article}/unlock', [ArticleInteractionController::class, 'unlockArticle']);
 });
+
+// OpenClaw Webhook - 接收 AI 自动获取的内容
+Route::post('/openclaw/webhook', [\App\Http\Controllers\Api\AiContentController::class, 'storeContent']);

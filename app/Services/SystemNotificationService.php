@@ -4,12 +4,16 @@ namespace App\Services;
 
 use App\Models\Article;
 use App\Models\Comment;
+use App\Models\EmailSubscription;
 use App\Models\SystemNotification;
 use App\Models\User;
 use Illuminate\Support\Str;
 
 class SystemNotificationService
 {
+    /**
+     * 仅当用户在邮件订阅偏好中开启「系统通知」且未退订时创建站内通知；否则不生成记录。
+     */
     public function notify(
         User $recipient,
         string $type,
@@ -17,7 +21,11 @@ class SystemNotificationService
         ?string $body = null,
         array $meta = [],
         bool $isFromAdmin = false
-    ): SystemNotification {
+    ): ?SystemNotification {
+        if (! EmailSubscription::wantsSystemNotifications($recipient)) {
+            return null;
+        }
+
         return SystemNotification::create([
             'user_id' => $recipient->id,
             'type' => $type,

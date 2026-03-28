@@ -12,6 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
+        // 每日凌晨 2 点使用 OpenClaw 自动获取 AI 内容（文章/项目/职位/知识库）
+        $schedule->command('ai:fetch-daily')
+                 ->dailyAt('02:00')
+                 ->timezone('Asia/Shanghai')
+                 ->withoutOverlapping();
+        
         // 每日上午 9 点发送订阅邮件（日报/周报）
         $schedule->command('emails:send-scheduled', ['--limit=100'])
                  ->dailyAt('09:00')

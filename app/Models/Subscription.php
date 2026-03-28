@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 
 class Subscription extends Model
 {
@@ -11,48 +12,51 @@ class Subscription extends Model
 
     protected $fillable = [
         'user_id',
-        'email',
-        'status',
         'plan',
-        'starts_at',
-        'ends_at',
-        'cancelled_at',
+        'amount',
+        'status',
+        'started_at',
+        'expires_at',
+        'payment_id',
+        'payment_method',
     ];
 
     protected $casts = [
-        'starts_at' => 'datetime',
-        'ends_at' => 'datetime',
-        'cancelled_at' => 'datetime',
+        'amount' => 'decimal:2',
+        'started_at' => 'datetime',
+        'expires_at' => 'datetime',
     ];
 
-    /**
-     * 用户关联
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
 
     /**
-     * 作用域：有效订阅
+     * 有效订阅：状态 active，且非终身时未过期
      */
-    public function scopeActive($query)
+    public function scopeActive(Builder $query): Builder
     {
         return $query->where('status', 'active')
-                     ->where('ends_at', '>', now());
+            ->where(function (Builder $q): void {
+                $q->where('plan', 'lifetime')
+                    ->orWhereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            });
     }
 
-    /**
-     * 是否有效
-     */
     public function isActive(): bool
     {
-        return $this->status === 'active' && $this->ends_at?->isFuture();
+        if ($this->status !== 'active') {
+            return false;
+        }
+        if ($this->plan === 'lifetime') {
+            return true;
+        }
+
+        return $this->expires_at === null || $this->expires_at->isFuture();
     }
 
-    /**
-     * 获取计划名称
-     */
     public function getPlanName(): string
     {
         return [

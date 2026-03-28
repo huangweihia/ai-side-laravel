@@ -238,6 +238,9 @@
         </div>
 
         {{-- 职位类型专属字段 --}}
+        @php
+            $jobPayload = ($isEdit && isset($submission)) ? ($submission->payload ?? []) : [];
+        @endphp
         <div id="job-fields" class="type-fields" style="display: none; background: var(--dark-light); border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid rgba(255,255,255,0.08);">
             <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
                 <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #ec4899 0%, #db2777 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px;">
@@ -256,6 +259,7 @@
                             公司名称 <span style="color: #ef4444;">*</span>
                         </label>
                         <input name="company_name" required maxlength="200" 
+                               value="{{ $isEdit ? old('company_name', $jobPayload['company_name'] ?? '') : old('company_name') }}"
                                placeholder="请输入公司名称" 
                                style="width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: var(--white); font-size: 15px; transition: all 0.2s;"
                                onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(102, 126, 234, 0.15)'"
@@ -267,6 +271,7 @@
                             职位名称 <span style="color: #ef4444;">*</span>
                         </label>
                         <input name="job_title" required maxlength="200" 
+                               value="{{ $isEdit ? old('job_title', $jobPayload['job_title'] ?? '') : old('job_title') }}"
                                placeholder="例如：高级 PHP 工程师" 
                                style="width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: var(--white); font-size: 15px; transition: all 0.2s;"
                                onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(102, 126, 234, 0.15)'"
@@ -280,6 +285,7 @@
                             薪资范围
                         </label>
                         <input name="salary_range" maxlength="100" 
+                               value="{{ $isEdit ? old('salary_range', $jobPayload['salary_range'] ?? '') : old('salary_range') }}"
                                placeholder="例如：15-25k·14 薪" 
                                style="width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: var(--white); font-size: 15px; transition: all 0.2s;"
                                onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(102, 126, 234, 0.15)'"
@@ -291,6 +297,7 @@
                             工作地点
                         </label>
                         <input name="location" maxlength="100" 
+                               value="{{ $isEdit ? old('location', $jobPayload['location'] ?? '') : old('location') }}"
                                placeholder="例如：北京·朝阳区" 
                                style="width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: var(--white); font-size: 15px; transition: all 0.2s;"
                                onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(102, 126, 234, 0.15)'"
@@ -306,7 +313,7 @@
                               placeholder="列出职位要求和技能要求..." 
                               style="width: 100%; padding: 14px 16px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.15); border-radius: 12px; color: var(--white); font-size: 15px; resize: vertical; transition: all 0.2s;"
                               onfocus="this.style.borderColor='var(--primary)'; this.style.boxShadow='0 0 0 3px rgba(102, 126, 234, 0.15)'"
-                              onblur="this.style.borderColor='rgba(255,255,255,0.15)'; this.style.boxShadow='none'"></textarea>
+                              onblur="this.style.borderColor='rgba(255,255,255,0.15)'; this.style.boxShadow='none'">{{ $isEdit ? old('job_requirements', $jobPayload['job_requirements'] ?? '') : old('job_requirements') }}</textarea>
                 </div>
             </div>
         </div>

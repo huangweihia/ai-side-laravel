@@ -7,6 +7,7 @@ use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
+use Filament\Navigation\NavigationGroup;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -30,6 +31,14 @@ class AdminPanelProvider extends PanelProvider
             ->brandName('AI 副业情报局')
             ->colors([
                 'primary' => Color::Amber,
+            ])
+            ->navigationGroups([
+                NavigationGroup::make('内容管理'),
+                NavigationGroup::make('用户与互动'),
+                NavigationGroup::make('订阅与会员'),
+                NavigationGroup::make('邮件系统'),
+                NavigationGroup::make('运营与数据'),
+                NavigationGroup::make('系统'),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')

@@ -20,7 +20,8 @@ class CommentResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-oval-left';
     protected static ?string $navigationLabel = '评论管理';
     protected static ?string $modelLabel = '评论';
-    protected static ?int $navigationSort = 8;
+    protected static ?string $navigationGroup = '内容管理';
+    protected static ?int $navigationSort = 50;
 
     public static function getNavigationBadge(): ?string
     {
@@ -69,7 +70,8 @@ class CommentResource extends Resource
                         'App\\Models\\Article' => '文章',
                         'App\\Models\\Project' => '项目',
                         'App\\Models\\KnowledgeBase' => '知识库',
-                        'App\\Models\\JobListing' => '资料',
+                        'App\\Models\\Job' => '职位',
+                        'App\\Models\\JobListing' => '采集职位',
                         default => $state,
                     }),
                 Tables\Columns\TextColumn::make('target_title')
@@ -104,6 +106,10 @@ class CommentResource extends Resource
                     ->options([
                         'App\\Models\\Article' => '文章',
                         'App\\Models\\Project' => '项目',
+                        'App\\Models\\Job' => '职位',
+                        'App\\Models\\KnowledgeBase' => '知识库',
+                        'App\\Models\\KnowledgeDocument' => '知识库文档',
+                        'App\\Models\\JobListing' => '采集职位',
                     ]),
                 Tables\Filters\TernaryFilter::make('is_hidden')
                     ->label('隐藏状态')

@@ -8,7 +8,9 @@ use App\Services\SubmissionPublisher;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Notifications\Notification;
 use Filament\Tables;
+use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 
 class ContentSubmissionResource extends Resource
@@ -18,7 +20,8 @@ class ContentSubmissionResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-inbox-stack';
     protected static ?string $navigationLabel = '投稿审核';
     protected static ?string $modelLabel = '投稿';
-    protected static ?int $navigationSort = 2;
+    protected static ?string $navigationGroup = '内容管理';
+    protected static ?int $navigationSort = 10;
 
     public static function form(Form $form): Form
     {
@@ -154,21 +157,32 @@ class ContentSubmissionResource extends Resource
                     ->falseLabel('免费内容'),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()
-                    ->after(function (ContentSubmission $record) {
-                        if (in_array($record->status, ['approved', 'rejected'], true)) {
-                            $record->reviewed_by = auth()->id();
-                            $record->reviewed_at = now();
-                            if ($record->status === 'approved' && !$record->published_at) {
-                                $record->published_at = now();
-                            }
-                            $record->save();
-                        }
-
-                        if ($record->status === 'approved') {
-                            SubmissionPublisher::publish($record);
+                Action::make('syncPublish')
+                    ->label('补发布')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->requiresConfirmation()
+                    ->modalHeading('将投稿同步到对应内容表')
+                    ->modalDescription('用于已通过但未生成文章/项目/职位等记录的历史数据。')
+                    ->visible(fn (ContentSubmission $record): bool => $record->status === 'approved'
+                        && (empty($record->published_model_id) || empty($record->published_model_type)))
+                    ->action(function (ContentSubmission $record): void {
+                        try {
+                            SubmissionPublisher::publish($record->fresh());
+                            Notification::make()
+                                ->success()
+                                ->title('已同步到对应内容表')
+                                ->send();
+                        } catch (\Throwable $e) {
+                            report($e);
+                            Notification::make()
+                                ->danger()
+                                ->title('同步失败')
+                                ->body($e->getMessage())
+                                ->send();
                         }
                     }),
+                Tables\Actions\EditAction::make(),
             ]);
     }
 

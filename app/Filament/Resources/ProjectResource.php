@@ -19,7 +19,8 @@ class ProjectResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
     protected static ?string $navigationLabel = '项目管理';
     protected static ?string $modelLabel = '项目';
-    protected static ?int $navigationSort = 4;
+    protected static ?string $navigationGroup = '内容管理';
+    protected static ?int $navigationSort = 30;
 
     public static function form(Form $form): Form
     {

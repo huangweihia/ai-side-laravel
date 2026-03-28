@@ -14,7 +14,8 @@ class Analytics extends Page
     protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
     protected static string $view = 'filament.pages.analytics';
     protected static ?string $navigationLabel = '数据报表';
-    protected static ?int $navigationSort = 90;
+    protected static ?string $navigationGroup = '运营与数据';
+    protected static ?int $navigationSort = 10;
 
     public function getStats(): array
     {

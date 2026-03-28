@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\KnowledgeBase;
 use App\Models\KnowledgeDocument;
 use App\Models\Comment;
+use App\Models\UserAction;
 use App\Services\KnowledgeSearchService;
 use Illuminate\Http\Request;
 
@@ -22,9 +23,15 @@ class KnowledgeController extends Controller
      */
     public function index(Request $request)
     {
-        // 暂时跳转到首页，避免报错
-        return redirect()->route('home')
-            ->with('info', '知识库功能开发中，敬请期待');
+        $bases = KnowledgeBase::query()
+            ->where('is_public', true)
+            ->with('user:id,name')
+            ->withCount('documents')
+            ->orderByDesc('updated_at')
+            ->paginate(12)
+            ->withQueryString();
+
+        return view('knowledge.index', compact('bases'));
     }
 
     /**
@@ -102,32 +109,68 @@ class KnowledgeController extends Controller
             \App\Models\ViewHistory::record(auth()->user(), $document);
         }
         
-        // 获取评论（最新 10 条）
-        $comments = $document->comments()
-            ->whereNull('parent_id')
-            ->where('is_hidden', false)
-            ->with(['user', 'replies.user'])
-            ->latest()
-            ->limit(10)
-            ->get();
-        
+        $comments = collect();
         $commentsTotal = $document->comments()
             ->whereNull('parent_id')
             ->where('is_hidden', false)
             ->count();
-        
-        return view('knowledge.document', compact('document', 'knowledgeBase', 'comments', 'commentsTotal'));
+
+        $featuredComment = $document->comments()
+            ->whereNull('parent_id')
+            ->where('is_hidden', false)
+            ->withCount('replies')
+            ->with(['user', 'replies.user', 'replies.replyTo.user'])
+            ->orderByDesc('replies_count')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($featuredComment && (int) $featuredComment->replies_count < 1) {
+            $featuredComment = null;
+        }
+
+        $commentsQuery = $document->comments()
+            ->whereNull('parent_id')
+            ->where('is_hidden', false)
+            ->with(['user', 'replies.user', 'replies.replyTo.user'])
+            ->latest();
+
+        if ($featuredComment) {
+            $commentsQuery->where('id', '!=', $featuredComment->id);
+        }
+
+        if ($featuredComment) {
+            $comments->push($featuredComment);
+        }
+        $comments = $comments->concat($commentsQuery->get());
+
+        $likedCommentIds = auth()->check()
+            ? UserAction::query()
+                ->where('user_id', auth()->id())
+                ->where('type', 'comment_like')
+                ->where('actionable_type', Comment::class)
+                ->pluck('actionable_id')
+                ->map(fn ($id) => (int) $id)
+                ->all()
+            : [];
+
+        return view('knowledge.document', compact(
+            'document',
+            'knowledgeBase',
+            'comments',
+            'commentsTotal',
+            'featuredComment',
+            'likedCommentIds'
+        ));
     }
 
     /**
-     * 发表评论
+     * 发表评论（与文章评论区逻辑一致：支持楼中楼）
      */
-    public function storeComment(Request $request, $documentId)
+    public function storeComment(Request $request, KnowledgeDocument $document)
     {
-        $document = KnowledgeDocument::findOrFail($documentId);
         $user = auth()->user();
-        
-        if (!$user) {
+
+        if (! $user) {
             return response()->json([
                 'success' => false,
                 'message' => '请先登录后评论',
@@ -135,25 +178,57 @@ class KnowledgeController extends Controller
         }
 
         $knowledgeBase = $document->knowledgeBase;
-        if (!$knowledgeBase->is_public) {
+        if (! $knowledgeBase->is_public) {
             return response()->json(['success' => false, 'message' => '无权评论'], 403);
         }
-        if ($knowledgeBase->is_vip_only && (!$user->isVip() && !$user->isAdmin())) {
+        if ($knowledgeBase->is_vip_only && (! $user->isVip() && ! $user->isAdmin())) {
             return response()->json(['success' => false, 'message' => '仅 VIP 可参与讨论'], 403);
         }
-        
+
         $request->validate([
             'content' => 'required|string|max:1000',
+            'parent_id' => 'nullable|integer|exists:comments,id',
+            'reply_to_id' => 'nullable|integer|exists:comments,id',
         ]);
-        
+
+        $parentId = $request->input('parent_id');
+        $replyToId = $request->input('reply_to_id');
+        $parentComment = null;
+
+        if ($parentId) {
+            $parentComment = Comment::find($parentId);
+            if (
+                ! $parentComment
+                || $parentComment->commentable_type !== KnowledgeDocument::class
+                || (int) $parentComment->commentable_id !== (int) $document->id
+            ) {
+                return response()->json([
+                    'success' => false,
+                    'message' => '回复目标无效',
+                ], 422);
+            }
+
+            if ($replyToId) {
+                $replyTarget = Comment::find($replyToId);
+                if (! $replyTarget || (int) ($replyTarget->parent_id ?: $replyTarget->id) !== (int) $parentComment->id) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => '引用目标无效',
+                    ], 422);
+                }
+            }
+        }
+
         $comment = $document->comments()->create([
             'user_id' => $user->id,
             'content' => $request->content,
+            'parent_id' => $parentId,
+            'reply_to_id' => $replyToId,
         ]);
-        
+
         return response()->json([
             'success' => true,
-            'comment' => $comment->load('user'),
+            'comment' => $comment->load(['user', 'replyTo.user']),
             'total' => $document->comments()->whereNull('parent_id')->where('is_hidden', false)->count(),
         ]);
     }

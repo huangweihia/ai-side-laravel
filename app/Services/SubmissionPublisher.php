@@ -88,6 +88,7 @@ class SubmissionPublisher
             'salary_range' => $p['salary_range'] ?? null,
             'requirements' => $p['job_requirements'] ?? null,
             'description' => $submission->content,
+            'source_url' => $p['source_url'] ?? $p['url'] ?? null,
             'is_contact_vip' => (bool) $submission->is_paid,
             'is_vip_only' => (bool) $submission->is_paid,
             'is_published' => true,

@@ -40,6 +40,14 @@
                             <span>·</span>
                             <span>📩 {{ $job->apply_count }} 次申请</span>
                         </div>
+                        @if(!empty($job->source_url))
+                            <div style="margin-top: 16px;">
+                                <a href="{{ $job->source_url }}" target="_blank" rel="noopener noreferrer"
+                                   style="display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 10px; background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.35); color: var(--primary-light); font-weight: 600; text-decoration: none; font-size: 14px;">
+                                    🔗 查看来源 / 投递页面
+                                </a>
+                            </div>
+                        @endif
                     </div>
                     
                     @if($job->is_contact_vip && !$canViewContact)

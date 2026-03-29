@@ -740,6 +740,7 @@
 | salary_range | VARCHAR(100) | ❌ | NULL | 薪资范围 |
 | requirements | TEXT | ❌ | NULL | 任职要求 |
 | description | TEXT | ❌ | NULL | 职位描述 |
+| source_url | VARCHAR(255) | ❌ | NULL | 来源/原文链接（迁移 `2026_03_29_184700_add_source_url_to_positions_table`） |
 | contact_email | VARCHAR(255) | ❌ | NULL | 联系邮箱 |
 | contact_phone | VARCHAR(50) | ❌ | NULL | 联系电话 |
 | contact_wechat | VARCHAR(100) | ❌ | NULL | 联系微信 |
@@ -759,6 +760,7 @@
 **变更记录：**
 - v1.4.0 (2026-03-27) - 新增（使用 `positions` 表名避免与队列冲突）
 - v1.4.4 (2026-03-28) - 新增 `is_vip_only`（VIP 专属职位正文）
+- v1.4.5 (2026-03-29) - 新增 `source_url`（可空，前台「查看来源」与采集 `url` 写入）
 
 ---
 

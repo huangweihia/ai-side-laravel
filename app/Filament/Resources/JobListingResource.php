@@ -46,6 +46,8 @@ class JobListingResource extends Resource
                     Forms\Components\TextInput::make('company_name')->label('公司名称')->required()->maxLength(200),
                     Forms\Components\TextInput::make('salary_range')->label('薪资范围')->maxLength(100),
                     Forms\Components\TextInput::make('location')->label('工作地点')->maxLength(100),
+                    Forms\Components\TextInput::make('source_url')->label('来源链接')->url()->maxLength(255)
+                        ->helperText('招聘原文外链（最多 255 字）；前台详情展示「查看来源」'),
                 ])->columns(2),
 
             Forms\Components\Section::make('详细内容')
@@ -86,6 +88,12 @@ class JobListingResource extends Resource
                 Tables\Columns\TextColumn::make('company_name')->label('公司')->searchable()->limit(24),
                 Tables\Columns\TextColumn::make('salary_range')->label('薪资')->toggleable(),
                 Tables\Columns\TextColumn::make('location')->label('地点')->toggleable(),
+                Tables\Columns\TextColumn::make('source_url')
+                    ->label('来源链接')
+                    ->url(fn (?string $state): ?string => $state ?: null)
+                    ->openUrlInNewTab()
+                    ->limit(28)
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('comments_count')
                     ->label('评论')
                     ->counts('comments')

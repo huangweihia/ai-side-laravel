@@ -42,7 +42,7 @@ docker-compose exec php php artisan storage:link
 # 后台：`http://localhost:8081/admin`
 ```
 
-**部署与运维文档**：Linux 部署参考 `docs/服务器部署文档.md`，Windows 部署参考 `docs/Windows 部署文档.md`，以及 `docs/文档整理说明.md` 中的 docs 维护约定。
+**部署与运维文档**：Linux 部署参考 [`docs/服务器部署文档.md`](docs/服务器部署文档.md)，Windows 部署参考 [`docs/Windows 部署文档.md`](docs/Windows%20部署文档.md)，以及 [`docs/文档整理说明.md`](docs/文档整理说明.md) 中的 docs 维护约定。
 
 ---
 
@@ -232,14 +232,14 @@ docker-compose exec php php artisan test --coverage-html=coverage
 ## 📖 项目文档（建议与优先级）
 权威文档入口主要在 `docs/01-项目规划` 与 `docs/05-开发文档`：
 
-- `docs/01-项目规划/产品需求文档.md`：PRD（MVP → 成长期），包含完整功能地图、验收标准与路线图
-- `docs/01-项目规划/产品详细需求.md`：更细的产品结构与功能拆解（可用于对齐实现）
-- `docs/01-项目规划/商业化方案.md`：收费策略、增收模块与路线（含 MCP 搜索整合思路）
-- `docs/01-项目规划/产品评审报告.md`：审查结论与优化清单（用于迭代优先级）
-- `docs/文档整理说明.md`：docs 结构、合并说明与维护规范
-- `docs/05-开发文档/迁移与前台功能变更记录.md`：迁移批次与前台关键路径变更对照
-- `docs/05-开发文档/微信支付Native接入.md`：微信 Native（API v3）配置、证书、路由与回调约定
-- `docs/服务器部署文档.md`：Linux 服务器线上部署（Docker/验证/排障）
+- [`docs/01-项目规划/产品需求文档.md`](docs/01-项目规划/产品需求文档.md)：PRD（MVP → 成长期），包含完整功能地图、验收标准与路线图
+- [`docs/01-项目规划/产品详细需求.md`](docs/01-项目规划/产品详细需求.md)：更细的产品结构与功能拆解（可用于对齐实现）
+- [`docs/01-项目规划/商业化方案.md`](docs/01-项目规划/商业化方案.md)：收费策略、增收模块与路线（含 MCP 搜索整合思路）
+- [`docs/01-项目规划/产品评审报告.md`](docs/01-项目规划/产品评审报告.md)：审查结论与优化清单（用于迭代优先级）
+- [`docs/文档整理说明.md`](docs/文档整理说明.md)：docs 结构、合并说明与维护规范
+- [`docs/05-开发文档/迁移与前台功能变更记录.md`](docs/05-开发文档/迁移与前台功能变更记录.md)：迁移批次与前台关键路径变更对照
+- [`docs/05-开发文档/微信支付Native接入.md`](docs/05-开发文档/微信支付Native接入.md)：微信 Native（API v3）配置、证书、路由与回调约定
+- [`docs/服务器部署文档.md`](docs/服务器部署文档.md)：Linux 服务器线上部署（Docker/验证/排障）
 
 ---
 

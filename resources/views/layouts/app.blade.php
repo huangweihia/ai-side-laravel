@@ -148,11 +148,14 @@
             flex-shrink: 0;
             white-space: nowrap;
             will-change: transform;
-            /* 无 JS 时退化为整段左移；有 JS 后切换为从视口右侧入场 */
-            animation: site-marquee-fallback 22s linear infinite;
+            /* 无 JS 时退化为一次性左移；有 JS 后切换为从视口右侧入场 */
+            animation: site-marquee-fallback 20s linear 1 forwards;
         }
         .site-marquee-bar .site-marquee-track.is-marquee-ready {
             animation-name: site-marquee-x;
+            animation-timing-function: linear;
+            animation-iteration-count: 1;
+            animation-fill-mode: forwards;
         }
         .site-marquee-bar .site-marquee-chunk,
         .site-marquee-bar .site-marquee-sep {
@@ -160,9 +163,9 @@
         }
         @keyframes site-marquee-fallback {
             0% { transform: translate3d(0, 0, 0); }
-            100% { transform: translate3d(-50%, 0, 0); }
+            100% { transform: translate3d(-100%, 0, 0); }
         }
-        /* --mx-start/--mx-end 为 px，由脚本写入：从右侧无缝滚过一整份副本宽度 */
+        /* --mx-start/--mx-end 为 px，由脚本写入：完整滚过头部后结束 */
         @keyframes site-marquee-x {
             0% { transform: translate3d(var(--mx-start), 0, 0); }
             100% { transform: translate3d(var(--mx-end), 0, 0); }
@@ -188,46 +191,38 @@
             margin: 0 auto;
             padding: 0 24px 48px;
         }
-        /* 有广告：四列 [左留白][主内容 ≤1200][推广加宽][右留白]，推广在主题列右侧，减少遮挡标题区 */
+        /* 有广告：主内容仍居中，广告改为浮动窗口，不占主内容栅格 */
         .layout-page-grid.layout-with-sidebar {
-            display: grid;
-            max-width: 100%;
-            width: 100%;
+            max-width: 1200px;
             margin: 0 auto;
-            padding: 0 max(20px, env(safe-area-inset-right, 0px)) 48px max(20px, env(safe-area-inset-left, 0px));
-            box-sizing: border-box;
-            grid-template-columns: minmax(8px, 1fr) minmax(0, 1200px) minmax(300px, 400px) minmax(16px, 1fr);
-            gap: 0 28px;
-            align-items: start;
+            padding: 0 24px 48px;
         }
         .layout-page-grid.layout-with-sidebar .layout-page-primary {
-            grid-column: 2;
             min-width: 0;
         }
         .layout-page-grid.layout-with-sidebar .site-ad-sidebar {
-            grid-column: 3;
-            position: sticky;
-            top: calc(80px + var(--site-marquee-offset, 0px) + 16px);
-            z-index: 35;
-            max-height: calc(100vh - 100px);
-            overflow-y: auto;
+            position: fixed;
+            right: 16px;
+            top: calc(80px + var(--site-marquee-offset, 0px) + 12px);
+            z-index: 1200;
+            width: min(320px, calc(100vw - 24px));
+            max-height: calc(100vh - 110px);
+            overflow: auto;
+        }
+        .layout-page-grid.layout-with-sidebar .site-ad-sidebar-card {
+            backdrop-filter: blur(8px);
         }
         @media (max-width: 1199px) {
             .layout-page-grid.layout-with-sidebar {
-                grid-template-columns: 1fr;
-                gap: 24px 0;
                 padding-left: 24px;
                 padding-right: 24px;
             }
             .layout-page-grid.layout-with-sidebar .layout-page-primary {
-                grid-column: 1;
+                min-width: 0;
             }
             .layout-page-grid.layout-with-sidebar .site-ad-sidebar {
-                grid-column: 1;
-                position: static;
-                max-width: 400px;
-                width: 100%;
-                margin: 0 auto;
+                right: 8px;
+                width: min(300px, calc(100vw - 16px));
                 max-height: none;
                 overflow: visible;
             }
@@ -309,7 +304,6 @@
             height: auto;
             object-fit: cover;
             display: block;
-            vertical-align: middle;
         }
         .site-ad-sidebar-title {
             font-size: 14px;
@@ -954,6 +948,9 @@
                 <a href="{{ route('articles.index') }}" class="navbar-link {{ request()->routeIs('articles.*') ? 'active' : '' }}">📝 文章</a>
                 <a href="{{ route('knowledge.index') }}" class="navbar-link {{ request()->routeIs('knowledge.*') ? 'active' : '' }}">📚 知识库</a>
                 <a href="{{ route('jobs.index') }}" class="navbar-link {{ request()->routeIs('jobs.*') ? 'active' : '' }}">💼 职位</a>
+                @auth
+                    <a href="{{ route('feedback.create') }}" class="navbar-link {{ request()->routeIs('feedback.*') ? 'active' : '' }}">🐞 反馈</a>
+                @endauth
                 
                 {{-- 用户功能 --}}
                 @auth
@@ -989,13 +986,12 @@
         @php
             $marqueeFirst = $marqueeAnnouncements->first();
             $marqueeLine = $marqueeAnnouncements->map(fn ($a) => $a->marquee_line)->implode('　｜　');
-            $marqueeSep = '　　　';
         @endphp
         <div id="site-marquee-bar" class="site-marquee-bar" role="region" aria-label="站点公告">
             <a href="{{ route('announcements.show', $marqueeFirst->slug) }}" class="site-marquee-link">
                 <div class="site-marquee-viewport">
                     <div class="site-marquee-track">
-                        <span class="site-marquee-chunk">{{ $marqueeLine }}</span><span class="site-marquee-sep" aria-hidden="true">{{ $marqueeSep }}</span><span class="site-marquee-chunk">{{ $marqueeLine }}</span>
+                        <span class="site-marquee-chunk">{{ $marqueeLine }}</span>
                     </div>
                 </div>
             </a>
@@ -1019,16 +1015,15 @@
             function updateMarqueeMetrics() {
                 var w = vp.offsetWidth;
                 var tw = track.scrollWidth;
-                var half = tw / 2;
-                if (w < 2 || half < 2) {
+                if (w < 2 || tw < 2) {
                     track.classList.remove('is-marquee-ready');
                     return;
                 }
                 var startPx = w;
-                var endPx = startPx - half;
+                var endPx = -tw;
                 track.style.setProperty('--mx-start', startPx + 'px');
                 track.style.setProperty('--mx-end', endPx + 'px');
-                track.style.animationDuration = Math.max(14, half / 45) + 's';
+                track.style.animationDuration = Math.max(10, (w + tw) / 80) + 's';
                 track.classList.add('is-marquee-ready');
             }
             function scheduleUpdate() {
@@ -1041,6 +1036,13 @@
             window.addEventListener('resize', function () {
                 clearTimeout(resizeTimer);
                 resizeTimer = setTimeout(scheduleUpdate, 120);
+            });
+            track.addEventListener('animationend', function () {
+                if (!bar || !bar.parentNode) {
+                    return;
+                }
+                bar.remove();
+                document.body.classList.remove('has-site-marquee');
             });
         })();
         </script>

@@ -16,6 +16,7 @@ use App\Http\Controllers\SystemNotificationController;
 use App\Http\Controllers\MyArticleEngagementController;
 use App\Http\Controllers\Payments\WechatNativePaymentController;
 use App\Http\Controllers\AnnouncementController;
+use App\Http\Controllers\ProblemFeedbackController;
 
 /*
 |--------------------------------------------------------------------------
@@ -91,6 +92,7 @@ Route::get('tools', function() {
 Route::middleware('guest')->group(function () {
     Route::get('register', [RegisterController::class, 'showRegistrationForm'])->name('register');
     Route::post('register', [RegisterController::class, 'register']);
+    Route::post('register/send-code', [RegisterController::class, 'sendEmailCode'])->name('register.send-code');
     Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
     Route::post('login', [LoginController::class, 'login']);
 });
@@ -121,6 +123,8 @@ Route::middleware('auth')->group(function () {
     // 个人中心
     Route::get('dashboard', [HomeController::class, 'dashboard'])->name('dashboard');
     Route::post('profile/upload-avatar', [HomeController::class, 'uploadAvatar'])->name('profile.upload-avatar');
+    Route::get('feedback', [ProblemFeedbackController::class, 'create'])->name('feedback.create');
+    Route::post('feedback', [ProblemFeedbackController::class, 'store'])->name('feedback.store');
 
     // 我发布的职位及收到的申请（发布者）
     Route::get('my/jobs', [\App\Http\Controllers\JobController::class, 'myJobs'])->name('my.jobs.index');

@@ -33,6 +33,14 @@
                 <label class="form-label" for="email">邮箱地址</label>
                 <input class="form-input" id="email" type="email" name="email" value="{{ old('email') }}" required placeholder="your@email.com">
             </div>
+            <div class="form-group">
+                <label class="form-label" for="email_code">邮箱验证码</label>
+                <div style="display:flex; gap:10px;">
+                    <input class="form-input" id="email_code" type="text" name="email_code" value="{{ old('email_code') }}" required placeholder="6 位验证码" maxlength="6" style="flex:1;">
+                    <button class="btn btn-secondary" type="button" id="sendEmailCodeBtn" onclick="sendEmailCode()" style="white-space:nowrap;">发送验证码</button>
+                </div>
+                <p style="margin-top: 8px; font-size: 12px; color: var(--gray-light);">需使用真实邮箱接收验证码，10 分钟内有效。</p>
+            </div>
 
             <div class="form-group">
                 <label class="form-label" for="password">密码</label>
@@ -54,11 +62,16 @@
             const form = document.getElementById('registerForm');
             const name = document.getElementById('name').value.trim();
             const email = document.getElementById('email').value.trim();
+            const emailCode = document.getElementById('email_code').value.trim();
             const password = document.getElementById('password').value;
             const passwordConfirm = document.getElementById('password_confirmation').value;
 
-            if (!name || !email || !password || !passwordConfirm) {
+            if (!name || !email || !emailCode || !password || !passwordConfirm) {
                 showToast('请填写所有必填字段', 'error');
+                return;
+            }
+            if (!/^\d{6}$/.test(emailCode)) {
+                showToast('请输入 6 位邮箱验证码', 'error');
                 return;
             }
 
@@ -83,6 +96,54 @@
                     form.submit();
                 }
             });
+        }
+
+        async function sendEmailCode() {
+            const email = document.getElementById('email').value.trim();
+            const btn = document.getElementById('sendEmailCodeBtn');
+            if (!email) {
+                showToast('请先输入邮箱地址', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.textContent = '发送中...';
+
+            try {
+                const res = await fetch("{{ route('register.send-code') }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ email }),
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    showToast(data.message || '发送失败，请稍后重试', 'error');
+                    btn.disabled = false;
+                    btn.textContent = '发送验证码';
+                    return;
+                }
+                showToast('验证码已发送，请查收邮箱', 'success');
+                let left = 60;
+                btn.textContent = `${left}s 后重发`;
+                const timer = setInterval(() => {
+                    left -= 1;
+                    if (left <= 0) {
+                        clearInterval(timer);
+                        btn.disabled = false;
+                        btn.textContent = '发送验证码';
+                        return;
+                    }
+                    btn.textContent = `${left}s 后重发`;
+                }, 1000);
+            } catch (e) {
+                showToast('发送失败，请检查网络后重试', 'error');
+                btn.disabled = false;
+                btn.textContent = '发送验证码';
+            }
         }
         </script>
 

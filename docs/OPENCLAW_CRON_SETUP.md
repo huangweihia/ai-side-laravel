@@ -30,7 +30,7 @@ openclaw cron add --name="AI 内容自动采集" \
 数据格式要求：
 - 文章：{\"title\":\"标题\",\"summary\":\"摘要\",\"content\":\"内容\",\"url\":\"链接\"}
 - 项目：{\"name\":\"项目名\",\"description\":\"描述\",\"url\":\"GitHub 链接\",\"stars\":数字,\"forks\":数字}
-- 职位：{\"title\":\"职位\",\"company_name\":\"公司\",\"salary\":\"薪资\",\"city\":\"城市\",\"description\":\"描述\"}
+- 职位：{\"title\":\"职位\",\"company_name\":\"公司\",\"salary\":\"薪资\",\"city\":\"城市\",\"description\":\"描述\",\"url\":\"原文链接\"}
 - 知识库：{\"title\":\"标题\",\"content\":\"HTML 内容\"}
 
 推送方式：
@@ -123,7 +123,7 @@ docker compose exec php tail -f storage/logs/laravel.log | grep -i "openclaw\|we
       "experience": "3-5 年",
       "education": "本科",
       "description": "负责大模型研发和优化...",
-      "url": "https://example.com/job"
+      "url": "https://www.zhipin.com/job/detail/xxxxx"
     }
   ]
 }

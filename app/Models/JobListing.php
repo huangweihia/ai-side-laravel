@@ -13,15 +13,21 @@ class JobListing extends Model
         'title',
         'company',
         'salary',
-        'location',
+        'city',
+        'experience',
+        'education',
         'description',
-        'url',
-        'source',
+        'source_url',
+        'tags',
+        'is_full_time',
+        'view_count',
         'published_at',
         'is_sent',
     ];
 
     protected $casts = [
+        'tags' => 'array',
+        'is_full_time' => 'boolean',
         'published_at' => 'datetime',
         'is_sent' => 'boolean',
     ];

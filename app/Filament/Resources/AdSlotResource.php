@@ -63,6 +63,7 @@ class AdSlotResource extends Resource
                         ->image()
                         ->disk('public')
                         ->directory('ad-slots')
+                        ->visibility('public')
                         ->maxSize(3072)
                         ->helperText('与「图片外链」二选一；上传后会清空外链。')
                         ->visible(fn (Get $get): bool => $get('display_mode') === 'standard'),

@@ -1,8 +1,8 @@
-# Windows 部署文档 - AI 副业情报局
+# AI 副业情报局 - Windows 电脑部署文档
 
-> 本文档用于在 Windows 机器上完整部署 AI 副业情报局项目，包括 OpenClaw 自动化采集系统。  
+> **适用环境：** Windows 10/11  
 > **最后更新：** 2026-03-28  
-> **适用系统：** Windows 10/11
+> **预计耗时：** 30-60 分钟
 
 ---
 
@@ -10,12 +10,13 @@
 
 1. [环境准备](#环境准备)
 2. [安装 Docker Desktop](#安装-docker-desktop)
-3. [安装 OpenClaw](#安装-openclaw)
-4. [部署 Laravel 项目](#部署-laravel-项目)
-5. [配置数据库](#配置数据库)
-6. [配置 OpenClaw 定时任务](#配置-openclaw-定时任务)
-7. [验证部署](#验证部署)
-8. [常见问题](#常见问题)
+3. [安装 Git](#安装-git)
+4. [安装 Node.js](#安装-nodejs)
+5. [安装 OpenClaw](#安装-openclaw)
+6. [部署 Laravel 项目](#部署-laravel-项目)
+7. [配置 OpenClaw 定时任务](#配置-openclaw-定时任务)
+8. [验证部署](#验证部署)
+9. [常见问题](#常见问题)
 
 ---
 
@@ -35,8 +36,9 @@
 
 - [ ] Docker Desktop
 - [ ] Git for Windows
+- [ ] Node.js v20+
 - [ ] OpenClaw
-- [ ] 文本编辑器（VS Code 推荐）
+- [ ] VS Code（推荐编辑器）
 
 ---
 
@@ -51,7 +53,7 @@
 ### 步骤 2：安装 Docker
 
 1. 双击下载的安装包 `Docker Desktop Installer.exe`
-2. 勾选 **Use WSL 2 instead of Hyper-V**
+2. 勾选 **Use WSL 2 instead of Hyper-V**（推荐）
 3. 点击 **OK** 开始安装
 4. 安装完成后重启电脑
 
@@ -62,38 +64,88 @@
 3. 打开 PowerShell，执行：
    ```powershell
    docker --version
+   docker-compose --version
    ```
-   应该显示 Docker 版本号
+   应该显示 Docker 和 Docker Compose 版本号
+
+### 步骤 4：配置 WSL 2（如果使用）
+
+```powershell
+# 1. 启用 WSL 2
+wsl --install
+
+# 2. 设置 WSL 2 为默认
+wsl --set-default-version 2
+
+# 3. 重启电脑
+# 4. 重新启动 Docker Desktop
+```
 
 ---
 
-## 🦞 安装 OpenClaw
+## 📥 安装 Git
 
-### 步骤 1：安装 Node.js
+### 步骤 1：下载 Git
+
+访问：https://git-scm.com/download/win
+
+下载并安装 **64 位 Git for Windows**
+
+### 步骤 2：安装配置
+
+安装过程中保持默认设置即可：
+- 选择 **Git from the command line and also from 3rd-party software**
+- 选择 **Use the OpenSSL library**
+- 选择 **Checkout Windows-style, commit Unix-style line endings**
+
+### 步骤 3：验证安装
+
+打开 PowerShell，执行：
+```powershell
+git --version
+```
+应该显示 Git 版本号
+
+---
+
+## 🟢 安装 Node.js
+
+### 步骤 1：下载 Node.js
 
 访问：https://nodejs.org/
 
 下载并安装 **LTS 版本**（推荐 v20+）
 
-验证安装：
+### 步骤 2：安装配置
+
+双击安装包，保持默认设置，一路 Next 即可。
+
+### 步骤 3：验证安装
+
+打开 PowerShell，执行：
 ```powershell
 node --version
 npm --version
 ```
+应该显示 Node.js 和 npm 版本号
 
-### 步骤 2：安装 OpenClaw
+---
 
-在 PowerShell 中执行（管理员权限）：
+## 🦞 安装 OpenClaw
+
+### 步骤 1：安装 OpenClaw
+
+以**管理员身份**打开 PowerShell，执行：
 
 ```powershell
-# 安装 OpenClaw
+# 全局安装 OpenClaw
 npm install -g openclaw
 
 # 验证安装
 openclaw --version
 ```
 
-### 步骤 3：初始化 OpenClaw
+### 步骤 2：初始化 OpenClaw
 
 ```powershell
 # 创建工作目录
@@ -102,20 +154,20 @@ cd C:\openclaw-workspace
 
 # 初始化 OpenClaw
 openclaw setup
+
+# 按照提示完成：
+# 1. 选择 main 模式
+# 2. 配置阿里云百炼 API Key（如果有）
+# 3. 完成初始化
 ```
 
-按照提示完成：
-1. 选择 **main** 模式
-2. 配置阿里云百炼 API Key（如果有）
-3. 完成初始化
-
-### 步骤 4：启动 OpenClaw Gateway
+### 步骤 3：启动 OpenClaw Gateway
 
 ```powershell
 # 启动 Gateway
 openclaw gateway
 
-# 保持后台运行（可选）
+# 保持后台运行
 # 访问 http://localhost:18788 查看控制面板
 ```
 
@@ -142,16 +194,18 @@ git clone <你的项目仓库地址> .
 
 ```powershell
 # 复制环境配置文件
-cp .env.example .env
+Copy-Item .env.example .env
+
+# 编辑 .env 文件（使用记事本或 VS Code）
+notepad .env
 ```
 
-编辑 `.env` 文件，配置以下内容：
+编辑以下内容：
 
 ```bash
 # 应用配置
 APP_NAME="AI 副业情报局"
 APP_ENV=production
-APP_KEY=base64:xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 APP_DEBUG=false
 APP_URL=http://localhost:8081
 
@@ -181,104 +235,48 @@ MAIL_FROM_NAME="${APP_NAME}"
 # OpenClaw Webhook Token
 OPENCLAW_WEBHOOK_TOKEN=openclaw-ai-fetcher-2026
 
-# 阿里云百炼 API Key（如果有）
-DASHSCOPE_API_KEY=sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+# 阿里云百炼 API Key
+DASHSCOPE_API_KEY=sk-你的 API-Key
 ```
+
+保存并关闭文件。
 
 ### 步骤 3：生成 APP_KEY
 
 ```powershell
-docker compose run --rm php php artisan key:generate
+# 启动 Docker 容器
+docker-compose up -d
+
+# 等待 30 秒让容器启动
+Start-Sleep -Seconds 30
+
+# 生成 APP_KEY
+docker-compose exec php php artisan key:generate
 ```
 
-### 步骤 4：启动 Docker 容器
-
-```powershell
-# 启动所有服务
-docker compose up -d
-
-# 查看运行状态
-docker compose ps
-
-# 应该看到以下服务：
-# - mysql (数据库)
-# - redis (缓存)
-# - php (PHP 应用)
-# - nginx (Web 服务器)
-```
-
-### 步骤 5：运行数据库迁移
+### 步骤 4：运行数据库迁移
 
 ```powershell
 # 进入 PHP 容器
-docker compose exec php bash
+docker-compose exec php bash
 
 # 运行迁移
 php artisan migrate
 
+# 创建管理员用户（重要！）
+php artisan tinker
+>>> $user = App\Models\User::create([
+    'name' => 'Admin',
+    'email' => 'admin@ai-side.com',
+    'password' => bcrypt('admin123'),
+    'role' => 'admin'
+]);
+>>> echo "User ID: " . $user->id;
+>>> exit
+
 # 退出容器
 exit
 ```
-
-### 步骤 6：配置 Nginx
-
-编辑 `docker-compose.yml` 或 Nginx 配置文件，确保：
-
-```nginx
-server {
-    listen 8081;
-    server_name localhost;
-    root /var/www/html/public;
-    
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
-    
-    location ~ \.php$ {
-        fastcgi_pass php:9000;
-        fastcgi_index index.php;
-        include fastcgi_params;
-        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
-    }
-}
-```
-
-### 步骤 7：访问网站
-
-浏览器访问：http://localhost:8081
-
----
-
-## 🗄️ 配置数据库
-
-### 方式 1：使用 Docker 中的 MySQL（推荐）
-
-```powershell
-# 查看 MySQL 容器
-docker compose ps mysql
-
-# 进入 MySQL
-docker compose exec mysql mysql -u ai_side -p
-
-# 创建数据库（如果迁移未自动创建）
-CREATE DATABASE IF NOT EXISTS ai_side CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-```
-
-### 方式 2：使用外部 MySQL
-
-1. 安装 MySQL 8.0 或更高版本
-2. 创建数据库：
-   ```sql
-   CREATE DATABASE ai_side CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-   CREATE USER 'ai_side'@'%' IDENTIFIED BY '强密码';
-   GRANT ALL PRIVILEGES ON ai_side.* TO 'ai_side'@'%';
-   FLUSH PRIVILEGES;
-   ```
-3. 修改 `.env` 中的数据库配置：
-   ```bash
-   DB_HOST=127.0.0.1
-   DB_PORT=3306
-   ```
 
 ---
 
@@ -286,62 +284,60 @@ CREATE DATABASE IF NOT EXISTS ai_side CHARACTER SET utf8mb4 COLLATE utf8mb4_unic
 
 ### 步骤 1：获取 Gateway Token
 
-在 OpenClaw 工作目录执行：
-
 ```powershell
+cd C:\openclaw-workspace
+
 # 查看配置文件
-cat C:\openclaw-workspace\openclaw.json
+Get-Content openclaw.json | Select-String "token"
 
-# 找到 token 字段，复制 token 值
-# 例如："token": "a58608bbd02545968ef99d8452530584"
+# 复制 token 值，例如："token": "a58608bbd02545968ef99d8452530584"
 ```
 
-### 步骤 2：创建定时任务配置文件
-
-创建文件 `C:\openclaw-workspace\ai-content-cron.json`：
-
-```json
-{
-  "name": "AI 内容自动采集",
-  "schedule": {
-    "kind": "cron",
-    "expr": "0 * * * *",
-    "tz": "Asia/Shanghai"
-  },
-  "payload": {
-    "kind": "agentTurn",
-    "message": "你是一个专业的 AI 内容采集助手。请使用 web_search 搜索最新的 AI 相关内容，整理后推送到 Laravel 项目。\n\n## 任务要求（每小时执行）\n\n### 1. 搜索 AI 文章（10 篇，带封面图）\n搜索关键词：\"AI 大模型 最新动态 GPT-5 AI 工具\"\n整理格式：\n{\"type\":\"articles\",\"items\":[{\"title\":\"标题\",\"summary\":\"200 字摘要\",\"content\":\"1000 字以上内容\",\"url\":\"原文链接\",\"cover_image\":\"封面图片 URL\"}]}\n\n### 2. 搜索 GitHub 项目（20 个）\n搜索关键词：\"GitHub trending machine-learning AI GPT LLM\"\n整理格式：\n{\"type\":\"projects\",\"items\":[{\"name\":\"项目名\",\"description\":\"详细描述\",\"url\":\"GitHub 链接\",\"stars\":数字,\"forks\":数字,\"language\":\"语言\"}]}\n\n### 3. 搜索 AI 职位（20 个）\n搜索关键词：\"AI 工程师 大模型 AIGC 招聘 薪资\"\n整理格式：\n{\"type\":\"jobs\",\"items\":[{\"title\":\"职位\",\"company_name\":\"公司\",\"salary\":\"薪资\",\"city\":\"城市\",\"description\":\"职位描述\",\"url\":\"招聘链接\"}]}\n\n### 4. 生成 AI 教程（2 篇）\n主题：\"ChatGPT 使用技巧\" 和 \"AI 工具实战教程\"\n整理格式：\n{\"type\":\"knowledge\",\"items\":[{\"title\":\"标题\",\"content\":\"HTML 格式内容\"}]}\n\n## 推送方式\n\n对每种类型分别推送：\nPOST http://host.docker.internal:8081/api/openclaw/webhook\nHeaders: Content-Type: application/json, X-API-Token: openclaw-ai-fetcher-2026\n\n## 重要提示\n\n1. 必须返回有效的 JSON 格式\n2. 每个类型单独推送一次\n3. 使用 web_search 获取真实数据\n4. 尽量获取带封面图的文章\n5. 内容要详细丰富（文章 1000 字+）\n\n现在开始执行！",
-    "model": "bailian/qwen3.5-plus",
-    "thinking": "high"
-  },
-  "sessionTarget": "isolated",
-  "enabled": true,
-  "delivery": {
-    "mode": "announce"
-  }
-}
-```
-
-### 步骤 3：导入定时任务
+### 步骤 2：创建定时任务
 
 ```powershell
 cd C:\openclaw-workspace
 
-# 导入定时任务
-openclaw cron add --name="AI 内容自动采集" --job-file=ai-content-cron.json
+openclaw cron add `
+  --name="AI 内容自动采集" `
+  --description="每小时自动采集 AI 文章、项目、职位和知识库" `
+  --cron="0 * * * *" `
+  --message="你是一个专业的 AI 内容采集助手。请使用 web_search 搜索最新的 AI 相关内容，整理后推送到 Laravel 项目。
 
-# 验证导入
-openclaw cron list
+任务要求：
+1. 搜索 10 篇最新的 AI 大模型相关文章
+2. 搜索 20 个热门的 GitHub AI 项目
+3. 搜索 20 个 AI 相关招聘职位
+4. 生成 2 篇 AI 技术教程文档
+
+数据格式：
+- 文章：{\"type\":\"articles\",\"items\":[{\"title\":\"标题\",\"summary\":\"摘要\",\"content\":\"内容\",\"url\":\"链接\",\"cover_image\":\"封面图 URL\"}]}
+- 项目：{\"type\":\"projects\",\"items\":[{\"name\":\"项目名\",\"description\":\"描述\",\"url\":\"GitHub 链接\",\"stars\":数字,\"forks\":数字}]}
+- 职位：{\"type\":\"jobs\",\"items\":[{\"title\":\"职位\",\"company_name\":\"公司\",\"salary\":\"薪资\",\"city\":\"城市\",\"description\":\"描述\"}]}
+- 知识库：{\"type\":\"knowledge\",\"items\":[{\"title\":\"标题\",\"content\":\"HTML 内容\"}]}
+
+推送方式：
+POST http://host.docker.internal:8081/api/openclaw/webhook
+Headers: Content-Type: application/json, X-API-Token: openclaw-ai-fetcher-2026
+
+请确保返回有效的 JSON 格式。" `
+  --model="bailian/qwen3.5-plus" `
+  --thinking="high" `
+  --session="isolated" `
+  --announce
 ```
 
-### 步骤 4：测试定时任务
+### 步骤 3：验证定时任务
 
 ```powershell
-# 立即执行一次测试
-openclaw cron run --name="AI 内容自动采集"
+# 查看定时任务列表
+openclaw cron list
 
-# 查看执行日志
-openclaw logs | Select-Object -Last 50
+# 应该看到：
+# AI 内容自动采集  0 * * * *  enabled
+
+# 立即测试一次
+openclaw cron run --name="AI 内容自动采集"
 ```
 
 ---
@@ -352,7 +348,7 @@ openclaw logs | Select-Object -Last 50
 
 ```powershell
 # Docker 服务
-docker compose ps
+docker-compose ps
 
 # 应该看到：
 # mysql     Up
@@ -380,42 +376,24 @@ curl -X POST http://localhost:8081/api/openclaw/webhook `
   -d "{\"type\":\"test\",\"items\":[]}"
 
 # 应该返回：{"success":false,"message":"未知类型"}
-# 这说明 API 正常工作
 ```
 
-### 4. 测试 OpenClaw 定时任务
-
-```powershell
-# 查看定时任务列表
-openclaw cron list
-
-# 应该看到：
-# AI 内容自动采集  0 * * * *  enabled
-
-# 查看执行日志
-openclaw logs | Select-Object -Last 20
-```
-
-### 5. 验证数据采集
+### 4. 验证数据采集
 
 等待定时任务执行完成后（约 2-5 分钟）：
 
 ```powershell
 # 进入 PHP 容器
-docker compose exec php bash
+docker-compose exec php bash
 
-# 查看文章数量
+# 查看日志
+tail -f storage/logs/laravel.log | grep -i "openclaw\|webhook"
+
+# 检查数据库
 php artisan tinker
 >>> App\Models\Article::count()
-
-# 查看项目数量
 >>> App\Models\Project::count()
-
-# 查看职位数量
->>> App\Models\JobListing::count()
-
-# 退出
-exit
+>>> App\Models\Job::count()
 ```
 
 ---
@@ -443,7 +421,7 @@ wsl --set-default-version 2
 **症状：** OpenClaw 无法访问 Laravel API
 
 **解决：**
-```powershell
+```bash
 # Windows Docker 使用 host.docker.internal
 # 修改 OpenClaw 定时任务中的 URL 为：
 http://host.docker.internal:8081/api/openclaw/webhook
@@ -454,15 +432,15 @@ http://host.docker.internal:8081/api/openclaw/webhook
 **症状：** Laravel 无法连接 MySQL
 
 **解决：**
-```bash
+```powershell
 # 1. 检查 .env 配置
-DB_HOST=mysql  # Docker 中使用服务名
+# DB_HOST=mysql  # Docker 中使用服务名
 
 # 2. 检查 MySQL 是否运行
-docker compose ps mysql
+docker-compose ps mysql
 
 # 3. 重启 MySQL 容器
-docker compose restart mysql
+docker-compose restart mysql
 ```
 
 ### Q4: OpenClaw 定时任务不执行
@@ -484,30 +462,26 @@ openclaw cron list
 openclaw cron run --name="AI 内容自动采集"
 ```
 
-### Q5: 文章/项目/职位保存失败
+### Q5: 职位保存失败
 
-**症状：** 日志显示字段不匹配错误
-
-**解决：**
-```bash
-# 检查数据库表结构
-docker compose exec php php artisan tinker
->>> Schema::getColumnListing('job_listings')
-
-# 确保 API 控制器中的字段名与数据库一致
-# 参考 DATABASE_SCHEMA.md 文档
-```
-
-### Q6: 邮件发送失败
-
-**症状：** 邮件无法发送
+**症状：** 日志显示 `user_id` 外键错误
 
 **解决：**
-```bash
-# 1. 检查 QQ 邮箱授权码（不是密码）
-# 2. 检查 SMTP 配置
-# 3. 查看邮件日志
-docker compose exec php tail -f storage/logs/laravel.log | grep -i mail
+```powershell
+# 确保已创建管理员用户
+docker-compose exec php php artisan tinker
+>>> App\Models\User::where('role', 'admin')->first()
+>>> exit
+
+# 如果没有管理员用户，创建一个
+docker-compose exec php php artisan tinker
+>>> App\Models\User::create([
+    'name' => 'Admin',
+    'email' => 'admin@ai-side.com',
+    'password' => bcrypt('admin123'),
+    'role' => 'admin'
+])
+>>> exit
 ```
 
 ---
@@ -531,6 +505,7 @@ docker compose exec php tail -f storage/logs/laravel.log | grep -i mail
 - [ ] APP_KEY 已生成
 - [ ] Docker 容器已启动
 - [ ] 数据库迁移已完成
+- [ ] 管理员用户已创建
 
 ### OpenClaw 配置
 - [ ] Gateway 已启动
@@ -551,19 +526,45 @@ docker compose exec php tail -f storage/logs/laravel.log | grep -i mail
 
 部署完成后：
 
-1. **配置域名和 HTTPS**（生产环境）
-2. **配置备份策略**（数据库 + 文件）
-3. **配置监控告警**（服务状态 + 错误日志）
-4. **定期更新内容**（定时任务自动执行）
+1. **配置开机自启**
+   - Docker Desktop 设置为开机自启
+   - OpenClaw Gateway 设置为开机自启
+
+2. **配置备份策略**
+   - 定期备份数据库
+   - 备份 `.env` 文件
+
+3. **定期查看日志**
+   - 确保定时任务正常执行
+   - 检查错误日志
+
+4. **更新维护**
+   - 定期拉取最新代码
+   - 运行数据库迁移
 
 ---
 
-## 📞 技术支持
+## 📝 PowerShell 快捷命令
 
-如遇到问题：
-1. 查看日志：`openclaw logs` 和 `docker compose logs`
-2. 检查配置：参考本文档和 `DATABASE_SCHEMA.md`
-3. 联系管理员
+```powershell
+# 查看所有 Docker 容器
+docker-compose ps
+
+# 重启所有服务
+docker-compose restart
+
+# 查看日志
+docker-compose logs -f
+
+# 进入 PHP 容器
+docker-compose exec php bash
+
+# 查看 OpenClaw 定时任务
+openclaw cron list
+
+# 手动执行定时任务
+openclaw cron run --name="AI 内容自动采集"
+```
 
 ---
 

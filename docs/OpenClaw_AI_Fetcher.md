@@ -36,7 +36,21 @@ docker compose exec php php artisan ai:fetch-daily --topic="GPT-5 最新动态"
 docker compose exec php php artisan ai:fetch-daily --mock
 ```
 
-### 方式 2：自动执行（生产环境）
+### 方式 2：OpenClaw 定时任务（推荐）
+
+在 OpenClaw 中配置定时任务，每日凌晨 2 点自动执行：
+
+```bash
+# 查看已配置的定时任务
+openclaw cron list
+
+# 立即执行一次测试
+openclaw cron run --name="AI 内容自动采集"
+```
+
+详细配置见：[OPENCLAW_CRON_SETUP.md](./OPENCLAW_CRON_SETUP.md)
+
+### 方式 3：Laravel 调度器（备选）
 
 定时任务已配置在 `app/Console/Kernel.php` 中：
 - **执行时间：** 每日凌晨 2:00

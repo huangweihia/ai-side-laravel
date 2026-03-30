@@ -107,14 +107,14 @@
         /* Container */
         .container { max-width: 1200px; margin: 0 auto; padding: 0 24px; }
 
-        /* 顶部滚动公告（关闭后仅本页隐藏，刷新后仍会出现） */
+        /* 顶部滚动公告：贴在主导航下方（关闭后仅本页隐藏，刷新后仍会出现） */
         .site-marquee-bar {
             position: fixed;
-            top: 0;
+            top: 80px;
             left: 0;
             right: 0;
             height: 38px;
-            z-index: 1001;
+            z-index: 999;
             display: flex;
             align-items: stretch;
             background: linear-gradient(90deg, rgba(99, 102, 241, 0.35), rgba(236, 72, 153, 0.25));
@@ -348,7 +348,7 @@
         /* Navigation */
         .navbar {
             position: fixed;
-            top: var(--site-marquee-offset, 0px);
+            top: 0;
             left: 0;
             right: 0;
             z-index: 1000;
@@ -796,34 +796,6 @@
     </style>
 </head>
 <body @class(['has-site-marquee' => isset($marqueeAnnouncements) && $marqueeAnnouncements->isNotEmpty()])>
-    @if(isset($marqueeAnnouncements) && $marqueeAnnouncements->isNotEmpty())
-        @php
-            $marqueeFirst = $marqueeAnnouncements->first();
-            $marqueeLine = $marqueeAnnouncements->map(fn ($a) => $a->marquee_line)->implode('　｜　');
-            $marqueeDup = $marqueeLine . '　　　' . $marqueeLine;
-        @endphp
-        <div id="site-marquee-bar" class="site-marquee-bar" role="region" aria-label="站点公告">
-            <a href="{{ route('announcements.show', $marqueeFirst->slug) }}" class="site-marquee-link">
-                <div class="site-marquee-viewport">
-                    <span class="site-marquee-track">{{ $marqueeDup }}</span>
-                </div>
-            </a>
-            <button type="button" class="site-marquee-close" id="site-marquee-close" aria-label="关闭公告条">×</button>
-        </div>
-        <script>
-        (function () {
-            var btn = document.getElementById('site-marquee-close');
-            var bar = document.getElementById('site-marquee-bar');
-            if (!btn || !bar) return;
-            btn.addEventListener('click', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                bar.remove();
-                document.body.classList.remove('has-site-marquee');
-            });
-        })();
-        </script>
-    @endif
     <nav class="navbar">
         <div class="navbar-content">
             <a href="{{ route('home') }}" class="navbar-brand">
@@ -870,6 +842,35 @@
             </div>
         </div>
     </nav>
+
+    @if(isset($marqueeAnnouncements) && $marqueeAnnouncements->isNotEmpty())
+        @php
+            $marqueeFirst = $marqueeAnnouncements->first();
+            $marqueeLine = $marqueeAnnouncements->map(fn ($a) => $a->marquee_line)->implode('　｜　');
+            $marqueeDup = $marqueeLine . '　　　' . $marqueeLine;
+        @endphp
+        <div id="site-marquee-bar" class="site-marquee-bar" role="region" aria-label="站点公告">
+            <a href="{{ route('announcements.show', $marqueeFirst->slug) }}" class="site-marquee-link">
+                <div class="site-marquee-viewport">
+                    <span class="site-marquee-track">{{ $marqueeDup }}</span>
+                </div>
+            </a>
+            <button type="button" class="site-marquee-close" id="site-marquee-close" aria-label="关闭公告条">×</button>
+        </div>
+        <script>
+        (function () {
+            var btn = document.getElementById('site-marquee-close');
+            var bar = document.getElementById('site-marquee-bar');
+            if (!btn || !bar) return;
+            btn.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                bar.remove();
+                document.body.classList.remove('has-site-marquee');
+            });
+        })();
+        </script>
+    @endif
 
     {{-- 皮肤切换面板 --}}
     <div id="skin-panel" class="skin-panel-floating" style="display: none; background: var(--dark-light); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); min-width: 200px;" onclick="event.stopPropagation()">

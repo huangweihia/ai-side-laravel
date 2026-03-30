@@ -90,7 +90,7 @@ curl -X POST http://localhost:8081/api/openclaw/webhook \
 }
 ```
 
-### 职位格式
+### 职位格式（包含原始 URL）
 ```json
 {
   "type": "jobs",
@@ -103,7 +103,7 @@ curl -X POST http://localhost:8081/api/openclaw/webhook \
       "experience": "经验要求",
       "education": "学历要求",
       "description": "职位描述",
-      "url": "链接",
+      "url": "原始职位链接（用于去重）",
       "tags": ["AI", "Python"]
     }
   ]

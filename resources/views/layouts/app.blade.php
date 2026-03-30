@@ -751,7 +751,44 @@
             .footer-content { grid-template-columns: 1fr; gap: 30px; }
         }
 
-        /* Pagination: 防止在未加载 Tailwind/Bootstrap 时，pagination 里的 svg 退化成超大尺寸 */
+        /* Pagination: 美化 + 防止在未加载 Tailwind/Bootstrap 时，pagination 里的 svg 退化成超大尺寸 */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            flex-wrap: wrap;
+        }
+        .page-item .page-link {
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.12);
+            background: rgba(255,255,255,0.06);
+            color: var(--gray-light);
+            padding: 8px 12px;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+        .page-item .page-link:hover {
+            background: rgba(99,102,241,0.18);
+            border-color: rgba(99,102,241,0.35);
+            color: var(--white);
+        }
+        .page-item.active .page-link {
+            background: linear-gradient(135deg, #6366f1 0%, #ec4899 100%);
+            border-color: rgba(99,102,241,0.55);
+            color: #fff;
+        }
+        .page-item.disabled .page-link {
+            opacity: 0.45;
+            cursor: not-allowed;
+        }
+        .page-item .page-link:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(99,102,241,0.18);
+        }
+        
         nav[aria-label="pagination"] a,
         nav[aria-label="pagination"] span {
             font-size: 14px;
@@ -760,6 +797,7 @@
         nav[aria-label="pagination"] svg {
             width: 14px;
             height: 14px;
+            display: inline-block;
         }
         /* tailwind 的 sr-only 兼容：把隐藏文本真正隐藏，避免占位/放大 */
         .sr-only {

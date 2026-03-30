@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class ProblemFeedback extends Model
 {
@@ -41,7 +42,18 @@ class ProblemFeedback extends Model
             return null;
         }
 
-        return '/storage/' . ltrim(str_replace('\\', '/', $this->image_path), '/');
+        $path = str_replace('\\', '/', (string) $this->image_path);
+        $path = ltrim($path, '/');
+        // 仅使用本地 public disk 展示：/storage/.../
+        try {
+            if (Storage::disk('public')->exists($path)) {
+                return Storage::disk('public')->url($path);
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        return '/storage/' . $path;
     }
 }
 

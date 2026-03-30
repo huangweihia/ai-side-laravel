@@ -180,11 +180,14 @@ class SubmissionController extends Controller
         ]);
 
         if ($request->file('image')->isValid()) {
+            // 保存到本地 storage/app/public：对外通过 /storage/... 访问
             $path = $request->file('image')->store('submissions/images', 'public');
+
+            $url = asset('storage/' . $path);
             
             return response()->json([
-                'url' => asset('storage/' . $path),
-                'location' => asset('storage/' . $path),
+                'url' => $url,
+                'location' => $url,
             ]);
         }
 

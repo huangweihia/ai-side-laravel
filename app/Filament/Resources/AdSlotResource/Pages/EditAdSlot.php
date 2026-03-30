@@ -32,7 +32,7 @@ class EditAdSlot extends EditRecord
 
         if ($clearImage) {
             if ($this->record->image_path) {
-                Storage::disk('public')->delete($this->record->image_path);
+                try { Storage::disk('public')->delete($this->record->image_path); } catch (\Throwable $e) {}
             }
             $data['image_path'] = null;
             $data['image_url'] = null;
@@ -43,11 +43,11 @@ class EditAdSlot extends EditRecord
         if (filled($path)) {
             $data['image_url'] = null;
             if ($this->record->image_path && $this->record->image_path !== $path) {
-                Storage::disk('public')->delete($this->record->image_path);
+                try { Storage::disk('public')->delete($this->record->image_path); } catch (\Throwable $e) {}
             }
         } elseif (filled($data['image_url'])) {
             if ($this->record->image_path) {
-                Storage::disk('public')->delete($this->record->image_path);
+                try { Storage::disk('public')->delete($this->record->image_path); } catch (\Throwable $e) {}
             }
             $data['image_path'] = null;
         }

@@ -28,6 +28,7 @@ class ProblemFeedbackController extends Controller
 
         $path = null;
         if ($request->hasFile('image')) {
+            // 反馈截图使用本地 storage/app/public：对外通过 /storage/... 访问
             $path = $request->file('image')->store('feedback', 'public');
         }
 

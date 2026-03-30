@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class AdSlot extends Model
 {
@@ -43,18 +44,24 @@ class AdSlot extends Model
             $path = ltrim($path, '/');
 
             // 兼容 Filament / 手动填入时可能出现的不同前缀：
-            // - storage/ad-slots/x.jpg  => /storage/ad-slots/x.jpg
-            // - public/ad-slots/x.jpg   => /storage/ad-slots/x.jpg
-            // - ad-slots/x.jpg          => /storage/ad-slots/x.jpg
+            // - storage/ad-slots/x.jpg  => ad-slots/x.jpg
+            // - public/ad-slots/x.jpg   => ad-slots/x.jpg
             if (str_starts_with($path, 'storage/')) {
-                return '/' . $path;
+                $path = substr($path, strlen('storage/'));
             }
-
             if (str_starts_with($path, 'public/')) {
                 $path = substr($path, strlen('public/'));
             }
 
-            // 使用站点根相对路径，避免 APP_URL 与浏览器访问域名/协议不一致时图片 404
+            try {
+                if (Storage::disk('public')->exists($path)) {
+                    return Storage::disk('public')->url($path);
+                }
+            } catch (\Throwable $e) {
+                // ignore
+            }
+
+            // 若磁盘查询失败/不存在，则兜底按 /storage/... 拼接
             return '/storage/' . $path;
         }
 

@@ -240,15 +240,17 @@
                                 $item = $history->viewable;
                                 $type = str_contains($history->viewable_type, 'Project') ? 'project' : 'article';
                             @endphp
-                            <a href="{{ route($type . 's.show', $item->id) }}" style="display: flex; align-items: center; gap: 16px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; text-decoration: none; color: inherit; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
-                                <div style="width: 40px; height: 40px; background: rgba(99,102,241,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
-                                    {{ $type === 'project' ? '🚀' : '📝' }}
-                                </div>
-                                <div style="flex: 1;">
-                                    <div style="font-weight: 600; color: white; font-size: 14px;">{{ Str::limit($item->name ?? $item->title, 50) }}</div>
-                                    <div style="font-size: 11px; color: var(--gray-light);">{{ $history->viewed_at->diffForHumans() }}</div>
-                                </div>
-                            </a>
+                            @if($item)
+                                <a href="{{ route($type . 's.show', $item->id) }}" style="display: flex; align-items: center; gap: 16px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px; text-decoration: none; color: inherit; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.08)'" onmouseout="this.style.background='rgba(255,255,255,0.05)'">
+                                    <div style="width: 40px; height: 40px; background: rgba(99,102,241,0.1); border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px;">
+                                        {{ $type === 'project' ? '🚀' : '📝' }}
+                                    </div>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; color: white; font-size: 14px;">{{ Str::limit($item->name ?? $item->title, 50) }}</div>
+                                        <div style="font-size: 11px; color: var(--gray-light);">{{ $history->viewed_at->diffForHumans() }}</div>
+                                    </div>
+                                </a>
+                            @endif
                         @endforeach
                     </div>
                 @else

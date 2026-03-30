@@ -1,5 +1,11 @@
 <x-filament-panels::page>
     <div style="display: grid; gap: 24px;">
+        @php
+            $registerVipEnabled = \App\Models\Setting::getValue('register_default_vip_enabled', false);
+            $registerVipDays = (int) (\App\Models\Setting::getValue('register_default_vip_days', 7) ?? 7);
+            $registerVipDays = max(0, $registerVipDays);
+        @endphp
+
         <!-- 邮件设置 -->
         <x-filament::section>
             <x-slot name="heading">
@@ -52,6 +58,43 @@
                     <code style="background: #1e293b; padding: 12px; border-radius: 8px; display: block;">2801359160@qq.com</code>
                 </div>
             </div>
+        </x-filament::section>
+
+        <!-- 注册赠送 VIP 设置 -->
+        <x-filament::section>
+            <x-slot name="heading">
+                👑 注册赠送 VIP 设置
+            </x-slot>
+            <x-slot name="description">
+                开启后，用户注册成功将自动设置为 VIP，并按天数赠送有效期。
+            </x-slot>
+
+            <form method="POST" action="{{ route('admin.settings.register-vip') }}" style="margin-top: 12px;">
+                @csrf
+                <div style="display: grid; gap: 12px;">
+                    <label style="display:flex; align-items:center; gap:10px; font-weight: 700;">
+                        <input type="checkbox" name="enabled" value="1" {{ $registerVipEnabled ? 'checked' : '' }}>
+                        启用：注册后自动赠送 VIP
+                    </label>
+
+                    <div style="display:flex; gap: 12px; align-items:center;">
+                        <label style="min-width: 120px; color: rgba(148,163,184,1); font-size: 13px; font-weight: 700;">赠送天数</label>
+                        <input type="number"
+                               name="days"
+                               value="{{ $registerVipDays }}"
+                               min="0"
+                               max="3650"
+                               step="1"
+                               style="width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(15,23,42,0.4); color: inherit;">
+                    </div>
+
+                    <button type="submit"
+                            class="fi-button fi-button-primary"
+                            style="justify-content:center; padding: 10px 16px; border-radius: 10px; font-weight: 800; cursor:pointer;">
+                        保存设置
+                    </button>
+                </div>
+            </form>
         </x-filament::section>
 
         <!-- 系统信息 -->

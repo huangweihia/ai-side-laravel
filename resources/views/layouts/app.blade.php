@@ -142,15 +142,30 @@
             text-align: left;
         }
         .site-marquee-bar .site-marquee-track {
-            display: inline-block;
+            display: inline-flex;
+            flex-wrap: nowrap;
+            align-items: center;
+            flex-shrink: 0;
             white-space: nowrap;
-            padding-right: 4rem;
-            animation: site-marquee-x 22s linear infinite;
             will-change: transform;
+            /* 无 JS 时退化为整段左移；有 JS 后切换为从视口右侧入场 */
+            animation: site-marquee-fallback 22s linear infinite;
         }
-        @keyframes site-marquee-x {
+        .site-marquee-bar .site-marquee-track.is-marquee-ready {
+            animation-name: site-marquee-x;
+        }
+        .site-marquee-bar .site-marquee-chunk,
+        .site-marquee-bar .site-marquee-sep {
+            flex-shrink: 0;
+        }
+        @keyframes site-marquee-fallback {
             0% { transform: translate3d(0, 0, 0); }
             100% { transform: translate3d(-50%, 0, 0); }
+        }
+        /* --mx-start/--mx-end 为 px，由脚本写入：从右侧无缝滚过一整份副本宽度 */
+        @keyframes site-marquee-x {
+            0% { transform: translate3d(var(--mx-start), 0, 0); }
+            100% { transform: translate3d(var(--mx-end), 0, 0); }
         }
         .site-marquee-bar .site-marquee-close {
             flex-shrink: 0;
@@ -974,12 +989,14 @@
         @php
             $marqueeFirst = $marqueeAnnouncements->first();
             $marqueeLine = $marqueeAnnouncements->map(fn ($a) => $a->marquee_line)->implode('　｜　');
-            $marqueeDup = $marqueeLine . '　　　' . $marqueeLine;
+            $marqueeSep = '　　　';
         @endphp
         <div id="site-marquee-bar" class="site-marquee-bar" role="region" aria-label="站点公告">
             <a href="{{ route('announcements.show', $marqueeFirst->slug) }}" class="site-marquee-link">
                 <div class="site-marquee-viewport">
-                    <span class="site-marquee-track">{{ $marqueeDup }}</span>
+                    <div class="site-marquee-track">
+                        <span class="site-marquee-chunk">{{ $marqueeLine }}</span><span class="site-marquee-sep" aria-hidden="true">{{ $marqueeSep }}</span><span class="site-marquee-chunk">{{ $marqueeLine }}</span>
+                    </div>
                 </div>
             </a>
             <button type="button" class="site-marquee-close" id="site-marquee-close" aria-label="关闭公告条">×</button>
@@ -994,6 +1011,36 @@
                 e.stopPropagation();
                 bar.remove();
                 document.body.classList.remove('has-site-marquee');
+            });
+            var vp = bar.querySelector('.site-marquee-viewport');
+            var track = bar.querySelector('.site-marquee-track');
+            if (!vp || !track) return;
+            var resizeTimer;
+            function updateMarqueeMetrics() {
+                var w = vp.offsetWidth;
+                var tw = track.scrollWidth;
+                var half = tw / 2;
+                if (w < 2 || half < 2) {
+                    track.classList.remove('is-marquee-ready');
+                    return;
+                }
+                var startPx = w;
+                var endPx = startPx - half;
+                track.style.setProperty('--mx-start', startPx + 'px');
+                track.style.setProperty('--mx-end', endPx + 'px');
+                track.style.animationDuration = Math.max(14, half / 45) + 's';
+                track.classList.add('is-marquee-ready');
+            }
+            function scheduleUpdate() {
+                updateMarqueeMetrics();
+                requestAnimationFrame(function () {
+                    updateMarqueeMetrics();
+                });
+            }
+            scheduleUpdate();
+            window.addEventListener('resize', function () {
+                clearTimeout(resizeTimer);
+                resizeTimer = setTimeout(scheduleUpdate, 120);
             });
         })();
         </script>

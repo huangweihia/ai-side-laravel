@@ -50,13 +50,6 @@ class EditAdSlot extends EditRecord
                 Storage::disk('public')->delete($this->record->image_path);
             }
             $data['image_path'] = null;
-        } elseif (($data['display_mode'] ?? '') === 'standard'
-            && array_key_exists('image_path', $data)
-            && ! filled($path)
-            && ! filled($data['image_url'])
-            && $this->record->image_path) {
-            Storage::disk('public')->delete($this->record->image_path);
-            $data['image_path'] = null;
         }
 
         return $data;

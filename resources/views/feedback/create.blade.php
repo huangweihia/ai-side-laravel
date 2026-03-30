@@ -36,6 +36,13 @@
                 <label class="form-label" for="image">截图（可选）</label>
                 <input id="image" class="form-input" type="file" name="image" accept="image/*">
                 <p style="margin-top: 8px; color: var(--gray-light); font-size: 12px;">支持 jpg/png/webp，最大 4MB。</p>
+                <div id="imagePreviewWrap" style="margin-top: 12px; padding: 12px; border-radius: 12px; border: 1px dashed rgba(99, 102, 241, 0.35); background: rgba(99, 102, 241, 0.06); display:none;">
+                    <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; margin-bottom: 10px;">
+                        <div style="font-weight: 700; color: var(--primary-light); font-size: 13px;">预览图</div>
+                        <div id="imagePreviewMeta" style="font-size: 12px; color: var(--gray-light);"></div>
+                    </div>
+                    <img id="imagePreview" alt="反馈截图预览" style="max-width:100%; border-radius: 8px; border: 1px solid rgba(255,255,255,0.08);">
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">提交反馈</button>
         </form>
@@ -66,5 +73,30 @@
         @endforelse
     </div>
 </div>
+    <script>
+        (function () {
+            var input = document.getElementById('image');
+            if (!input) return;
+            var wrap = document.getElementById('imagePreviewWrap');
+            var img = document.getElementById('imagePreview');
+            var meta = document.getElementById('imagePreviewMeta');
+            if (!wrap || !img || !meta) return;
+
+            input.addEventListener('change', function () {
+                var file = input.files && input.files[0];
+                if (!file) {
+                    wrap.style.display = 'none';
+                    img.removeAttribute('src');
+                    meta.textContent = '';
+                    return;
+                }
+
+                var url = URL.createObjectURL(file);
+                img.src = url;
+                meta.textContent = file.name + ' · ' + Math.max(1, Math.round(file.size / 1024)) + 'KB';
+                wrap.style.display = 'block';
+            });
+        })();
+    </script>
 @endsection
 

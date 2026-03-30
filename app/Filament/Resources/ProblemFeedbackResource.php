@@ -96,12 +96,17 @@ class ProblemFeedbackResource extends Resource
 
                         if (! $record->rewarded_at) {
                             $user = $record->user;
-                            $base = $user->subscription_ends_at && $user->subscription_ends_at->isFuture()
-                                ? $user->subscription_ends_at
-                                : now();
-                            $user->subscription_ends_at = $base->copy()->addDay();
-                            $user->save();
-                            $record->rewarded_at = now();
+                            // 永久 VIP（role=vip）不应被改写 subscription_ends_at，否则前台/后台会从“长期”变成“1 天”
+                            if ($user->role === 'vip') {
+                                $record->rewarded_at = now();
+                            } else {
+                                $base = $user->subscription_ends_at && $user->subscription_ends_at->isFuture()
+                                    ? $user->subscription_ends_at
+                                    : now();
+                                $user->subscription_ends_at = $base->copy()->addDay();
+                                $user->save();
+                                $record->rewarded_at = now();
+                            }
                         }
 
                         $record->save();

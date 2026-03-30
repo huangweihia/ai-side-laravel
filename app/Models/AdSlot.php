@@ -34,10 +34,28 @@ class AdSlot extends Model
     public function resolvedImageUrl(): ?string
     {
         if ($this->image_path) {
-            $path = str_replace('\\', '/', ltrim($this->image_path, '/'));
+            // 若外部是全 URL，直接返回
+            if (is_string($this->image_path) && (str_starts_with($this->image_path, 'http://') || str_starts_with($this->image_path, 'https://'))) {
+                return $this->image_path;
+            }
+
+            $path = str_replace('\\', '/', (string) $this->image_path);
+            $path = ltrim($path, '/');
+
+            // 兼容 Filament / 手动填入时可能出现的不同前缀：
+            // - storage/ad-slots/x.jpg  => /storage/ad-slots/x.jpg
+            // - public/ad-slots/x.jpg   => /storage/ad-slots/x.jpg
+            // - ad-slots/x.jpg          => /storage/ad-slots/x.jpg
+            if (str_starts_with($path, 'storage/')) {
+                return '/' . $path;
+            }
+
+            if (str_starts_with($path, 'public/')) {
+                $path = substr($path, strlen('public/'));
+            }
 
             // 使用站点根相对路径，避免 APP_URL 与浏览器访问域名/协议不一致时图片 404
-            return '/storage/'.$path;
+            return '/storage/' . $path;
         }
 
         return $this->image_url ?: null;

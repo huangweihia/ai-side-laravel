@@ -414,52 +414,6 @@
             background: var(--primary);
         }
 
-        /* Topbar Dropdown（减少顶部栏按钮拥挤） */
-        .nav-dropdown-wrapper {
-            position: relative;
-        }
-
-        .nav-dropdown-menu {
-            position: absolute;
-            top: calc(100% + 10px);
-            right: 0;
-            min-width: 220px;
-            display: none;
-            padding: 8px;
-            border-radius: 14px;
-            background: rgba(15, 23, 42, 0.95);
-            border: 1px solid rgba(255, 255, 255, 0.12);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
-            z-index: 2000;
-            backdrop-filter: blur(18px);
-        }
-
-        .nav-dropdown-wrapper:focus-within .nav-dropdown-menu {
-            display: block;
-        }
-
-        .nav-dropdown-menu a {
-            display: block;
-            padding: 10px 12px;
-            border-radius: 12px;
-            color: var(--gray-light);
-            text-decoration: none;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s ease;
-        }
-
-        .nav-dropdown-menu a:hover {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--white);
-        }
-
-        .nav-dropdown-menu a.active {
-            color: var(--white) !important;
-            background: rgba(99, 102, 241, 0.18);
-            border: 1px solid rgba(99, 102, 241, 0.35);
-        }
-
         /* 个人中心头像入口 */
         .nav-avatar-link {
             width: 40px;
@@ -1085,36 +1039,6 @@
                 
                 {{-- 用户功能 --}}
                 @auth
-                    {{-- 将“投稿/反馈/VIP/后台”集中到下拉中心菜单，避免顶部栏拥挤 --}}
-                    <div class="nav-dropdown-wrapper">
-                        <button
-                            type="button"
-                            class="navbar-link"
-                            style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15);"
-                            aria-haspopup="menu"
-                        >
-                            🧭 中心
-                        </button>
-                        <div class="nav-dropdown-menu" role="menu" aria-label="中心菜单">
-                            @if(auth()->user()?->isVip() || auth()->user()?->isAdmin())
-                                <a href="{{ route('submissions.index') }}" class="{{ request()->routeIs('submissions.*') ? 'active' : '' }}">
-                                    ✍️ 投稿中心
-                                </a>
-                            @endif
-                            <a href="{{ route('feedback.create') }}" class="{{ request()->routeIs('feedback.*') ? 'active' : '' }}">
-                                🐞 反馈中心
-                            </a>
-                            <a href="{{ route('vip') }}" class="{{ request()->routeIs('vip') ? 'active' : '' }}">
-                                👑 VIP 会员中心
-                            </a>
-                            @if(auth()->user()->isAdmin())
-                                <a href="/admin" class="{{ request()->is('admin') || request()->is('admin/*') ? 'active' : '' }}">
-                                    🔒 后台中心
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-
                     {{-- 个人中心：头像入口 --}}
                     <a href="{{ route('dashboard') }}" class="nav-avatar-link" title="个人中心">
                         @if(auth()->user()?->avatar)
@@ -1123,6 +1047,8 @@
                             <span class="nav-avatar-fallback">{{ substr(auth()->user()->name ?? '', 0, 1) }}</span>
                         @endif
                     </a>
+                    {{-- VIP 仍保留在顶部栏（外部菜单），其余功能在个人中心中集中展示 --}}
+                    <a href="{{ route('vip') }}" class="btn btn-sm btn-primary" style="margin-left: 10px;">👑 VIP 会员</a>
                     <button type="button" data-skin-toggle class="btn btn-sm btn-secondary" style="padding: 8px 12px; font-size: 16px; position: relative; z-index: 10000;" title="切换皮肤">🎨</button>
                     <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                         @csrf

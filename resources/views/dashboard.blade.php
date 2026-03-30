@@ -87,9 +87,19 @@
                     <span>我发布的职位</span>
                 </a>
                 @endif
+                @if(auth()->user()?->isAdmin())
+                <a href="/admin" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.12)'" onmouseout="this.style.background='transparent'">
+                    <span>🔒</span>
+                    <span>后台入口</span>
+                </a>
+                @endif
                 <a href="{{ route('notifications.index') }}" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">
                     <span>🔔</span>
                     <span>系统通知</span>
+                </a>
+                <a href="{{ route('feedback.create') }}" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">
+                    <span>🐞</span>
+                    <span>反馈中心</span>
                 </a>
                 @if(auth()->user()?->isVip() || auth()->user()?->isAdmin())
                 <a href="{{ route('submissions.index') }}" style="display: flex; align-items: center; gap: 12px; padding: 12px; border-radius: 8px; text-decoration: none; color: inherit; margin-bottom: 8px; transition: background 0.2s;" onmouseover="this.style.background='rgba(99,102,241,0.1)'" onmouseout="this.style.background='transparent'">

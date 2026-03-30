@@ -215,13 +215,25 @@ class HomeController extends Controller
                 throw new \RuntimeException('头像保存失败：存储文件不存在，请检查 storage/app/public 写入情况');
             }
 
-            // 避免“返回成功但外链 404”：如果没有 storage:link，/storage/... 会找不到
+            // 避免“返回失败”：如果服务器没做 storage:link（没有 public/storage），
+            // 就把文件再复制到 public/avatars，确保上传仍能成功且可访问。
             $publicStorage = public_path('storage');
-            if (! file_exists($publicStorage)) {
-                throw new \RuntimeException('头像上传成功但无法访问：请先执行 `php artisan storage:link` 以启用 /storage 映射');
-            }
+            if (file_exists($publicStorage)) {
+                $avatarUrl = asset('storage/' . $path);
+            } else {
+                $publicAvatarDir = public_path('avatars');
+                if (! is_dir($publicAvatarDir)) {
+                    @mkdir($publicAvatarDir, 0755, true);
+                }
 
-            $avatarUrl = asset('storage/' . $path);
+                $publicAvatarAbs = $publicAvatarDir . '/' . $filename;
+                $copied = @copy($storageFileAbs, $publicAvatarAbs);
+                if (! $copied || ! is_file($publicAvatarAbs)) {
+                    throw new \RuntimeException('头像上传失败：服务器未启用 /storage 映射（缺少 public/storage），且无法写入 public/avatars，请检查目录权限并执行 php artisan storage:link');
+                }
+
+                $avatarUrl = asset('avatars/' . $filename);
+            }
 
             // 删除旧头像：兼容历史 /avatars/* 与 /storage/avatars/*
             if (! empty($user->avatar) && is_string($user->avatar)) {

@@ -201,35 +201,29 @@ class HomeController extends Controller
             $ext = strtolower($file->getClientOriginalExtension() ?: 'jpg');
             $filename = 'avatar_' . $user->id . '_' . time() . '.' . $ext;
 
-            // 上传头像到本地 public 目录：/public/avatars
-            $uploadDir = public_path('avatars');
-            if (! is_dir($uploadDir)) {
-                if (! mkdir($uploadDir, 0755, true) && ! is_dir($uploadDir)) {
-                    $message = '上传失败：创建上传目录失败（' . $uploadDir . '）';
-                    return $request->expectsJson()
-                        ? response()->json(['success' => false, 'message' => $message], 500)
-                        : back()->with('error', $message);
+            // 上传头像到 Laravel public disk：storage/app/public/avatars
+            // 对外通过 /storage/... 访问（需要已执行 storage:link）
+            $path = $file->storeAs('avatars', $filename, 'public');
+            $avatarUrl = asset('storage/' . $path);
+
+            // 删除旧头像：兼容历史 /avatars/* 与 /storage/avatars/*
+            if (! empty($user->avatar) && is_string($user->avatar)) {
+                if (str_starts_with($user->avatar, '/avatars/')) {
+                    $oldAvatarAbsolutePath = public_path(ltrim($user->avatar, '/'));
+                    if (is_file($oldAvatarAbsolutePath)) {
+                        @unlink($oldAvatarAbsolutePath);
+                    }
+                } elseif (str_starts_with($user->avatar, '/storage/')) {
+                    $rel = ltrim($user->avatar, '/'); // storage/avatars/xxx
+                    if (str_starts_with($rel, 'storage/')) {
+                        $oldKey = substr($rel, strlen('storage/')); // avatars/xxx
+                        $oldAbs = storage_path('app/public/' . $oldKey);
+                        if (is_file($oldAbs)) {
+                            @unlink($oldAbs);
+                        }
+                    }
                 }
             }
-
-            if (! is_writable($uploadDir)) {
-                $message = '上传失败：上传目录不可写（' . $uploadDir . '）';
-                return $request->expectsJson()
-                    ? response()->json(['success' => false, 'message' => $message], 500)
-                    : back()->with('error', $message);
-            }
-
-            $file->move($uploadDir, $filename);
-
-            // 删除旧头像（仅当旧值形如 /avatars/...）
-            if (! empty($user->avatar) && is_string($user->avatar) && str_starts_with($user->avatar, '/avatars/')) {
-                $oldAvatarAbsolutePath = public_path(ltrim($user->avatar, '/'));
-                if (is_file($oldAvatarAbsolutePath)) {
-                    @unlink($oldAvatarAbsolutePath);
-                }
-            }
-
-            $avatarUrl = '/avatars/' . $filename;
 
             $user->update([
                 'avatar' => $avatarUrl,

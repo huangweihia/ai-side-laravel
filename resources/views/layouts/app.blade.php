@@ -751,6 +751,29 @@
             .footer-content { grid-template-columns: 1fr; gap: 30px; }
         }
 
+        /* Pagination: 防止在未加载 Tailwind/Bootstrap 时，pagination 里的 svg 退化成超大尺寸 */
+        nav[aria-label="pagination"] a,
+        nav[aria-label="pagination"] span {
+            font-size: 14px;
+            line-height: 1.2;
+        }
+        nav[aria-label="pagination"] svg {
+            width: 14px;
+            height: 14px;
+        }
+        /* tailwind 的 sr-only 兼容：把隐藏文本真正隐藏，避免占位/放大 */
+        .sr-only {
+            position: absolute !important;
+            width: 1px !important;
+            height: 1px !important;
+            padding: 0 !important;
+            margin: -1px !important;
+            overflow: hidden !important;
+            clip: rect(0, 0, 0, 0) !important;
+            white-space: nowrap !important;
+            border-width: 0 !important;
+        }
+
         /* Forms */
         .form-group { margin-bottom: 20px; }
         

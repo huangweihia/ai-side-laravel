@@ -191,6 +191,28 @@ Route::get('admin/email-manager/export', function() {
     ]);
 })->middleware('auth');
 
+// 后台：注册赠送 VIP 开关/天数
+Route::post('admin/settings/register-vip', function (\Illuminate\Http\Request $request) {
+    $user = auth()->user();
+    abort_unless($user && $user->isAdmin(), 403);
+
+    $data = $request->validate([
+        'enabled' => ['required'],
+        'days' => ['nullable', 'integer', 'min:0', 'max:3650'],
+    ]);
+
+    $enabled = (bool) ($data['enabled'] ?? false);
+    $days = (int) ($data['days'] ?? 0);
+    if ($enabled) {
+        $days = max(1, $days);
+    }
+
+    \App\Models\Setting::setValue('register_default_vip_enabled', $enabled, 'boolean');
+    \App\Models\Setting::setValue('register_default_vip_days', $days, 'number');
+
+    return back()->with('success', '已保存注册赠送 VIP 设置');
+})->name('admin.settings.register-vip')->middleware('auth');
+
 // 知识库路由
 Route::prefix('knowledge')->group(function () {
     Route::get('/', [KnowledgeController::class, 'index'])->name('knowledge.index');

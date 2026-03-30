@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\EmailSubscription;
 use App\Services\EmailNotificationService;
+use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
@@ -51,6 +52,18 @@ class RegisterController extends Controller
             'email_verified_at' => now(),
         ]);
         Cache::forget($cacheKey);
+
+        // 注册赠送 VIP（由后台开关控制）
+        $autoVipEnabled = (bool) Setting::getValue('register_default_vip_enabled', false);
+        if ($autoVipEnabled) {
+            $vipDays = (int) Setting::getValue('register_default_vip_days', 7);
+            $vipDays = max(1, $vipDays);
+
+            $user->update([
+                'role' => 'vip',
+                'subscription_ends_at' => now()->addDays($vipDays),
+            ]);
+        }
 
         // 创建邮件订阅记录
         $subscription = EmailSubscription::create([

@@ -96,8 +96,12 @@ class ProblemFeedbackResource extends Resource
 
                         if (! $record->rewarded_at) {
                             $user = $record->user;
-                            // 永久 VIP（role=vip）不应被改写 subscription_ends_at，否则前台/后台会从“长期”变成“1 天”
-                            if ($user->role === 'vip') {
+                            // 终身 VIP 在支付服务中：subscription_ends_at = null，role = vip。
+                            // 月/年 VIP 也会是 role=vip，但 subscription_ends_at 会有到期时间，应在采纳后 +1 天。
+                            $isLifetimeVip = $user->role === 'vip' && is_null($user->subscription_ends_at);
+
+                            if ($isLifetimeVip) {
+                                // 终身不改写到期时间，但仍记录奖励时间，避免重复奖励
                                 $record->rewarded_at = now();
                             } else {
                                 $base = $user->subscription_ends_at && $user->subscription_ends_at->isFuture()

@@ -119,9 +119,21 @@
                     },
                     body: JSON.stringify({ email }),
                 });
-                const data = await res.json();
-                if (!res.ok || !data.success) {
-                    showToast(data.message || '发送失败，请稍后重试', 'error');
+
+                let data = null;
+                try { data = await res.json(); } catch (e) {}
+
+                if (!res.ok || !data || !data.success) {
+                    const emailTaken = data?.errors?.email?.[0] || data?.message || '';
+                    const shown = emailTaken || '发送失败，请稍后重试';
+
+                    // 针对“邮箱已被占用/已注册”的更友好提示
+                    if (shown.includes('already been taken') || shown.includes('已被注册') || shown.includes('已占用')) {
+                        showToast('该邮箱已注册，请直接登录或更换邮箱', 'error');
+                    } else {
+                        showToast(shown, 'error');
+                    }
+
                     btn.disabled = false;
                     btn.textContent = '发送验证码';
                     return;

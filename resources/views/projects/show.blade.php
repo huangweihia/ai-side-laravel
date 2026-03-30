@@ -68,7 +68,7 @@
                     📋 项目介绍
                 </h2>
                 @if($canViewFullProject)
-                    <div style="color: #64748b; font-size: 16px; line-height: 1.8; margin: 0;" class="project-description-body">
+                    <div style="font-size: 16px; line-height: 1.8; margin: 0;" class="project-description-body rich-html-content">
                         {!! $project->description ?: '暂无描述' !!}
                     </div>
                 @else
@@ -466,7 +466,7 @@
                     <span style="font-size: 11px; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.06em;">推广</span>
                 </div>
                 @if($adSlot->display_mode === 'html' && filled($adSlot->html_content))
-                    <div style="font-size: 14px; line-height: 1.6;">{!! $adSlot->html_content !!}</div>
+                    <div class="rich-html-content" style="font-size: 14px; line-height: 1.6;">{!! $adSlot->html_content !!}</div>
                 @else
                     @php $adResolvedImg = $adSlot->resolvedImageUrl(); @endphp
                     @if($adResolvedImg)

@@ -4,7 +4,7 @@
 @if($article->is_vip && (!auth()->check() || !auth()->user()->isVip()))
     <div style="position: relative; margin-top: 30px;">
         {{-- 模糊背景 --}}
-        <div style="filter: blur(8px); opacity: 0.3; pointer-events: none; user-select: none;">
+        <div class="rich-html-content" style="filter: blur(8px); opacity: 0.3; pointer-events: none; user-select: none;">
             {!! $article->content !!}
         </div>
 
@@ -79,7 +79,7 @@
     </div>
 @else
     {{-- 非 VIP 文章或已是 VIP，显示正常内容 --}}
-    <div style="margin-top: 30px;">
+    <div class="rich-html-content" style="margin-top: 30px;">
         {!! $article->content !!}
     </div>
 @endif

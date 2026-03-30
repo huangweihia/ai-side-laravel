@@ -63,7 +63,7 @@
                     <div style="margin-bottom: 24px;">
                         <h2 style="font-size: 18px; font-weight: 700; color: var(--white); margin: 0 0 12px;">📋 职位描述</h2>
                         @if(!$job->is_vip_only || $canViewFullContent)
-                            <div class="job-html-content" style="color: var(--gray-light); line-height: 1.85;">{!! $job->description !!}</div>
+                            <div class="job-html-content rich-html-content" style="line-height: 1.85;">{!! $job->description !!}</div>
                         @else
                             <p style="color: var(--gray-light); line-height: 1.8;">{{ \Illuminate\Support\Str::limit(strip_tags($job->description), 320) }}</p>
                             <div style="margin-top: 16px; padding: 20px; border-radius: 12px; border: 1px solid rgba(251, 191, 36, 0.35); background: rgba(251, 191, 36, 0.08); text-align: center;">

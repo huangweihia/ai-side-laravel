@@ -128,7 +128,7 @@
         <div id="unlocked-content" style="display: none;"></div>
     @else
         {{-- 非 VIP 内容或已是 VIP，显示完整内容 --}}
-        {!! $article->content !!}
+        <div class="rich-html-content">{!! $article->content !!}</div>
     @endif
 </div>
 

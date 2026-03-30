@@ -181,7 +181,9 @@
             {{-- 文章内容：未授权时仅输出摘要（纯文本），不输出 HTML 正文 --}}
             <div style="margin-top: 30px;">
                 @if($canViewFullArticle)
-                    {!! $article->content !!}
+                    <div class="rich-html-content">
+                        {!! $article->content !!}
+                    </div>
                 @else
                     <div style="position: relative; min-height: 68vh; border-radius: 20px; overflow: hidden; border: 2px solid rgba(251, 191, 36, 0.5); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.88) 100%); box-shadow: inset 0 0 120px rgba(0,0,0,0.45);">
                         <div style="position: absolute; inset: 0; background: repeating-linear-gradient(135deg, rgba(255,255,255,0.03) 0, rgba(255,255,255,0.03) 2px, transparent 2px, transparent 8px); pointer-events: none;"></div>
@@ -495,7 +497,7 @@
                     </div>
                     <div class="site-ad-sidebar-body">
                         @if($adSlot->display_mode === 'html' && filled($adSlot->html_content))
-                            <div class="site-ad-sidebar-html">{!! $adSlot->html_content !!}</div>
+                            <div class="site-ad-sidebar-html rich-html-content">{!! $adSlot->html_content !!}</div>
                         @else
                             <div class="site-ad-sidebar-meta">
                                 <span class="site-ad-sidebar-badge">广告</span>

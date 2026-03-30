@@ -11,7 +11,7 @@
                 {{ $announcement->published_at->format('Y-m-d H:i') }}
             </p>
         @endif
-        <div class="card" style="padding: 28px; line-height: 1.75;">
+        <div class="card rich-html-content" style="padding: 28px; line-height: 1.75;">
             {!! $announcement->body ?: '<p>暂无正文</p>' !!}
         </div>
         <p style="margin-top: 24px;">

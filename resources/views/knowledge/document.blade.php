@@ -28,7 +28,7 @@
 <section style="padding: 32px 0 48px;">
     <div class="container">
         <div class="card" style="padding: 28px 32px; max-width: 900px; margin: 0 auto; border: 1px solid rgba(255,255,255,0.08);">
-            <div class="prose-invert knowledge-doc-body" style="color: var(--white); font-size: 15px; line-height: 1.85; word-break: break-word;">
+            <div class="rich-html-content knowledge-doc-body">
                 {!! $document->content !!}
             </div>
         </div>

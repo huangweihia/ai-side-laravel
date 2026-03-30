@@ -328,15 +328,6 @@
             transform: translateY(-1px);
             color: #fff;
         }
-        .site-ad-sidebar-html {
-            font-size: 14px;
-            line-height: 1.5;
-            color: var(--gray-light);
-        }
-        .site-ad-sidebar-html img {
-            max-width: 100%;
-            height: auto;
-        }
 
         .skin-panel-floating {
             position: fixed;
@@ -793,6 +784,135 @@
             border: 1px solid rgba(16, 185, 129, 0.3);
             color: #6ee7b7;
         }
+
+        /*
+         * 富文本（知识库/文章/公告/广告 HTML）：正文用灰字，标题用主题字；
+         * 对常见「浅色背景」内联样式强制深色字，避免继承 body 浅色导致白底白字。
+         */
+        .rich-html-content,
+        .site-ad-sidebar-html {
+            color: var(--gray-light);
+            font-size: 15px;
+            line-height: 1.85;
+            word-break: break-word;
+        }
+        .rich-html-content h1,
+        .rich-html-content h2,
+        .rich-html-content h3,
+        .rich-html-content h4,
+        .rich-html-content h5,
+        .rich-html-content h6,
+        .site-ad-sidebar-html h1,
+        .site-ad-sidebar-html h2,
+        .site-ad-sidebar-html h3,
+        .site-ad-sidebar-html h4,
+        .site-ad-sidebar-html h5,
+        .site-ad-sidebar-html h6 {
+            color: var(--white);
+            margin-top: 1.15em;
+            margin-bottom: 0.45em;
+            line-height: 1.35;
+        }
+        .rich-html-content p,
+        .site-ad-sidebar-html p {
+            margin: 0.65em 0;
+        }
+        .rich-html-content a,
+        .site-ad-sidebar-html a {
+            color: var(--primary-light);
+        }
+        .rich-html-content img,
+        .site-ad-sidebar-html img {
+            max-width: 100%;
+            height: auto;
+        }
+        .rich-html-content pre,
+        .rich-html-content code,
+        .site-ad-sidebar-html pre,
+        .site-ad-sidebar-html code {
+            background: rgba(15, 23, 42, 0.55);
+            color: #e2e8f0;
+            border-radius: 6px;
+        }
+        .rich-html-content pre,
+        .site-ad-sidebar-html pre {
+            padding: 12px 14px;
+            overflow-x: auto;
+        }
+        .rich-html-content code,
+        .site-ad-sidebar-html code {
+            padding: 2px 6px;
+            font-size: 0.9em;
+        }
+        body.skin-light .rich-html-content pre,
+        body.skin-light .rich-html-content code,
+        body.skin-light .site-ad-sidebar-html pre,
+        body.skin-light .site-ad-sidebar-html code {
+            background: #f1f5f9;
+            color: #0f172a;
+        }
+
+        /* 内联 style 含浅色背景时，强制深色正文（覆盖继承的浅色字） */
+        .rich-html-content [style*="background:#fff"],
+        .rich-html-content [style*="background: #fff"],
+        .rich-html-content [style*="background:#ffffff"],
+        .rich-html-content [style*="background: #ffffff"],
+        .rich-html-content [style*="background:#f8fafc"],
+        .rich-html-content [style*="background: #f8fafc"],
+        .rich-html-content [style*="background:#f1f5f9"],
+        .rich-html-content [style*="background: #f1f5f9"],
+        .rich-html-content [style*="background:#f0f9ff"],
+        .rich-html-content [style*="background: #f0f9ff"],
+        .rich-html-content [style*="background:#f0f7ff"],
+        .rich-html-content [style*="background: #f0f7ff"],
+        .rich-html-content [style*="background:#e0f7fa"],
+        .rich-html-content [style*="background: #e0f7fa"],
+        .rich-html-content [style*="background:#e0f2fe"],
+        .rich-html-content [style*="background: #e0f2fe"],
+        .rich-html-content [style*="background:#ecfdf5"],
+        .rich-html-content [style*="background: #ecfdf5"],
+        .rich-html-content [style*="background:#fef3c7"],
+        .rich-html-content [style*="background: #fef3c7"],
+        .rich-html-content [style*="background:#fefce8"],
+        .rich-html-content [style*="background: #fefce8"],
+        .rich-html-content [style*="background:rgb(255"],
+        .rich-html-content [style*="background: rgb(255"],
+        .rich-html-content [style*="background:rgba(255, 255, 255"],
+        .rich-html-content [style*="background: rgba(255, 255, 255"],
+        .site-ad-sidebar-html [style*="background:#fff"],
+        .site-ad-sidebar-html [style*="background: #fff"],
+        .site-ad-sidebar-html [style*="background:#f0f7ff"],
+        .site-ad-sidebar-html [style*="background: #f0f7ff"],
+        .site-ad-sidebar-html [style*="background:#e0f7fa"],
+        .site-ad-sidebar-html [style*="background: #e0f7fa"],
+        .site-ad-sidebar-html [style*="background:rgb(255"],
+        .site-ad-sidebar-html [style*="background: rgb(255"] {
+            color: #0f172a !important;
+        }
+        .rich-html-content [style*="background:#f0f7ff"] a,
+        .rich-html-content [style*="background: #f0f7ff"] a,
+        .rich-html-content [style*="background:#e0f7fa"] a,
+        .rich-html-content [style*="background: #e0f7fa"] a,
+        .rich-html-content [style*="background:#fff"] a,
+        .rich-html-content [style*="background: #fff"] a {
+            color: #4f46e5 !important;
+        }
+
+        /* 项目页等：白底卡片内富文本，标题不能用 var(--white) */
+        .project-description-body.rich-html-content {
+            color: #475569 !important;
+        }
+        .project-description-body.rich-html-content h1,
+        .project-description-body.rich-html-content h2,
+        .project-description-body.rich-html-content h3,
+        .project-description-body.rich-html-content h4,
+        .project-description-body.rich-html-content h5,
+        .project-description-body.rich-html-content h6 {
+            color: #0f172a !important;
+        }
+        .project-description-body.rich-html-content a {
+            color: #4f46e5 !important;
+        }
     </style>
 </head>
 <body @class(['has-site-marquee' => isset($marqueeAnnouncements) && $marqueeAnnouncements->isNotEmpty()])>
@@ -919,7 +1039,7 @@
                         </div>
                         <div class="site-ad-sidebar-body">
                             @if($adSlot->display_mode === 'html' && filled($adSlot->html_content))
-                                <div class="site-ad-sidebar-html">{!! $adSlot->html_content !!}</div>
+                                <div class="site-ad-sidebar-html rich-html-content">{!! $adSlot->html_content !!}</div>
                             @else
                                 <div class="site-ad-sidebar-meta">
                                     <span class="site-ad-sidebar-badge">广告</span>

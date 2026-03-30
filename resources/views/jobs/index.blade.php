@@ -109,7 +109,7 @@
         {{-- 分页 --}}
         @if($jobs->hasPages())
             <div style="margin-top: 40px;">
-                {{ $jobs->links() }}
+                {{ $jobs->links('pagination::simple-bootstrap-4') }}
             </div>
         @endif
     @else

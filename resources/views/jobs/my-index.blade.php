@@ -47,7 +47,7 @@
                 </div>
             @endforeach
         </div>
-        <div style="margin-top: 28px;">{{ $jobs->links() }}</div>
+        <div style="margin-top: 28px;">{{ $jobs->links('pagination::simple-bootstrap-4') }}</div>
     @else
         <div class="card" style="padding: 48px 24px; text-align: center; color: var(--gray-light);">
             <div style="font-size: 48px; margin-bottom: 12px;">📭</div>

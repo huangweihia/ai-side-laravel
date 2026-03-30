@@ -43,7 +43,7 @@
                 </ul>
                 @auth
                     <a href="{{ route('vip.pay', 'monthly') }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; display: inline-block; text-decoration: none; box-sizing: border-box;">
-                        微信扫码开通
+                        查看收款码开通
                     </a>
                 @else
                     <a href="{{ route('login', ['redirect' => route('vip.pay', 'monthly')]) }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; display: inline-block; text-decoration: none; box-sizing: border-box;">
@@ -78,7 +78,7 @@
                 </ul>
                 @auth
                     <a href="{{ route('vip.pay', 'yearly') }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
-                        微信扫码开通
+                        查看收款码开通
                     </a>
                 @else
                     <a href="{{ route('login', ['redirect' => route('vip.pay', 'yearly')]) }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
@@ -100,7 +100,7 @@
                 </ul>
                 @auth
                     <a href="{{ route('vip.pay', 'lifetime') }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
-                        微信扫码开通
+                        查看收款码开通
                     </a>
                 @else
                     <a href="{{ route('login', ['redirect' => route('vip.pay', 'lifetime')]) }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">

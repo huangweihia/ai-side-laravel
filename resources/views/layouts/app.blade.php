@@ -1021,6 +1021,12 @@
                         </a>
                     @endif
                     
+                    <a href="{{ route('vip') }}"
+                       class="navbar-link {{ request()->routeIs('vip') ? 'active' : '' }}"
+                       style="background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24; font-weight: 800;">
+                        👑 VIP 会员
+                    </a>
+
                     {{-- 后台入口：仅管理员可见 --}}
                     @if(auth()->user()->isAdmin())
                         <a href="/admin" class="navbar-link" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
@@ -1037,6 +1043,7 @@
                 @else
                     <a href="{{ route('login') }}" class="navbar-link">登录</a>
                     <a href="{{ route('register') }}" class="btn btn-sm btn-primary">免费注册</a>
+                    <a href="{{ route('vip') }}" class="btn btn-sm btn-primary" style="margin-left: 10px;">👑 VIP 会员</a>
                     <button type="button" data-skin-toggle class="btn btn-sm btn-secondary" style="padding: 8px 12px; font-size: 16px; position: relative; z-index: 10000;" title="切换皮肤">🎨</button>
                 @endauth
             </div>

@@ -414,6 +414,79 @@
             background: var(--primary);
         }
 
+        /* Topbar Dropdown（减少顶部栏按钮拥挤） */
+        .nav-dropdown-wrapper {
+            position: relative;
+        }
+
+        .nav-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 10px);
+            right: 0;
+            min-width: 220px;
+            display: none;
+            padding: 8px;
+            border-radius: 14px;
+            background: rgba(15, 23, 42, 0.95);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+            z-index: 2000;
+            backdrop-filter: blur(18px);
+        }
+
+        .nav-dropdown-wrapper:focus-within .nav-dropdown-menu {
+            display: block;
+        }
+
+        .nav-dropdown-menu a {
+            display: block;
+            padding: 10px 12px;
+            border-radius: 12px;
+            color: var(--gray-light);
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+
+        .nav-dropdown-menu a:hover {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--white);
+        }
+
+        .nav-dropdown-menu a.active {
+            color: var(--white) !important;
+            background: rgba(99, 102, 241, 0.18);
+            border: 1px solid rgba(99, 102, 241, 0.35);
+        }
+
+        /* 个人中心头像入口 */
+        .nav-avatar-link {
+            width: 40px;
+            height: 40px;
+            border-radius: 14px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            overflow: hidden;
+            text-decoration: none;
+        }
+
+        .nav-avatar-link img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .nav-avatar-fallback {
+            font-size: 18px;
+            font-weight: 900;
+            color: #fff;
+            letter-spacing: 0.02em;
+        }
+
         .btn {
             display: inline-flex;
             align-items: center;
@@ -1009,32 +1082,47 @@
                 <a href="{{ route('articles.index') }}" class="navbar-link {{ request()->routeIs('articles.*') ? 'active' : '' }}">📝 文章</a>
                 <a href="{{ route('knowledge.index') }}" class="navbar-link {{ request()->routeIs('knowledge.*') ? 'active' : '' }}">📚 知识库</a>
                 <a href="{{ route('jobs.index') }}" class="navbar-link {{ request()->routeIs('jobs.*') ? 'active' : '' }}">💼 职位</a>
-                @auth
-                    <a href="{{ route('feedback.create') }}" class="navbar-link {{ request()->routeIs('feedback.*') ? 'active' : '' }}">🐞 反馈</a>
-                @endauth
                 
                 {{-- 用户功能 --}}
                 @auth
-                    @if(auth()->user()?->isVip() || auth()->user()?->isAdmin())
-                        <a href="{{ route('submissions.index') }}" class="navbar-link {{ request()->routeIs('submissions.*') ? 'active' : '' }}" style="background: rgba(99, 102, 241, 0.15); border: 1px solid rgba(99, 102, 241, 0.3);">
-                            ✍️ 投稿
-                        </a>
-                    @endif
-                    
-                    <a href="{{ route('vip') }}"
-                       class="navbar-link {{ request()->routeIs('vip') ? 'active' : '' }}"
-                       style="background: rgba(251, 191, 36, 0.15); border: 1px solid rgba(251, 191, 36, 0.35); color: #fbbf24; font-weight: 800;">
-                        👑 VIP 会员
-                    </a>
+                    {{-- 将“投稿/反馈/VIP/后台”集中到下拉中心菜单，避免顶部栏拥挤 --}}
+                    <div class="nav-dropdown-wrapper">
+                        <button
+                            type="button"
+                            class="navbar-link"
+                            style="background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(255, 255, 255, 0.15);"
+                            aria-haspopup="menu"
+                        >
+                            🧭 中心
+                        </button>
+                        <div class="nav-dropdown-menu" role="menu" aria-label="中心菜单">
+                            @if(auth()->user()?->isVip() || auth()->user()?->isAdmin())
+                                <a href="{{ route('submissions.index') }}" class="{{ request()->routeIs('submissions.*') ? 'active' : '' }}">
+                                    ✍️ 投稿中心
+                                </a>
+                            @endif
+                            <a href="{{ route('feedback.create') }}" class="{{ request()->routeIs('feedback.*') ? 'active' : '' }}">
+                                🐞 反馈中心
+                            </a>
+                            <a href="{{ route('vip') }}" class="{{ request()->routeIs('vip') ? 'active' : '' }}">
+                                👑 VIP 会员中心
+                            </a>
+                            @if(auth()->user()->isAdmin())
+                                <a href="/admin" class="{{ request()->is('admin') || request()->is('admin/*') ? 'active' : '' }}">
+                                    🔒 后台中心
+                                </a>
+                            @endif
+                        </div>
+                    </div>
 
-                    {{-- 后台入口：仅管理员可见 --}}
-                    @if(auth()->user()->isAdmin())
-                        <a href="/admin" class="navbar-link" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3);">
-                            🔒 后台
-                        </a>
-                    @endif
-                    
-                    <a href="{{ route('dashboard') }}" class="btn btn-sm btn-secondary">个人中心</a>
+                    {{-- 个人中心：头像入口 --}}
+                    <a href="{{ route('dashboard') }}" class="nav-avatar-link" title="个人中心">
+                        @if(auth()->user()?->avatar)
+                            <img src="{{ auth()->user()->avatar }}" alt="用户头像">
+                        @else
+                            <span class="nav-avatar-fallback">{{ substr(auth()->user()->name ?? '', 0, 1) }}</span>
+                        @endif
+                    </a>
                     <button type="button" data-skin-toggle class="btn btn-sm btn-secondary" style="padding: 8px 12px; font-size: 16px; position: relative; z-index: 10000;" title="切换皮肤">🎨</button>
                     <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                         @csrf

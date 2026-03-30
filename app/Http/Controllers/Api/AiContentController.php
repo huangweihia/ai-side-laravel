@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 class AiContentController extends Controller
 {
     /**
-     * 接收 OpenClaw 推送的 AI 内容
+     * 接收 OpenClaw 推送的 AI 内容 方便统计数据
      */
     public function storeContent(Request $request)
     {

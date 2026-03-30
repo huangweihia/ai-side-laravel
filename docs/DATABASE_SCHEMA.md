@@ -737,13 +737,13 @@
 | title | VARCHAR(255) | ✅ | - | 职位名称 |
 | company_name | VARCHAR(255) | ✅ | - | 公司名称 |
 | location | VARCHAR(255) | ❌ | NULL | 工作地点 |
-| salary_range | VARCHAR(100) | ❌ | NULL | 薪资范围 |
+| salary_range | VARCHAR(255) | ❌ | NULL | 薪资范围（迁移 `string()` 默认长度） |
 | requirements | TEXT | ❌ | NULL | 任职要求 |
 | description | TEXT | ❌ | NULL | 职位描述 |
 | source_url | VARCHAR(255) | ❌ | NULL | 来源/原文链接（迁移 `2026_03_29_184700_add_source_url_to_positions_table`） |
 | contact_email | VARCHAR(255) | ❌ | NULL | 联系邮箱 |
-| contact_phone | VARCHAR(50) | ❌ | NULL | 联系电话 |
-| contact_wechat | VARCHAR(100) | ❌ | NULL | 联系微信 |
+| contact_phone | VARCHAR(255) | ❌ | NULL | 联系电话 |
+| contact_wechat | VARCHAR(255) | ❌ | NULL | 联系微信 |
 | is_contact_vip | BOOLEAN | ✅ | false | 联系方式是否 VIP 可见 |
 | is_vip_only | BOOLEAN | ✅ | false | VIP 专属正文（非 VIP 仅见摘要；迁移 `2026_03_28_180000_add_is_vip_only_to_positions_table`） |
 | is_published | BOOLEAN | ✅ | false | 是否已发布 |
@@ -752,6 +752,8 @@
 | published_at | TIMESTAMP | ❌ | NULL | 发布时间 |
 | created_at | TIMESTAMP | ❌ | NULL | 创建时间 |
 | updated_at | TIMESTAMP | ❌ | NULL | 更新时间 |
+
+**与代码 / OpenClaw 接口：** Eloquent 为 `App\Models\Job`（`protected $table = 'positions'`），**勿与**队列驱动表 `jobs`、采集表 `job_listings` 混淆。HTTP 入口 `AiContentController::storeContent` 中 `type` 为 `jobs`（或别名 `job` / `position` / `positions`）时调用 `saveJobs`，写入**本表**；去重键为 `source_url`（请求 JSON 可用 `url` 或 `source_url`）。Webhook 未传的 `contact_*`、`is_contact_vip`、`is_vip_only` 等为 NULL 或 false，属预期，**不是**写错表。
 
 **索引：**
 - `is_published + created_at` - 发布状态和时间索引
@@ -1067,7 +1069,7 @@
 ### v1.4.0 (2026-03-27) - 职位系统
 
 **新增表：**
-- ✅ `positions` - 职位表（含联系方式 VIP 控制）
+- ✅ `positions` - 用户发布职位表（`App\Models\Job`；与 Laravel 队列 `jobs`、采集 `job_listings` 不同；联系方式 VIP 等见表结构）
 
 **新增功能：**
 - 职位列表和详情页

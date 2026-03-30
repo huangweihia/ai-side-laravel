@@ -122,28 +122,35 @@
             font-size: 13px;
         }
         .site-marquee-bar a.site-marquee-link {
-            flex: 1;
+            flex: 1 1 0%;
             min-width: 0;
             display: flex;
             align-items: center;
+            justify-content: flex-start;
             overflow: hidden;
             color: var(--white);
             padding: 0 8px 0 12px;
+            text-align: left;
         }
+        /* min-width:0 关键：否则内部超长一行会撑满 min-content，裁剪区像只在中间一条在滚 */
         .site-marquee-bar .site-marquee-viewport {
-            overflow: hidden;
+            flex: 1 1 0%;
+            min-width: 0;
             width: 100%;
-            mask-image: linear-gradient(90deg, transparent, #000 12px, #000 calc(100% - 12px), transparent);
+            max-width: 100%;
+            overflow: hidden;
+            text-align: left;
         }
         .site-marquee-bar .site-marquee-track {
             display: inline-block;
             white-space: nowrap;
             padding-right: 4rem;
-            animation: site-marquee-x 18s linear infinite;
+            animation: site-marquee-x 22s linear infinite;
+            will-change: transform;
         }
         @keyframes site-marquee-x {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
+            0% { transform: translate3d(0, 0, 0); }
+            100% { transform: translate3d(-50%, 0, 0); }
         }
         .site-marquee-bar .site-marquee-close {
             flex-shrink: 0;

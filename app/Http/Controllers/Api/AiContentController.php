@@ -37,8 +37,15 @@ class AiContentController extends Controller
         }
         
         $data = $request->json()->all();
-        $type = $data['type'] ?? '';
-        
+        $typeRaw = strtolower((string) ($data['type'] ?? ''));
+        // OpenClaw / 外部脚本可能用不同别名
+        $type = match ($typeRaw) {
+            'job', 'position', 'positions' => 'jobs',
+            'article' => 'articles',
+            'project' => 'projects',
+            default => $typeRaw,
+        };
+
         Log::info("📥 数据类型：" . $type);
         Log::info("📥 数据数量：" . count($data['items'] ?? []));
         Log::info("📥 完整数据：" . json_encode($data, JSON_UNESCAPED_UNICODE));
@@ -174,10 +181,15 @@ class AiContentController extends Controller
     {
         Log::info("💼 开始保存职位，数量：" . count($items));
         
-        // 获取管理员用户 ID
         $adminUser = \App\Models\User::where('role', 'admin')->first();
-        $userId = $adminUser ? $adminUser->id : 1;
-        Log::info("💼 使用管理员 user_id: {$userId}");
+        $firstUser = \App\Models\User::query()->orderBy('id')->first();
+        $userId = $adminUser?->id ?? $firstUser?->id;
+        if (! $userId) {
+            Log::error('💼 无可用用户，无法写入职位（请先创建管理员）');
+
+            return response()->json(['success' => false, 'message' => '数据库中无用户，无法创建职位'], 500);
+        }
+        Log::info("💼 使用 user_id: {$userId}");
         
         $saved = 0;
         $failed = 0;
@@ -198,16 +210,16 @@ class AiContentController extends Controller
                     }
                 }
                 
-                // 保存到 positions 表（后台管理的表）
+                $desc = $item['description'] ?? $item['content'] ?? '';
                 $job = \App\Models\Job::create([
                     'user_id' => $userId,
                     'title' => $item['title'] ?? '未知职位',
                     'company_name' => $item['company_name'] ?? $item['company'] ?? '未知公司',
                     'location' => $item['city'] ?? $item['location'] ?? '不限',
-                    'salary_range' => $item['salary'] ?? '面议',
-                    'requirements' => $item['description'] ?? '',
-                    'description' => $item['description'] ?? '',
-                    'source_url' => $uniqueUrl,
+                    'salary_range' => $item['salary'] ?? $item['salary_range'] ?? '面议',
+                    'requirements' => $item['requirements'] ?? $desc,
+                    'description' => $desc,
+                    'source_url' => $uniqueUrl ? \Illuminate\Support\Str::limit($uniqueUrl, 255, '') : null,
                     'is_published' => true,
                     'published_at' => now(),
                 ]);

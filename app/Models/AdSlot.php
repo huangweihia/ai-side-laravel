@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Storage;
 
 class AdSlot extends Model
 {
@@ -35,7 +34,10 @@ class AdSlot extends Model
     public function resolvedImageUrl(): ?string
     {
         if ($this->image_path) {
-            return Storage::disk('public')->url($this->image_path);
+            $path = str_replace('\\', '/', ltrim($this->image_path, '/'));
+
+            // 使用站点根相对路径，避免 APP_URL 与浏览器访问域名/协议不一致时图片 404
+            return '/storage/'.$path;
         }
 
         return $this->image_url ?: null;

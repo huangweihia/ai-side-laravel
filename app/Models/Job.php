@@ -20,6 +20,7 @@ class Job extends Model
         'salary_range',
         'requirements',
         'description',
+        'source_url',
         'contact_email',
         'contact_phone',
         'contact_wechat',

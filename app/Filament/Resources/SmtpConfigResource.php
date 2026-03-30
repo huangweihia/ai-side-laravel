@@ -20,7 +20,8 @@ class SmtpConfigResource extends Resource
     protected static ?string $modelLabel = 'SMTP 配置';
     protected static ?int $navigationSort = 40;
     protected static ?string $navigationGroup = '邮件系统';
-    protected static bool $shouldRegisterNavigation = true;
+    // 与「系统设置」页能力重叠：仅保留系统设置入口，隐藏 SMTP 配置列表入口
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {

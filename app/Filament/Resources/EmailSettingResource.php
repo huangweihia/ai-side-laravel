@@ -18,6 +18,8 @@ class EmailSettingResource extends Resource
     protected static ?string $modelLabel = '邮件配置';
     protected static ?int $navigationSort = 30;
     protected static ?string $navigationGroup = '邮件系统';
+    // 与「系统设置」页能力重叠：仅保留系统设置入口，隐藏邮件配置列表入口
+    protected static bool $shouldRegisterNavigation = false;
 
     public static function form(Form $form): Form
     {

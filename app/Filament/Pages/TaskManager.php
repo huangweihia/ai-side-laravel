@@ -15,6 +15,8 @@ class TaskManager extends Page
     protected static ?string $navigationLabel = '任务管理';
     protected static ?int $navigationSort = 20;
     protected static ?string $navigationGroup = 'AI 采集';
+    // 避免与后台入口菜单重叠：按需求隐藏任务管理导航
+    protected static bool $shouldRegisterNavigation = false;
     
     public function getTasksProperty()
     {

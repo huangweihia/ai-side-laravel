@@ -32,7 +32,13 @@
             <div class="card" style="padding: 40px; text-align: center; border: 2px solid rgba(255,255,255,0.1);">
                 <div style="font-size: 24px; margin-bottom: 10px; color: var(--gray-light);">月度会员</div>
                 <div style="font-size: 56px; font-weight: 800; color: var(--primary); margin-bottom: 10px;">
-                    ¥{{ number_format((float) config('wechat_pay.plans.monthly.amount_yuan', 39), 0) }}<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;">/月</span>
+                    ¥{{ number_format((float) config('wechat_pay.plans.monthly.amount_yuan', 9.9), 1) }}<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;">/月</span>
+                </div>
+                <div style="margin-top: -2px; margin-bottom: 18px; color: rgba(148,163,184,0.95); font-size: 14px;">
+                    打折前
+                    <span style="text-decoration: line-through; color: rgba(148,163,184,0.95); font-weight: 600;">
+                        ¥{{ number_format((float) config('wechat_pay.plans.monthly.original_amount_yuan', 29), 0) }}
+                    </span>
                 </div>
                 <ul style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
                     <li style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">✅ 解锁全部项目库</li>
@@ -59,13 +65,19 @@
                 </div>
                 <div style="font-size: 24px; margin-bottom: 10px; color: var(--gray-light);">年度会员</div>
                 <div style="font-size: 56px; font-weight: 800; color: var(--primary); margin-bottom: 10px;">
-                    ¥{{ number_format((float) config('wechat_pay.plans.yearly.amount_yuan', 399), 0) }}<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;">/年</span>
+                    ¥{{ number_format((float) config('wechat_pay.plans.yearly.amount_yuan', 88), 0) }}<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;">/年</span>
                 </div>
                 @php
-                    $m = (float) config('wechat_pay.plans.monthly.amount_yuan', 39);
-                    $y = (float) config('wechat_pay.plans.yearly.amount_yuan', 399);
+                    $m = (float) config('wechat_pay.plans.monthly.amount_yuan', 9.9);
+                    $y = (float) config('wechat_pay.plans.yearly.amount_yuan', 88);
                     $save = max(0, $m * 12 - $y);
                 @endphp
+                <div style="margin-top: -2px; margin-bottom: 18px; color: rgba(148,163,184,0.95); font-size: 14px;">
+                    打折前
+                    <span style="text-decoration: line-through; color: rgba(148,163,184,0.95); font-weight: 600;">
+                        ¥{{ number_format((float) config('wechat_pay.plans.yearly.original_amount_yuan', 288), 0) }}
+                    </span>
+                </div>
                 @if($save > 0)
                 <div style="color: #10b981; font-size: 14px; margin-bottom: 20px;">相较连续包月约省 ¥{{ number_format($save, 0) }}</div>
                 @endif
@@ -91,7 +103,13 @@
             <div class="card" style="padding: 40px; text-align: center; border: 2px solid rgba(139, 92, 246, 0.45);">
                 <div style="font-size: 24px; margin-bottom: 10px; color: var(--gray-light);">终身会员</div>
                 <div style="font-size: 56px; font-weight: 800; color: #a78bfa; margin-bottom: 10px;">
-                    ¥{{ number_format((float) config('wechat_pay.plans.lifetime.amount_yuan', 1999), 0) }}<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;"> 一次买断</span>
+                    ¥{{ number_format((float) config('wechat_pay.plans.lifetime.amount_yuan', 388), 0) }}<span style="font-size: 16px; color: var(--gray-light); font-weight: 400;"> 一次买断</span>
+                </div>
+                <div style="margin-top: -2px; margin-bottom: 22px; color: rgba(148,163,184,0.95); font-size: 14px;">
+                    打折前
+                    <span style="text-decoration: line-through; color: rgba(148,163,184,0.95); font-weight: 600;">
+                        ¥{{ number_format((float) config('wechat_pay.plans.lifetime.original_amount_yuan', 888), 0) }}
+                    </span>
                 </div>
                 <ul style="list-style: none; padding: 0; margin: 30px 0; text-align: left;">
                     <li style="padding: 12px 0; border-bottom: 1px solid rgba(255,255,255,0.1);">✅ 含月度/年度全部权益</li>

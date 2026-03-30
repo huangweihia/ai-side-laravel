@@ -21,7 +21,7 @@
 
                 <div style="display: grid; place-items: center; padding: 16px; border-radius: 16px; background: rgba(255,255,255,0.04); border: 1px dashed rgba(251,191,36,0.35);">
                     <img
-                        src="{{ asset('images/vip-demo-qrcode.png') }}"
+                        src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&data={{ urlencode('VIP-DEMO:' . $planLabel) }}"
                         alt="VIP 收款码"
                         style="width: 240px; height: 240px; object-fit: contain; border-radius: 12px;"
                     />
@@ -33,13 +33,72 @@
             </div>
             <a href="{{ route('vip') }}" class="btn btn-primary" style="margin-top: 20px; display: inline-block;">返回 VIP 介绍</a>
         @else
-            <form method="post" action="{{ route('payments.wechat.create') }}">
-                @csrf
-                <input type="hidden" name="plan" value="{{ $plan }}">
-                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; font-weight: 700;">
-                    使用微信扫码支付
-                </button>
-            </form>
+            <button
+                type="button"
+                id="wechat-native-pay-btn"
+                data-plan="{{ $plan }}"
+                data-create-url="{{ route('payments.wechat.create') }}"
+                class="btn btn-primary"
+                style="width: 100%; padding: 16px; font-size: 16px; font-weight: 700;"
+            >
+                使用微信扫码支付
+            </button>
+
+            <div id="wechat-native-pay-error" style="margin-top: 14px; color: #fca5a5; font-size: 13px; display: none;"></div>
+
+            <script>
+                (function () {
+                    const btn = document.getElementById('wechat-native-pay-btn');
+                    if (!btn) return;
+
+                    btn.addEventListener('click', async function () {
+                        const errorEl = document.getElementById('wechat-native-pay-error');
+                        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                        const plan = btn.dataset.plan;
+                        const createUrl = btn.dataset.createUrl;
+
+                        btn.disabled = true;
+                        const oldText = btn.textContent;
+                        btn.textContent = '正在准备支付...';
+                        if (errorEl) {
+                            errorEl.style.display = 'none';
+                            errorEl.textContent = '';
+                        }
+
+                        try {
+                            const resp = await fetch(createUrl, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-Requested-With': 'XMLHttpRequest',
+                                    'X-CSRF-TOKEN': csrfToken
+                                },
+                                body: JSON.stringify({ plan: plan })
+                            });
+
+                            const data = await resp.json().catch(() => ({}));
+                            if (!resp.ok || data?.success === false) {
+                                throw new Error(data?.message || '创建支付失败');
+                            }
+
+                            // 这里直接跳转到“二维码页”，不会经过“表单提交刷新”的体感。
+                            if (data?.redirect_url) {
+                                window.location.href = data.redirect_url;
+                            } else {
+                                throw new Error('缺少跳转地址');
+                            }
+                        } catch (e) {
+                            if (errorEl) {
+                                errorEl.textContent = e?.message || '创建支付失败';
+                                errorEl.style.display = 'block';
+                            }
+                            btn.disabled = false;
+                            btn.textContent = oldText;
+                        }
+                    });
+                })();
+            </script>
             <p style="margin-top: 20px; font-size: 13px; color: var(--gray-light); text-align: center;">
                 <a href="{{ route('vip') }}" style="color: var(--primary-light);">返回</a>
             </p>

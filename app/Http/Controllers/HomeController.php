@@ -13,6 +13,7 @@ use App\Models\ViewHistory;
 use App\Models\VipUrgentNotificationLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Storage;
 
 class HomeController extends Controller
 {
@@ -204,6 +205,22 @@ class HomeController extends Controller
             // 上传头像到 Laravel public disk：storage/app/public/avatars
             // 对外通过 /storage/... 访问（需要已执行 storage:link）
             $path = $file->storeAs('avatars', $filename, 'public');
+            if (! is_string($path) || $path === '' || ! Storage::disk('public')->exists($path)) {
+                throw new \RuntimeException('头像保存失败：文件未写入存储目录，请检查 storage/app/public 权限');
+            }
+
+            // 兜底：确保文件在磁盘上确实存在（避免 storeAs 返回异常值）
+            $storageFileAbs = storage_path('app/public/' . $path);
+            if (! is_file($storageFileAbs)) {
+                throw new \RuntimeException('头像保存失败：存储文件不存在，请检查 storage/app/public 写入情况');
+            }
+
+            // 避免“返回成功但外链 404”：如果没有 storage:link，/storage/... 会找不到
+            $publicStorage = public_path('storage');
+            if (! file_exists($publicStorage)) {
+                throw new \RuntimeException('头像上传成功但无法访问：请先执行 `php artisan storage:link` 以启用 /storage 映射');
+            }
+
             $avatarUrl = asset('storage/' . $path);
 
             // 删除旧头像：兼容历史 /avatars/* 与 /storage/avatars/*

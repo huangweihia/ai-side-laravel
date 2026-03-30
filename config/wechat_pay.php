@@ -52,15 +52,18 @@ return [
     'plans' => [
         'monthly' => [
             'label' => '月度会员',
-            'amount_yuan' => (float) env('WECHAT_PAY_PLAN_MONTHLY_YUAN', 39),
+            'amount_yuan' => (float) env('WECHAT_PAY_PLAN_MONTHLY_YUAN', 9.9),
+            'original_amount_yuan' => (float) env('WECHAT_PAY_PLAN_MONTHLY_ORIGINAL_YUAN', 29),
         ],
         'yearly' => [
             'label' => '年度会员',
-            'amount_yuan' => (float) env('WECHAT_PAY_PLAN_YEARLY_YUAN', 399),
+            'amount_yuan' => (float) env('WECHAT_PAY_PLAN_YEARLY_YUAN', 88),
+            'original_amount_yuan' => (float) env('WECHAT_PAY_PLAN_YEARLY_ORIGINAL_YUAN', 288),
         ],
         'lifetime' => [
             'label' => '终身会员',
-            'amount_yuan' => (float) env('WECHAT_PAY_PLAN_LIFETIME_YUAN', 1999),
+            'amount_yuan' => (float) env('WECHAT_PAY_PLAN_LIFETIME_YUAN', 388),
+            'original_amount_yuan' => (float) env('WECHAT_PAY_PLAN_LIFETIME_ORIGINAL_YUAN', 888),
         ],
     ],
 

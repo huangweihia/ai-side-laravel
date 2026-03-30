@@ -30,6 +30,12 @@ class ProblemFeedbackController extends Controller
         if ($request->hasFile('image')) {
             // 反馈截图使用本地 storage/app/public：对外通过 /storage/... 访问
             $path = $request->file('image')->store('feedback', 'public');
+            if (! is_string($path) || $path === '') {
+                return back()->with('error', '上传失败：存储写入失败，请稍后重试。');
+            }
+            if (! file_exists(storage_path('app/public/' . $path))) {
+                return back()->with('error', '上传失败：存储文件不存在，请检查服务器写入权限。');
+            }
         }
 
         ProblemFeedback::create([

@@ -182,6 +182,14 @@ class SubmissionController extends Controller
         if ($request->file('image')->isValid()) {
             // 保存到本地 storage/app/public：对外通过 /storage/... 访问
             $path = $request->file('image')->store('submissions/images', 'public');
+            if (! is_string($path) || $path === '') {
+                return response()->json(['error' => '上传失败：存储写入失败'], 422);
+            }
+
+            // 兜底：确保文件在磁盘上确实存在（避免返回成功但文件不存在）
+            if (! file_exists(storage_path('app/public/' . $path))) {
+                return response()->json(['error' => '上传失败：存储文件不存在'], 422);
+            }
 
             $url = asset('storage/' . $path);
             

@@ -26,7 +26,7 @@ git clone https://github.com/YOUR_USERNAME/ai-side-laravel.git
 cd ai-side-laravel
 
 # 2. 复制配置文件
-cp .env.example .env
+copy .env.example .env
 
 # 3. 启动 Docker
 docker-compose up -d
@@ -35,8 +35,9 @@ docker-compose up -d
 docker-compose exec php php artisan key:generate
 docker-compose exec php php artisan migrate
 docker-compose exec php php artisan make:filament-user
-
-# 5. 访问
+# 5. 启用 /storage 映射（图片/头像/上传文件访问依赖）
+docker-compose exec php php artisan storage:link
+# 6. 访问
 # 前台：http://localhost:8081
 # 后台：http://localhost:8081/admin
 ```
@@ -164,14 +165,15 @@ docker-compose exec php php artisan test --coverage-html=coverage
 | 等级 | 价格 | 权益 |
 |------|------|------|
 | **免费用户** | ¥0 | 每日简报 Top5、基础项目推荐 |
-| **年度会员** | ¥199/年 | 完整日报、周报、资源包、社群 |
-| **终身会员** | ¥999 | 所有权益 + 1v1 咨询 + 资源对接 |
+| **月度会员** | ¥9.9/月 | 解锁全部文章/项目库、每日资讯日报（不含一对一） |
+| **年度会员** | ¥88/年 | 解锁全部文章/项目库、每日资讯日报、专属资源下载 |
+| **终身会员** | ¥388/一次买断 | 含月度/年度全部权益 + 长期内容更新（不含续费烦恼） |
 
-### 收入预测
-
-- 第 1 个月：10 个付费会员 = ¥1,990
-- 第 3 个月：100 个付费会员 = ¥19,900
-- 第 6 个月：500 个付费会员 = ¥99,500/年
+### 收入预测（示例）
+（示例仅按月度会员 `¥9.9/月` 线性估算）
+- 第 1 个月：10 个付费会员 = ¥99
+- 第 3 个月：100 个付费会员 = ¥990
+- 第 6 个月：500 个付费会员 = ¥4,950
 
 ---
 

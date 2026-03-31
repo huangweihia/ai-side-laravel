@@ -34,12 +34,22 @@ class AiContentController extends Controller
         
         $data = $request->json()->all();
         $typeRaw = strtolower((string) ($data['type'] ?? ''));
-        $type = match ($typeRaw) {
-            'job', 'position', 'positions' => 'jobs',
-            'article' => 'articles',
-            'project' => 'projects',
-            default => $typeRaw,
-        };
+        switch ($typeRaw) {
+            case 'job':
+            case 'position':
+            case 'positions':
+                $type = 'jobs';
+                break;
+            case 'article':
+                $type = 'articles';
+                break;
+            case 'project':
+                $type = 'projects';
+                break;
+            default:
+                $type = $typeRaw;
+                break;
+        }
 
         Log::info("📥 数据类型：" . $type);
         
@@ -223,7 +233,7 @@ class AiContentController extends Controller
         Log::info("💼 开始保存职位，数量：" . count($items));
         
         $adminUser = \App\Models\User::where('role', 'admin')->first();
-        $userId = $adminUser?->id ?? \App\Models\User::query()->orderBy('id')->value('id');
+        $userId = $adminUser ? $adminUser->id : \App\Models\User::query()->orderBy('id')->value('id');
         
         if (!$userId) {
             return response()->json(['success' => false, 'message' => '无可用用户'], 500);
@@ -365,13 +375,28 @@ class AiContentController extends Controller
                 }
                 
                 $resourceType = $item['resource_type'] ?? '其他';
-                $resourceIcon = match($resourceType) {
-                    'PDF' => '📄',
-                    '网盘' => '💾',
-                    '视频' => '🎥',
-                    '电子书' => '📚',
-                    default => '📎'
-                };
+                switch ($resourceType) {
+                    case 'PDF':
+                        $resourceIcon = '📄';
+                        break;
+                    case '网盘':
+                        $resourceIcon = '💾';
+                        break;
+                    case '视频':
+                        $resourceIcon = '🎥';
+                        break;
+                    case '电子书':
+                        $resourceIcon = '📚';
+                        break;
+                    default:
+                        $resourceIcon = '📎';
+                        break;
+                }
+
+                $materialPlatform = isset($item['platform']) && $item['platform'] !== '' ? $item['platform'] : '未知';
+                $materialDescription = isset($item['description']) && $item['description'] !== '' ? $item['description'] : '暂无详细描述';
+                $materialUrl = isset($item['url']) && $item['url'] !== '' ? $item['url'] : '#';
+                $materialUpdatedAt = now()->format('Y-m-d H:i:s');
                 
                 $content = <<<HTML
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.8; color: #1a202c;">
@@ -379,18 +404,18 @@ class AiContentController extends Controller
     
     <div style="background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); padding: 20px; border-radius: 8px; margin: 20px 0;">
         <p style="margin: 0;"><strong>资源类型：</strong>{$resourceType}</p>
-        <p style="margin: 10px 0 0;"><strong>来源平台：</strong>{$item['platform'] ?? '未知'}</p>
-        <p style="margin: 10px 0 0;"><strong>更新时间：</strong>" . now()->format('Y-m-d H:i:s') . "</p>
+        <p style="margin: 10px 0 0;"><strong>来源平台：</strong>{$materialPlatform}</p>
+        <p style="margin: 10px 0 0;"><strong>更新时间：</strong>{$materialUpdatedAt}</p>
     </div>
     
     <h2 style="font-size: 22px; margin: 30px 0 15px; color: #4a5568;">📝 资源描述</h2>
-    <p style="line-height: 1.8;">{$item['description'] ?? '暂无详细描述'}</p>
+    <p style="line-height: 1.8;">{$materialDescription}</p>
     
     <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(66, 153, 225, 0.1) 100%); border-radius: 8px; border: 1px solid rgba(72, 187, 120, 0.3);">
         <p style="margin: 0; color: #2f855a; font-weight: 600;">🔗 访问链接：</p>
         <p style="margin: 10px 0 0;">
-            <a href="{$item['url']}" target="_blank" style="color: #3182ce; text-decoration: none; word-break: break-all;">
-                {$item['url']}
+            <a href="{$materialUrl}" target="_blank" style="color: #3182ce; text-decoration: none; word-break: break-all;">
+                {$materialUrl}
             </a>
         </p>
     </div>
@@ -501,24 +526,27 @@ HTML;
             '量子位' => '#0066cc',
         ];
         $color = $platformColors[$platform] ?? '#666666';
+        $author = isset($item['author']) && $item['author'] !== '' ? $item['author'] : '佚名';
+        $summary = isset($item['summary']) && $item['summary'] !== '' ? $item['summary'] : '暂无摘要';
+        $url = isset($item['url']) && $item['url'] !== '' ? $item['url'] : '#';
         
         return <<<HTML
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.8; color: #1a202c;">
     <div style="display: flex; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid {$color};">
         <div>
             <h1 style="font-size: 24px; margin: 0; color: #2d3748;">{$item['title']}</h1>
-            <p style="margin: 5px 0 0; color: #718096; font-size: 14px;">来源：{$platform} | 作者：{$item['author'] ?? '佚名'}</p>
+            <p style="margin: 5px 0 0; color: #718096; font-size: 14px;">来源：{$platform} | 作者：{$author}</p>
         </div>
     </div>
     
     <h2 style="font-size: 20px; margin: 25px 0 15px; color: #4a5568; border-left: 4px solid {$color}; padding-left: 12px;">文章摘要</h2>
-    <p style="line-height: 1.8; color: #2d3748;">{$item['summary'] ?? '暂无摘要'}</p>
+    <p style="line-height: 1.8; color: #2d3748;">{$summary}</p>
     
     <div style="margin-top: 30px; padding: 20px; background: #f7fafc; border-radius: 8px;">
         <p style="margin: 0; color: #4a5568; font-weight: 600;">📌 原文链接：</p>
         <p style="margin: 10px 0 0;">
-            <a href="{$item['url']}" target="_blank" style="color: {$color}; text-decoration: none; word-break: break-all;">
-                {$item['url']}
+            <a href="{$url}" target="_blank" style="color: {$color}; text-decoration: none; word-break: break-all;">
+                {$url}
             </a>
         </p>
     </div>

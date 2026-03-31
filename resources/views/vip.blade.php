@@ -13,6 +13,10 @@
         <div style="padding: 14px 18px; border-radius: 12px; background: rgba(239,68,68,0.15); color: #fca5a5;">{{ session('error') }}</div>
     </div>
 @endif
+@php
+    $checkoutMode = (string) config('vip_checkout.mode', 'manual_qr');
+    $openButtonText = $checkoutMode === 'manual_qr' ? '查看收款码开通' : '微信扫码开通';
+@endphp
 <!-- Page Header -->
 <section style="padding: 80px 0; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); text-align: center;">
     <div class="container">
@@ -49,7 +53,7 @@
                 </ul>
                 @auth
                     <a href="{{ route('vip.pay', 'monthly') }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; display: inline-block; text-decoration: none; box-sizing: border-box;">
-                        查看收款码开通
+                        {{ $openButtonText }}
                     </a>
                 @else
                     <a href="{{ route('login', ['redirect' => route('vip.pay', 'monthly')]) }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; display: inline-block; text-decoration: none; box-sizing: border-box;">
@@ -90,7 +94,7 @@
                 </ul>
                 @auth
                     <a href="{{ route('vip.pay', 'yearly') }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
-                        查看收款码开通
+                        {{ $openButtonText }}
                     </a>
                 @else
                     <a href="{{ route('login', ['redirect' => route('vip.pay', 'yearly')]) }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
@@ -118,7 +122,7 @@
                 </ul>
                 @auth
                     <a href="{{ route('vip.pay', 'lifetime') }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">
-                        查看收款码开通
+                        {{ $openButtonText }}
                     </a>
                 @else
                     <a href="{{ route('login', ['redirect' => route('vip.pay', 'lifetime')]) }}" class="btn btn-primary" style="width: 100%; padding: 16px; font-size: 16px; background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); display: inline-block; text-decoration: none; box-sizing: border-box;">

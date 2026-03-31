@@ -22,7 +22,9 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('feedback.store') }}" enctype="multipart/form-data">
+        <div id="feedbackSuccessBox" class="alert alert-success" style="display:none;"></div>
+        <div id="feedbackErrorBox" class="alert alert-error" style="display:none;"></div>
+        <form id="feedbackForm" method="POST" action="{{ route('feedback.store') }}" enctype="multipart/form-data">
             @csrf
             <div class="form-group">
                 <label class="form-label" for="title">标题</label>
@@ -65,7 +67,7 @@
                     <img id="imagePreview" alt="反馈截图预览" style="max-width:100%; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">提交反馈</button>
+            <button type="submit" id="feedbackSubmitBtn" class="btn btn-primary">提交反馈</button>
         </form>
     </div>
 
@@ -96,6 +98,10 @@
 </div>
     <script>
         (function () {
+            var form = document.getElementById('feedbackForm');
+            var submitBtn = document.getElementById('feedbackSubmitBtn');
+            var successBox = document.getElementById('feedbackSuccessBox');
+            var errorBox = document.getElementById('feedbackErrorBox');
             var input = document.getElementById('image');
             if (!input) return;
             var dropZone = document.getElementById('imageDropZone');
@@ -115,6 +121,28 @@
                 wrap.style.display = 'none';
                 img.removeAttribute('src');
                 meta.textContent = '';
+            }
+
+            function setSubmitState(loading) {
+                if (!submitBtn) return;
+                submitBtn.disabled = !!loading;
+                submitBtn.textContent = loading ? '提交中...' : '提交反馈';
+            }
+
+            function showSuccess(msg) {
+                if (!successBox || !errorBox) return;
+                errorBox.style.display = 'none';
+                errorBox.textContent = '';
+                successBox.style.display = 'block';
+                successBox.textContent = msg || '提交成功';
+            }
+
+            function showError(msg) {
+                if (!successBox || !errorBox) return;
+                successBox.style.display = 'none';
+                successBox.textContent = '';
+                errorBox.style.display = 'block';
+                errorBox.textContent = msg || '提交失败，请稍后重试';
             }
 
             function setPreview(file) {
@@ -192,6 +220,48 @@
                         // 回退：至少更新预览（提交文件可能不带上）
                     }
                     setPreview(file);
+                });
+            }
+
+            // Ajax 提交：避免整页刷新
+            if (form) {
+                form.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    setSubmitState(true);
+
+                    var csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+                    var formData = new FormData(form);
+
+                    try {
+                        var resp = await fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'Accept': 'application/json',
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'X-CSRF-TOKEN': csrfToken
+                            },
+                            body: formData
+                        });
+
+                        var data = await resp.json().catch(function () { return {}; });
+                        if (!resp.ok || data.success === false) {
+                            if (data && data.errors) {
+                                var firstError = Object.values(data.errors)[0];
+                                if (Array.isArray(firstError) && firstError.length) {
+                                    throw new Error(firstError[0]);
+                                }
+                            }
+                            throw new Error(data.message || '提交失败，请检查输入内容');
+                        }
+
+                        showSuccess(data.message || '反馈提交成功！');
+                        form.reset();
+                        clearPreview();
+                    } catch (err) {
+                        showError(err && err.message ? err.message : '提交失败，请稍后重试');
+                    } finally {
+                        setSubmitState(false);
+                    }
                 });
             }
         })();

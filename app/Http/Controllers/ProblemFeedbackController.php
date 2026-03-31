@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ProblemFeedback;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class ProblemFeedbackController extends Controller
 {
@@ -30,15 +31,16 @@ class ProblemFeedbackController extends Controller
         if ($request->hasFile('image')) {
             // 反馈截图使用本地 storage/app/public：对外通过 /storage/... 访问
             $path = $request->file('image')->store('feedback', 'public');
-            if (! is_string($path) || $path === '') {
-                return back()->with('error', '上传失败：存储写入失败，请稍后重试。');
-            }
-            if (! file_exists(storage_path('app/public/' . $path))) {
-                return back()->with('error', '上传失败：存储文件不存在，请检查服务器写入权限。');
+            if (! is_string($path) || $path === '' || ! Storage::disk('public')->exists($path)) {
+                $message = '上传失败：存储写入失败，请检查 storage/app/public 写入权限。';
+                if ($request->expectsJson()) {
+                    return response()->json(['success' => false, 'message' => $message], 500);
+                }
+                return back()->with('error', $message);
             }
         }
 
-        ProblemFeedback::create([
+        $feedback = ProblemFeedback::create([
             'user_id' => auth()->id(),
             'title' => $validated['title'],
             'content' => $validated['content'],
@@ -46,7 +48,16 @@ class ProblemFeedbackController extends Controller
             'status' => 'pending',
         ]);
 
-        return redirect()->route('feedback.create')->with('success', '反馈已提交，管理员审核通过后将奖励 1 天 VIP。');
+        $message = '反馈已提交，管理员审核通过后将奖励 1 天 VIP。';
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'feedback_id' => $feedback->id,
+            ]);
+        }
+
+        return redirect()->route('feedback.create')->with('success', $message);
     }
 }
 

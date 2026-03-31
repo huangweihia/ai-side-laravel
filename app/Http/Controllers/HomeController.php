@@ -235,15 +235,21 @@ class HomeController extends Controller
                 $avatarUrl = asset('avatars/' . $filename);
             }
 
-            // 删除旧头像：兼容历史 /avatars/* 与 /storage/avatars/*
+            // 删除旧头像：兼容历史 /avatars/*、/storage/avatars/* 以及完整 URL
             if (! empty($user->avatar) && is_string($user->avatar)) {
-                if (str_starts_with($user->avatar, '/avatars/')) {
-                    $oldAvatarAbsolutePath = public_path(ltrim($user->avatar, '/'));
+                $oldAvatarPath = $user->avatar;
+                if (preg_match('#^https?://#i', $oldAvatarPath)) {
+                    $parsed = parse_url($oldAvatarPath, PHP_URL_PATH);
+                    $oldAvatarPath = is_string($parsed) ? $parsed : $oldAvatarPath;
+                }
+
+                if (str_starts_with($oldAvatarPath, '/avatars/')) {
+                    $oldAvatarAbsolutePath = public_path(ltrim($oldAvatarPath, '/'));
                     if (is_file($oldAvatarAbsolutePath)) {
                         @unlink($oldAvatarAbsolutePath);
                     }
-                } elseif (str_starts_with($user->avatar, '/storage/')) {
-                    $rel = ltrim($user->avatar, '/'); // storage/avatars/xxx
+                } elseif (str_starts_with($oldAvatarPath, '/storage/')) {
+                    $rel = ltrim($oldAvatarPath, '/'); // storage/avatars/xxx
                     if (str_starts_with($rel, 'storage/')) {
                         $oldKey = substr($rel, strlen('storage/')); // avatars/xxx
                         $oldAbs = storage_path('app/public/' . $oldKey);

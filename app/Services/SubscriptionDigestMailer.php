@@ -140,15 +140,19 @@ class SubscriptionDigestMailer
             $user->exists = false;
         }
 
+        $dateStr = \Carbon\Carbon::instance($today)->format('Y-m-d');
+        $dayName = \Carbon\Carbon::instance($today)->dayName;
+        $userName = $user->name ?? '用户';
+
+        // 主题变量替换：兼容 {date} 与 {{date}} 两种写法
         $subject = str_replace(
-            ['{date}', '{day}', '{user.name}'],
-            [
-                \Carbon\Carbon::instance($today)->format('Y-m-d'),
-                \Carbon\Carbon::instance($today)->dayName,
-                $user->name ?? '用户',
-            ],
-            $template->subject
+            ['{{date}}', '{date}', '{{day}}', '{day}', '{{user.name}}', '{user.name}', '{{name}}', '{name}'],
+            [$dateStr, $dateStr, $dayName, $dayName, $userName, $userName, $userName, $userName],
+            (string) $template->subject
         );
+
+        // 兜底：如果主题里出现 "{2026-03-31}" 这类包裹日期的花括号，自动去掉
+        $subject = preg_replace('/\{(\d{4}-\d{2}-\d{2})\}/', '$1', $subject) ?? $subject;
 
         $content = $this->renderTemplateContent($template, $user, $subscription, $today);
 

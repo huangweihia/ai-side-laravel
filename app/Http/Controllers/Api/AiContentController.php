@@ -351,24 +351,31 @@ class AiContentController extends Controller
                     default => '📎'
                 };
                 
+                // 提前处理空合并运算，避免在 heredoc 中使用 ??
+                $platform = $item['platform'] ?? '未知';
+                $description = $item['description'] ?? '暂无详细描述';
+                $url = $item['url'] ?? '#';
+                $urlText = $item['url'] ?? '暂无链接';
+                $updateTime = now()->format('Y-m-d H:i:s');
+                
                 $content = <<<HTML
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.8; color: #1a202c;">
     <h1 style="font-size: 28px; margin-bottom: 20px; color: #2d3748;">{$resourceIcon} {$item['title']}</h1>
     
     <div style="background: linear-gradient(135deg, rgba(66, 153, 225, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%); padding: 20px; border-radius: 8px; margin: 20px 0;">
         <p style="margin: 0;"><strong>资源类型：</strong>{$resourceType}</p>
-        <p style="margin: 10px 0 0;"><strong>来源平台：</strong>{$item['platform'] ?? '未知'}</p>
-        <p style="margin: 10px 0 0;"><strong>更新时间：</strong>""" . now()->format('Y-m-d H:i:s') . """</p>
+        <p style="margin: 10px 0 0;"><strong>来源平台：</strong>{$platform}</p>
+        <p style="margin: 10px 0 0;"><strong>更新时间：</strong>{$updateTime}</p>
     </div>
     
     <h2 style="font-size: 22px; margin: 30px 0 15px; color: #4a5568;">📝 资源描述</h2>
-    <p style="line-height: 1.8;">{$item['description'] ?? '暂无详细描述'}</p>
+    <p style="line-height: 1.8;">{$description}</p>
     
     <div style="margin-top: 30px; padding: 20px; background: linear-gradient(135deg, rgba(72, 187, 120, 0.1) 0%, rgba(66, 153, 225, 0.1) 100%); border-radius: 8px; border: 1px solid rgba(72, 187, 120, 0.3);">
         <p style="margin: 0; color: #2f855a; font-weight: 600;">🔗 访问链接：</p>
         <p style="margin: 10px 0 0;">
-            <a href="{$item['url'] ?? '#'}" target="_blank" style="color: #3182ce; text-decoration: none; word-break: break-all;">
-                {$item['url'] ?? '暂无链接'}
+            <a href="{$url}" target="_blank" style="color: #3182ce; text-decoration: none; word-break: break-all;">
+                {$urlText}
             </a>
         </p>
     </div>

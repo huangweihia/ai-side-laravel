@@ -1084,9 +1084,48 @@
             var btn = document.getElementById('site-marquee-close');
             var bar = document.getElementById('site-marquee-bar');
             if (!btn || !bar) return;
+
+            // 公告关闭缓存：10 分钟内不再弹出（按用户区分；未登录则按浏览器本地匿名 ID 区分）
+            var TEN_MIN_MS = 10 * 60 * 1000;
+            function getLeWanCacheUserId() {
+                try {
+                    var uid = @json(auth()->check() ? auth()->id() : null);
+                    if (uid !== null && uid !== undefined && uid !== '') {
+                        return 'u:' + uid;
+                    }
+                    var anonKey = 'lewan:anon_user_id';
+                    var anonId = localStorage.getItem(anonKey);
+                    if (!anonId) {
+                        anonId = 'a_' + Math.random().toString(36).slice(2) + '_' + Date.now();
+                        localStorage.setItem(anonKey, anonId);
+                    }
+                    return 'g:' + anonId;
+                } catch (e) {
+                    return 'g:local';
+                }
+            }
+
+            var cacheKey = 'lewan:closed:site_marquee:' + getLeWanCacheUserId();
+            try {
+                var raw = localStorage.getItem(cacheKey);
+                if (raw) {
+                    var obj = JSON.parse(raw);
+                    var ts = Number(obj && obj.ts ? obj.ts : 0);
+                    if (ts && (Date.now() - ts) < TEN_MIN_MS) {
+                        bar.remove();
+                        return;
+                    }
+                }
+            } catch (e) {}
+
             btn.addEventListener('click', function (e) {
                 e.preventDefault();
                 e.stopPropagation();
+
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now() }));
+                } catch (err) {}
+
                 bar.remove();
                 document.body.classList.remove('has-site-marquee');
             });
@@ -1242,13 +1281,70 @@
     </footer>
 
     <script>
-    /** 关闭右侧推广位：仅当前页有效，刷新后重新展示（不使用 localStorage） */
+    /** 关闭右侧推广位：10 分钟内不再弹出（按用户区分） */
     function closeSiteAdSidebar() {
+        // 写入关闭缓存时间戳
+        try {
+            // 只是用于写入时间戳，不需要读取阈值
+            var uid = @json(auth()->check() ? auth()->id() : null);
+            var cacheUserId = '';
+            if (uid !== null && uid !== undefined && uid !== '') {
+                cacheUserId = 'u:' + uid;
+            } else {
+                var anonKey = 'lewan:anon_user_id';
+                var anonId = localStorage.getItem(anonKey);
+                if (!anonId) {
+                    anonId = 'a_' + Math.random().toString(36).slice(2) + '_' + Date.now();
+                    localStorage.setItem(anonKey, anonId);
+                }
+                cacheUserId = 'g:' + anonId;
+            }
+            var cacheKey = 'lewan:closed:site_ad_sidebar:' + cacheUserId;
+            localStorage.setItem(cacheKey, JSON.stringify({ ts: Date.now() }));
+        } catch (e) {}
+
         var el = document.getElementById('site-ad-sidebar');
         var grid = document.querySelector('.layout-page-grid');
         if (el) el.remove();
         if (grid) grid.classList.remove('layout-with-sidebar');
     }
+
+    (function () {
+        // 关闭缓存：同公告逻辑，10 分钟内不弹出
+        var TEN_MIN_MS = 10 * 60 * 1000;
+        function getLeWanCacheUserId() {
+            try {
+                var uid = @json(auth()->check() ? auth()->id() : null);
+                if (uid !== null && uid !== undefined && uid !== '') {
+                    return 'u:' + uid;
+                }
+                var anonKey = 'lewan:anon_user_id';
+                var anonId = localStorage.getItem(anonKey);
+                if (!anonId) {
+                    anonId = 'a_' + Math.random().toString(36).slice(2) + '_' + Date.now();
+                    localStorage.setItem(anonKey, anonId);
+                }
+                return 'g:' + anonId;
+            } catch (e) {
+                return 'g:local';
+            }
+        }
+
+        var cacheKey = 'lewan:closed:site_ad_sidebar:' + getLeWanCacheUserId();
+        try {
+            var raw = localStorage.getItem(cacheKey);
+            if (raw) {
+                var obj = JSON.parse(raw);
+                var ts = Number(obj && obj.ts ? obj.ts : 0);
+                if (ts && (Date.now() - ts) < TEN_MIN_MS) {
+                    var el = document.getElementById('site-ad-sidebar');
+                    var grid = document.querySelector('.layout-page-grid');
+                    if (el) el.remove();
+                    if (grid) grid.classList.remove('layout-with-sidebar');
+                }
+            }
+        } catch (e) {}
+    })();
 
     // 皮肤切换功能（注意：打开面板时必须阻止冒泡，否则 document 上的关闭逻辑会在同一次点击里立刻把面板关掉）
     function toggleSkinPanel() {

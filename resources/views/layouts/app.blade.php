@@ -817,11 +817,14 @@
         }
         
         nav[aria-label="pagination"] a,
-        nav[aria-label="pagination"] span {
+        nav[aria-label="pagination"] span,
+        nav[aria-label*="Pagination"] a,
+        nav[aria-label*="Pagination"] span {
             font-size: 14px;
             line-height: 1.2;
         }
-        nav[aria-label="pagination"] svg {
+        nav[aria-label="pagination"] svg,
+        nav[aria-label*="Pagination"] svg {
             width: 14px;
             height: 14px;
             display: inline-block;
@@ -954,6 +957,12 @@
         body.skin-light .site-ad-sidebar-html code {
             background: #f1f5f9;
             color: #0f172a;
+        }
+
+        /* 深色皮肤下，知识库文档正文内若含内联深色字体，统一提亮（避免几乎看不见） */
+        body.skin-dark .knowledge-doc-body,
+        body.skin-dark .knowledge-doc-body * {
+            color: #e5e7eb !important;
         }
 
         /* 内联 style 含浅色背景时，强制深色正文（覆盖继承的浅色字） */

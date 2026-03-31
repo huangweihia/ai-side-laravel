@@ -497,6 +497,8 @@ HTML;
         $author = isset($item['author']) && $item['author'] !== '' ? $item['author'] : '佚名';
         $summary = isset($item['summary']) && $item['summary'] !== '' ? $item['summary'] : '暂无摘要';
         $url = isset($item['url']) && $item['url'] !== '' ? $item['url'] : null;
+        $urlHref = $url ? $url : '#';
+        $urlText = $url ? $url : '暂无链接';
         
         return <<<HTML
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.8; color: #1a202c;">
@@ -514,8 +516,8 @@ HTML;
     <div style="margin-top: 30px; padding: 20px; background: #f7fafc; border-radius: 8px;">
         <p style="margin: 0; color: #4a5568; font-weight: 600;">📌 原文链接：</p>
         <p style="margin: 10px 0 0;">
-            <a href="{$url ?: '#'}" target="_blank" style="color: {$color}; text-decoration: none; word-break: break-all;">
-                {$url ?: '暂无链接'}
+            <a href="{$urlHref}" target="_blank" style="color: {$color}; text-decoration: none; word-break: break-all;">
+                {$urlText}
             </a>
         </p>
     </div>

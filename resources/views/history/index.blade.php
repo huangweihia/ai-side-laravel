@@ -235,7 +235,7 @@
         
         {{-- 分页 --}}
         <div style="margin-top: 48px; display: flex; justify-content: center;">
-            {{ $histories->links() }}
+            <x-pagination-links :paginator="$histories" />
         </div>
     @else
         {{-- 空状态 --}}

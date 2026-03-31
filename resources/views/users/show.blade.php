@@ -80,7 +80,9 @@
                         <p style="color:#64748b;">暂无留言</p>
                     @endforelse
                     @if($profileMessages->hasPages())
-                        <div style="margin-top:16px;">{{ $profileMessages->links() }}</div>
+                        <div style="margin-top:16px;">
+                            <x-pagination-links :paginator="$profileMessages" />
+                        </div>
                     @endif
                 @endif
             @else
@@ -95,7 +97,9 @@
                     <p style="color:#64748b; font-size:14px; margin:0 0 20px;">暂无留言记录，发送后会在上方显示。</p>
                 @endforelse
                 @if($profileMessagesSent->hasPages())
-                    <div style="margin:16px 0 20px;">{{ $profileMessagesSent->links() }}</div>
+                    <div style="margin:16px 0 20px;">
+                        <x-pagination-links :paginator="$profileMessagesSent" />
+                    </div>
                 @endif
 
                 <h3 style="margin:0 0 12px; font-size:16px; font-weight:700; color:#1e293b;">{{ $profileMessagesSent->isNotEmpty() ? '发送新留言' : '给 TA 留言' }}</h3>

@@ -249,7 +249,7 @@
         
         {{-- 分页 --}}
         <div style="margin-top: 48px; display: flex; justify-content: center;">
-            {{ $favorites->links() }}
+            <x-pagination-links :paginator="$favorites" />
         </div>
     @else
         {{-- 空状态 --}}

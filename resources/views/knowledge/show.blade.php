@@ -62,7 +62,7 @@
 
         @if($documents->hasPages())
             <div style="margin-top: 28px;">
-                {{ $documents->links() }}
+                <x-pagination-links :paginator="$documents" />
             </div>
         @endif
     </div>

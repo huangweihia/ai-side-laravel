@@ -160,7 +160,7 @@
     {{-- 分页 --}}
     @if($submissions->hasPages())
         <div style="margin-top: 32px;">
-            {{ $submissions->links() }}
+            <x-pagination-links :paginator="$submissions" />
         </div>
     @endif
 </div>

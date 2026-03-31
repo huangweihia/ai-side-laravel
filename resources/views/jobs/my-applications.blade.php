@@ -34,7 +34,9 @@
                 </div>
             @endforeach
         </div>
-        <div style="margin-top: 24px;">{{ $applications->links() }}</div>
+        <div style="margin-top: 24px;">
+            <x-pagination-links :paginator="$applications" />
+        </div>
     @else
         <div class="card" style="padding: 40px; text-align: center; color: var(--gray-light);">
             暂无申请记录

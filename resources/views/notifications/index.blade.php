@@ -63,7 +63,9 @@
     </div>
 
     @if($notifications->hasPages())
-        <div style="margin-top: 28px;">{{ $notifications->links() }}</div>
+        <div style="margin-top: 28px;">
+            <x-pagination-links :paginator="$notifications" />
+        </div>
     @endif
 </div>
 @endsection

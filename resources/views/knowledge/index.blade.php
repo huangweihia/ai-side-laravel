@@ -51,7 +51,7 @@
 
         @if($bases->hasPages())
             <div style="margin-top: 32px;">
-                {{ $bases->links() }}
+                <x-pagination-links :paginator="$bases" />
             </div>
         @endif
     </div>

@@ -484,7 +484,7 @@ HTML;
      */
     protected function buildPlatformArticleContent(array $item): string
     {
-        $platform = $item['platform'] ?? '未知';
+        $platform = isset($item['platform']) && $item['platform'] !== '' ? $item['platform'] : '未知';
         $platformColors = [
             '知乎' => '#0084ff',
             '简书' => '#ea6f5a',
@@ -492,7 +492,11 @@ HTML;
             '机器之心' => '#000000',
             '量子位' => '#0066cc',
         ];
-        $color = $platformColors[$platform] ?? '#666666';
+        $color = isset($platformColors[$platform]) ? $platformColors[$platform] : '#666666';
+
+        $author = isset($item['author']) && $item['author'] !== '' ? $item['author'] : '佚名';
+        $summary = isset($item['summary']) && $item['summary'] !== '' ? $item['summary'] : '暂无摘要';
+        $url = isset($item['url']) && $item['url'] !== '' ? $item['url'] : null;
         
         return <<<HTML
 <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.8; color: #1a202c;">
@@ -500,18 +504,18 @@ HTML;
         <span style="display: inline-block; width: 40px; height: 40px; background: {$color}; color: white; border-radius: 8px; text-align: center; line-height: 40px; font-weight: bold; margin-right: 15px;">{$platform[0]}</span>
         <div>
             <h1 style="font-size: 24px; margin: 0; color: #2d3748;">{$item['title']}</h1>
-            <p style="margin: 5px 0 0; color: #718096; font-size: 14px;">来源：{$platform} | 作者：{$item['author'] ?? '佚名'}</p>
+            <p style="margin: 5px 0 0; color: #718096; font-size: 14px;">来源：{$platform} | 作者：{$author}</p>
         </div>
     </div>
     
     <h2 style="font-size: 20px; margin: 25px 0 15px; color: #4a5568; border-left: 4px solid {$color}; padding-left: 12px;">文章摘要</h2>
-    <p style="line-height: 1.8; color: #2d3748;">{$item['summary'] ?? '暂无摘要'}</p>
+    <p style="line-height: 1.8; color: #2d3748;">{$summary}</p>
     
     <div style="margin-top: 30px; padding: 20px; background: #f7fafc; border-radius: 8px;">
         <p style="margin: 0; color: #4a5568; font-weight: 600;">📌 原文链接：</p>
         <p style="margin: 10px 0 0;">
-            <a href="{$item['url'] ?? '#'}" target="_blank" style="color: {$color}; text-decoration: none; word-break: break-all;">
-                {$item['url'] ?? '暂无链接'}
+            <a href="{$url ?: '#'}" target="_blank" style="color: {$color}; text-decoration: none; word-break: break-all;">
+                {$url ?: '暂无链接'}
             </a>
         </p>
     </div>

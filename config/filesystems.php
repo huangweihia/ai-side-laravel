@@ -44,6 +44,18 @@ return [
             'throw' => false,
         ],
 
+        /**
+         * 直接写入 public/ 下子目录（如 public/ad-slots），不依赖 php artisan storage:link。
+         * 与头像兜底写入 public/avatars 一致，便于 CDN/静态站直接访问。
+         */
+        'public_web' => [
+            'driver' => 'local',
+            'root' => public_path(),
+            'url' => rtrim(env('APP_URL'), '/'),
+            'visibility' => 'public',
+            'throw' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

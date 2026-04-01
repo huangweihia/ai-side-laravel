@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\AdSlotResource\Pages;
 
 use App\Filament\Resources\AdSlotResource;
+use App\Support\PublicStorageFallback;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Storage;
 
 class EditAdSlot extends EditRecord
 {
@@ -15,6 +15,25 @@ class EditAdSlot extends EditRecord
     protected function getHeaderActions(): array
     {
         return [];
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $raw = $data['image_path'] ?? null;
+        $path = is_array($raw) ? (Arr::first(array_filter($raw)) ?: null) : $raw;
+        if (is_string($path) && $path !== '') {
+            PublicStorageFallback::ensurePublicWebCopyFromStorageLegacy($path);
+        }
+
+        return $data;
+    }
+
+    protected function afterSave(): void
+    {
+        $path = $this->record->image_path;
+        if (filled($path)) {
+            PublicStorageFallback::ensurePublicWebCopyFromStorageLegacy($path);
+        }
     }
 
     protected function mutateFormDataBeforeSave(array $data): array
@@ -32,7 +51,7 @@ class EditAdSlot extends EditRecord
 
         if ($clearImage) {
             if ($this->record->image_path) {
-                try { Storage::disk('public')->delete($this->record->image_path); } catch (\Throwable $e) {}
+                PublicStorageFallback::deleteFromBothDisks($this->record->image_path);
             }
             $data['image_path'] = null;
             $data['image_url'] = null;
@@ -43,11 +62,11 @@ class EditAdSlot extends EditRecord
         if (filled($path)) {
             $data['image_url'] = null;
             if ($this->record->image_path && $this->record->image_path !== $path) {
-                try { Storage::disk('public')->delete($this->record->image_path); } catch (\Throwable $e) {}
+                PublicStorageFallback::deleteFromBothDisks($this->record->image_path);
             }
         } elseif (filled($data['image_url'])) {
             if ($this->record->image_path) {
-                try { Storage::disk('public')->delete($this->record->image_path); } catch (\Throwable $e) {}
+                PublicStorageFallback::deleteFromBothDisks($this->record->image_path);
             }
             $data['image_path'] = null;
         }

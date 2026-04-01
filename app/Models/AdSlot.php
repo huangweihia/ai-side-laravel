@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\PublicStorageFallback;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Storage;
 
@@ -51,6 +52,16 @@ class AdSlot extends Model
             }
             if (str_starts_with($path, 'public/')) {
                 $path = substr($path, strlen('public/'));
+            }
+
+            // 新上传与镜像副本：位于 public/ad-slots/...，不依赖 storage 软链
+            PublicStorageFallback::ensurePublicWebCopyFromStorageLegacy($path);
+            try {
+                if (Storage::disk('public_web')->exists($path)) {
+                    return Storage::disk('public_web')->url($path);
+                }
+            } catch (\Throwable $e) {
+                // ignore
             }
 
             try {

@@ -43,6 +43,10 @@ docker-compose.override.yml
 /public/avatars/*
 !/public/avatars/.gitignore
 
+# 后台广告位上传图片（与头像同理，写入 public/ad-slots）
+/public/ad-slots/*
+!/public/ad-slots/.gitignore
+
 # 引导缓存（composer / artisan 生成）
 /bootstrap/cache/*
 !/bootstrap/cache/.gitignore

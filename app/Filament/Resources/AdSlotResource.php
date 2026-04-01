@@ -67,12 +67,12 @@ class AdSlotResource extends Resource
                         ->reorderable(false)
                         // 避免每次打开表单都去磁盘 exists 检查；上传失败/异常时减少 Filepond 卡在「加载中」
                         ->fetchFileInformation(false)
-                        ->disk('public')
+                        ->disk('public_web')
                         ->directory('ad-slots')
                         ->visibility('public')
                         ->maxSize(3072)
                         ->removeUploadedFileButtonPosition('right')
-                        ->helperText('与「图片外链」二选一；上传后会清空外链。若上传失败无法取消，请开启下方「清空当前图片并重传」后保存。')
+                        ->helperText('与「图片外链」二选一；文件保存在站点 public/ad-slots（与头像写入 public 目录一致，不依赖 storage 软链）。若上传失败无法取消，请开启下方「清空当前图片并重传」后保存。')
                         ->visible(fn (Get $get): bool => $get('display_mode') === 'standard'),
                     Forms\Components\Toggle::make('clear_image')
                         ->label('清空当前图片并重传')

@@ -122,11 +122,16 @@ class UserResource extends Resource
                     ->dateTime('Y-m-d H:i')
                     ->sortable()
                     ->placeholder('—'),
+                Tables\Columns\TextColumn::make('last_login_ip')
+                    ->label('最后登录IP')
+                    ->copyable()
+                    ->searchable()
+                    ->placeholder('—'),
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('注册时间')
+                    ->label('创建时间')
                     ->dateTime('Y-m-d H:i')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(),
             ])
             ->defaultSort('created_at', 'desc')
             ->filters([

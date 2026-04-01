@@ -28,6 +28,10 @@ class LoginController extends Controller
 
         if (Auth::attempt($credentials, $request->boolean('remember'))) {
             $request->session()->regenerate();
+            $user = Auth::user();
+            if ($user instanceof \App\Models\User) {
+                $user->updateLastLogin($request->ip());
+            }
 
             $redirectTo = $request->input('redirect');
             if (is_string($redirectTo) && $redirectTo !== '') {

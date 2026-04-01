@@ -61,6 +61,29 @@ class SubscriptionDigestMailer
     }
 
     /**
+     * 对订阅记录按邮箱去重（兼容历史脏数据：同一邮箱多条订阅导致重复发送）。
+     */
+    private function dedupeSubscriptionsByEmail(Collection $subscriptions): Collection
+    {
+        return $subscriptions
+            ->filter(fn (EmailSubscription $item): bool => filled($item->email))
+            ->unique(fn (EmailSubscription $item): string => mb_strtolower(trim((string) $item->email)))
+            ->values();
+    }
+
+    private function hasSentToday(string $recipient, string $type, \DateTimeInterface $today): bool
+    {
+        $date = \Carbon\Carbon::instance($today)->toDateString();
+
+        return EmailLog::query()
+            ->where('recipient', $recipient)
+            ->where('type', $type)
+            ->where('status', 'sent')
+            ->whereDate('sent_at', $date)
+            ->exists();
+    }
+
+    /**
      * @return array{sent: int, failed: int, lines: list<string>}
      */
     public function runBatch(int $limit, ?string $onlyEmail = null): array
@@ -69,7 +92,9 @@ class SubscriptionDigestMailer
         $isMonday = $today->isMonday();
         $onlyEmailNorm = $onlyEmail !== null && $onlyEmail !== '' ? $onlyEmail : null;
 
-        $subscriptions = $this->queryRecipients($isMonday, $onlyEmailNorm, $onlyEmailNorm ? 1 : $limit);
+        $subscriptions = $this->dedupeSubscriptionsByEmail(
+            $this->queryRecipients($isMonday, $onlyEmailNorm, $onlyEmailNorm ? 1 : $limit)
+        );
 
         $templateKey = ($onlyEmailNorm !== null || ! $isMonday) ? 'daily_digest' : 'weekly_summary';
         $template = EmailTemplate::query()->where('key', $templateKey)->first();
@@ -96,6 +121,12 @@ class SubscriptionDigestMailer
 
         foreach ($subscriptions as $subscription) {
             try {
+                $logType = $templateKey === 'weekly_summary' ? 'weekly_digest' : 'daily_digest';
+                if ($this->hasSentToday((string) $subscription->email, $logType, $today)) {
+                    $lines[] = "• 跳过 {$subscription->email}（今日已发送）";
+                    continue;
+                }
+
                 $this->sendOneSubscription($subscription, $template, $templateKey, $today);
                 $sent++;
                 $lines[] = "✓ {$subscription->email}";

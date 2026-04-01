@@ -48,7 +48,9 @@ class SendDailyDigest extends Command
                 })
                 ->orWhereNull('user_id');
             })
-            ->get();
+            ->get()
+            ->unique(fn (EmailSubscription $item): string => mb_strtolower(trim((string) $item->email)))
+            ->values();
         
         if ($subscriptions->isEmpty()) {
             $this->warn('⚠️ 没有订阅日报的用户');
@@ -91,6 +93,18 @@ class SendDailyDigest extends Command
         
         foreach ($subscriptions as $subscription) {
             try {
+                $alreadySent = EmailLog::query()
+                    ->where('recipient', $subscription->email)
+                    ->where('type', 'daily_digest')
+                    ->where('status', 'sent')
+                    ->whereDate('sent_at', now()->toDateString())
+                    ->exists();
+
+                if ($alreadySent) {
+                    $this->warn("⏭️ 已跳过（今日已发送）：{$subscription->email}");
+                    continue;
+                }
+
                 // 渲染邮件内容
                 $data = [
                     'date' => now()->format('Y-m-d'),

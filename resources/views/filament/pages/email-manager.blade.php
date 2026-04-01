@@ -317,8 +317,8 @@
 
     {{-- 模板选择模态窗（独立显示）--}}
     @if($showTemplateModal)
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px);">
-            <div style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 35px; max-width: 600px; width: 90%; box-shadow: 0 25px 60px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1);">
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.8); display: flex; align-items: center; justify-content: center; z-index: 9999; backdrop-filter: blur(4px); padding: 16px; overflow-y: auto;">
+            <div style="position: relative; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-radius: 16px; padding: 35px; max-width: 600px; width: 100%; max-height: min(92vh, 900px); margin: auto; box-shadow: 0 25px 60px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.1); display: flex; flex-direction: column;">
                 <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <span style="font-size: 36px;">📬</span>
                     <div>
@@ -327,7 +327,7 @@
                     </div>
                 </div>
 
-                <div style="display: grid; gap: 12px; margin-bottom: 25px;">
+                <div style="flex: 1; min-height: 0; max-height: min(48vh, 420px); overflow-y: auto; padding-right: 8px; margin-bottom: 25px; display: grid; gap: 12px;">
                     @foreach($this->availableTemplates as $template)
                         <label style="display: flex; align-items: center; gap: 15px; padding: 18px; background: {{ in_array($template['key'], $this->selectedTemplates) ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.03)' }}; border: 2px solid {{ in_array($template['key'], $this->selectedTemplates) ? '#6366f1' : 'rgba(255,255,255,0.1)' }}; border-radius: 12px; cursor: pointer; transition: all 0.2s;">
                             <input 

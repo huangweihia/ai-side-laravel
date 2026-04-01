@@ -11,7 +11,7 @@ class SendScheduledEmails extends Command
                             {--limit=100 : 每次发送的最大数量}
                             {--email= : 仅向该邮箱发送一封（用于测试，须为已订阅且未退订的地址）}';
 
-    protected $description = '发送定时邮件（日报/周报）；定时任务见 app/Console/Kernel.php（每日 9:00 Asia/Shanghai）';
+    protected $description = '发送定时邮件（日报/周报）；时刻与模板见后台系统设置 + email_settings 表';
 
     public function handle(SubscriptionDigestMailer $mailer): int
     {

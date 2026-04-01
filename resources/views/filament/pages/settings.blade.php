@@ -4,6 +4,10 @@
             $registerVipEnabled = \App\Models\Setting::getValue('register_default_vip_enabled', false);
             $registerVipDays = (int) (\App\Models\Setting::getValue('register_default_vip_days', 7) ?? 7);
             $registerVipDays = max(0, $registerVipDays);
+            $emailSendTime = \App\Models\EmailSetting::get('email_send_time', '10:00');
+            $digestTplKey = \App\Models\EmailSetting::getDigestTemplateKey();
+            $weeklyTplKey = \App\Models\EmailSetting::getWeeklyTemplateKey();
+            $emailTemplates = \App\Models\EmailTemplate::query()->where('is_active', true)->orderBy('name')->get(['key', 'name']);
         @endphp
 
         <!-- 邮件设置 -->
@@ -31,33 +35,63 @@
             </div>
         </x-filament::section>
 
-        <!-- 定时任务设置 -->
+        <!-- 定时任务设置（与 schedule:run + emails:send-scheduled 一致） -->
         <x-filament::section>
             <x-slot name="heading">
-                ⏰ 定时任务
+                ⏰ 定时推送（订阅邮件）
             </x-slot>
             <x-slot name="description">
-                每日自动推送 AI 副业资讯
+                每日按下方时间在「北京时间」触发一次投递；非周一发日报模板，周一发周报模板。收件人来自「邮件管理」中的订阅用户。
             </x-slot>
-            
-            <div style="display: grid; gap: 16px;">
+
+            @if(session('success'))
+                <p style="color: #34d399; margin-bottom: 8px;">{{ session('success') }}</p>
+            @endif
+            @if(isset($errors) && $errors->any())
+                <p style="color: #f87171; margin-bottom: 8px;">{{ $errors->first() }}</p>
+            @endif
+
+            @if($emailTemplates->isEmpty())
+                <p style="color: #fbbf24;">请先在「邮件模板」中创建并启用至少一个模板后再配置。</p>
+            @else
+            <form method="POST" action="{{ url('/admin/settings/email-schedule') }}" style="display: grid; gap: 16px;">
+                @csrf
                 <div>
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">推送时间</label>
-                    <code style="background: #1e293b; padding: 12px; border-radius: 8px; display: block;">每天 10:00 (Asia/Shanghai)</code>
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">每日推送时间</label>
+                    <input type="time"
+                           name="email_send_time"
+                           value="{{ old('email_send_time', $emailSendTime) }}"
+                           required
+                           style="width: 100%; max-width: 200px; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(15,23,42,0.4); color: inherit;">
+                    <p style="color: #94a3b8; font-size: 13px; margin-top: 6px;">时区固定为 Asia/Shanghai，与 Docker 中每分钟执行的 <code>php artisan schedule:run</code> 配合。</p>
                 </div>
                 <div>
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">推送内容</label>
-                    <ul style="list-style: disc; padding-left: 20px; color: #94a3b8;">
-                        <li>热门 AI 项目 Top 10</li>
-                        <li>副业/创收灵感 5+</li>
-                        <li>学习资源推荐 4+</li>
-                    </ul>
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">日报模板</label>
+                    <select name="email_digest_template_key" required
+                            style="width: 100%; max-width: 480px; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(15,23,42,0.4); color: inherit;">
+                        @foreach($emailTemplates as $t)
+                            <option value="{{ $t->key }}" @selected(old('email_digest_template_key', $digestTplKey) === $t->key)>{{ $t->name }}（{{ $t->key }}）</option>
+                        @endforeach
+                    </select>
+                    <p style="color: #94a3b8; font-size: 13px; margin-top: 6px;">周二至周日及周一「单邮箱测试」时使用的模板 key。</p>
                 </div>
                 <div>
-                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">收件人</label>
-                    <code style="background: #1e293b; padding: 12px; border-radius: 8px; display: block;">2801359160@qq.com</code>
+                    <label style="display: block; font-weight: 600; margin-bottom: 8px;">周报模板（仅周一）</label>
+                    <select name="email_weekly_template_key" required
+                            style="width: 100%; max-width: 480px; padding: 10px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(15,23,42,0.4); color: inherit;">
+                        @foreach($emailTemplates as $t)
+                            <option value="{{ $t->key }}" @selected(old('email_weekly_template_key', $weeklyTplKey) === $t->key)>{{ $t->name }}（{{ $t->key }}）</option>
+                        @endforeach
+                    </select>
+                    <p style="color: #94a3b8; font-size: 13px; margin-top: 6px;">每周一全量发送时使用的模板（需含 <code>week_range</code>、<code>top_projects</code> 等变量）。</p>
                 </div>
-            </div>
+                <button type="submit"
+                        class="fi-button fi-button-primary"
+                        style="justify-content:center; padding: 10px 16px; border-radius: 10px; font-weight: 800; cursor:pointer; width: fit-content;">
+                    保存推送配置
+                </button>
+            </form>
+            @endif
         </x-filament::section>
 
         <!-- 注册赠送 VIP 设置 -->

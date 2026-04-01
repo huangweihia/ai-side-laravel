@@ -15,16 +15,16 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // 每日凌晨 2 点使用 OpenClaw 自动获取 AI 内容（文章/项目/职位/知识库）
-        $schedule->command('ai:fetch-daily')
-                 ->dailyAt('02:00')
-                 ->timezone('Asia/Shanghai')
-                 ->withoutOverlapping();
+        // // 每日凌晨 2 点使用 OpenClaw 自动获取 AI 内容（文章/项目/职位/知识库）
+        // $schedule->command('ai:fetch-daily')
+        //          ->dailyAt('02:00')
+        //          ->timezone('Asia/Shanghai')
+        //          ->withoutOverlapping();
 
         /**
          * 邮件订阅：日报 / 周报（周一走周报模板）
-         * 发送时刻读取后台「邮件设置 → 邮件发送时间」(email_send_time，默认 10:00，时区 Asia/Shanghai)
-         * 依赖 Docker 中 scheduler 容器每分钟执行 `php artisan schedule:run`
+         * 发送时刻与模板 key 见后台「系统设置」：email_send_time、email_digest_template_key、email_weekly_template_key
+         * 依赖 scheduler 每分钟执行 `php artisan schedule:run`（时区 Asia/Shanghai）
          */
         $schedule->call(function (): void {
             Artisan::call('emails:send-scheduled', ['--limit' => '100']);

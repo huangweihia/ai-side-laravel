@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Models\EmailSetting;
 use App\Models\EmailSubscription;
 use App\Models\EmailTemplate;
 use App\Models\EmailLog;
@@ -55,23 +56,31 @@ class SendWeeklyDigest extends Command
         }
         
         $this->info("📋 共有 {$subscriptions->count()} 位订阅用户");
-        
+
+        $base = now();
+        $weekStart = $base->copy()->startOfWeek();
+        $weekEnd = $base->copy()->endOfWeek();
+        $weekRange = $weekStart->format('m-d').' ~ '.$weekEnd->format('m-d');
+        $weekRangeLong = $weekStart->format('Y-m-d').' ~ '.$weekEnd->format('Y-m-d');
+        $weekLabel = $base->format('Y-m-d').' 第'.$base->week.'周';
+
         // 获取本周热门项目
-        $weekStart = now()->startOfWeek();
-        $topProjects = Project::whereBetween('created_at', [$weekStart, now()])
+        $topProjects = Project::whereBetween('created_at', [$weekStart, $weekEnd])
             ->orderBy('stars', 'desc')
             ->limit(10)
             ->get();
-        
+
         // 获取本周热门文章
         $topArticles = Article::where('is_published', true)
-            ->whereBetween('created_at', [$weekStart, now()])
+            ->whereBetween('created_at', [$weekStart, $weekEnd])
             ->orderBy('view_count', 'desc')
             ->limit(10)
             ->get();
         
-        // 获取模板
-        $template = EmailTemplate::where('key', 'weekly_summary')
+        $weeklyKey = EmailSetting::getWeeklyTemplateKey();
+
+        // 获取模板（与系统设置中的「周报模板」一致）
+        $template = EmailTemplate::where('key', $weeklyKey)
             ->where('is_active', true)
             ->first();
         
@@ -85,17 +94,28 @@ class SendWeeklyDigest extends Command
         
         foreach ($subscriptions as $subscription) {
             try {
-                // 渲染邮件内容
                 $data = [
-                    'week' => now()->format('Y-m-d') . ' 第' . now()->week . '周',
+                    'week' => $weekLabel,
+                    'week_range' => $weekRange,
+                    'week_range_long' => $weekRangeLong,
                     'name' => $subscription->user?->name ?? '朋友',
                     'email' => $subscription->email,
                     'top_projects' => $this->renderProjects($topProjects),
                     'articles' => $this->renderArticles($topArticles),
+                    'projects' => $this->renderProjects($topProjects),
+                    'side_hustles' => $this->renderArticles($topArticles),
+                    'projects_count' => (string) $topProjects->count(),
+                    'articles_count' => (string) $topArticles->count(),
+                    'tips_count' => '3',
+                    'unsubscribe_url' => $subscription->getUnsubscribeUrl(),
                 ];
-                
+
                 $content = $template->render($data);
-                $subject = str_replace('{{week}}', now()->format('Y-m-d') . ' 第' . now()->week . '周', $template->subject);
+                $subject = str_replace(
+                    ['{{week}}', '{{week_range}}', '{{week_range_long}}'],
+                    [$weekLabel, $weekRange, $weekRangeLong],
+                    $template->subject
+                );
                 
                 // 记录邮件日志
                 $emailLog = EmailLog::create([
@@ -107,12 +127,11 @@ class SendWeeklyDigest extends Command
                     'status' => 'pending',
                 ]);
                 
-                // 发送邮件
-                Mail::raw($content, function ($message) use ($subscription, $subject) {
+                Mail::html($content, function ($message) use ($subscription, $subject) {
                     $message->to($subscription->email)
                             ->subject($subject)
-                            ->from(config('mail.from.address', '2801359160@qq.com'), 
-                                   config('mail.from.name', 'AI 副业情报局'));
+                            ->from(config('mail.from.address', '2801359160@qq.com'),
+                                config('mail.from.name', 'AI 副业情报局'));
                 });
                 
                 $emailLog->update([

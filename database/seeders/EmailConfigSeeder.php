@@ -35,6 +35,8 @@ class EmailConfigSeeder extends Seeder
         $emailSettings = [
             ['key' => 'email_recipients', 'value' => json_encode(['2801359160@qq.com', 'vip1@example.com', 'vip2@example.com']), 'description' => '邮件接收人列表'],
             ['key' => 'email_send_time', 'value' => '10:00', 'description' => '邮件发送时间'],
+            ['key' => 'email_digest_template_key', 'value' => 'daily_digest', 'description' => '定时日报模板 key'],
+            ['key' => 'email_weekly_template_key', 'value' => 'weekly_summary', 'description' => '定时周报（周一）模板 key'],
             ['key' => 'email_daily_enabled', 'value' => '1', 'description' => '是否启用日报'],
             ['key' => 'email_weekly_enabled', 'value' => '1', 'description' => '是否启用周报'],
         ];

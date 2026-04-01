@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Article;
 use App\Models\EmailLog;
+use App\Models\EmailSetting;
 use App\Models\EmailSubscription;
 use App\Models\EmailTemplate;
 use App\Models\Project;
@@ -96,7 +97,9 @@ class SubscriptionDigestMailer
             $this->queryRecipients($isMonday, $onlyEmailNorm, $onlyEmailNorm ? 1 : $limit)
         );
 
-        $templateKey = ($onlyEmailNorm !== null || ! $isMonday) ? 'daily_digest' : 'weekly_summary';
+        $dailyKey = EmailSetting::getDigestTemplateKey();
+        $weeklyKey = EmailSetting::getWeeklyTemplateKey();
+        $templateKey = ($onlyEmailNorm !== null || ! $isMonday) ? $dailyKey : $weeklyKey;
         $template = EmailTemplate::query()->where('key', $templateKey)->first();
 
         if (! $template) {
@@ -119,9 +122,11 @@ class SubscriptionDigestMailer
         $failed = 0;
         $lines = [];
 
+        $weeklyLog = ($templateKey === $weeklyKey);
+
         foreach ($subscriptions as $subscription) {
             try {
-                $logType = $templateKey === 'weekly_summary' ? 'weekly_digest' : 'daily_digest';
+                $logType = $weeklyLog ? 'weekly_digest' : 'daily_digest';
                 if ($this->hasSentToday((string) $subscription->email, $logType, $today)) {
                     $lines[] = "• 跳过 {$subscription->email}（今日已发送）";
                     continue;
@@ -138,7 +143,7 @@ class SubscriptionDigestMailer
                     'recipient' => $subscription->email,
                     'subject' => $template->subject,
                     'content' => $e->getMessage(),
-                    'type' => $templateKey === 'weekly_summary' ? 'weekly_digest' : 'daily_digest',
+                    'type' => $weeklyLog ? 'weekly_digest' : 'daily_digest',
                     'status' => 'failed',
                     'error_message' => $e->getMessage(),
                 ]);
@@ -171,14 +176,16 @@ class SubscriptionDigestMailer
             $user->exists = false;
         }
 
-        $dateStr = \Carbon\Carbon::instance($today)->format('Y-m-d');
-        $dayName = \Carbon\Carbon::instance($today)->dayName;
+        $cSub = \Carbon\Carbon::instance($today);
+        $dateStr = $cSub->format('Y-m-d');
+        $dayName = $cSub->dayName;
         $userName = $user->name ?? '用户';
+        $weekRangeShort = $cSub->copy()->startOfWeek()->format('m-d').' ~ '.$cSub->copy()->endOfWeek()->format('m-d');
 
         // 主题变量替换：兼容 {date} 与 {{date}} 两种写法
         $subject = str_replace(
-            ['{{date}}', '{date}', '{{day}}', '{day}', '{{user.name}}', '{user.name}', '{{name}}', '{name}'],
-            [$dateStr, $dateStr, $dayName, $dayName, $userName, $userName, $userName, $userName],
+            ['{{date}}', '{date}', '{{day}}', '{day}', '{{user.name}}', '{user.name}', '{{name}}', '{name}', '{{week_range}}', '{week_range}'],
+            [$dateStr, $dateStr, $dayName, $dayName, $userName, $userName, $userName, $userName, $weekRangeShort, $weekRangeShort],
             (string) $template->subject
         );
 
@@ -197,11 +204,13 @@ class SubscriptionDigestMailer
             }
         );
 
+        $weeklyKey = EmailSetting::getWeeklyTemplateKey();
+
         EmailLog::query()->create([
             'recipient' => $subscription->email,
             'subject' => $subject,
             'content' => $content,
-            'type' => $templateKey === 'weekly_summary' ? 'weekly_digest' : 'daily_digest',
+            'type' => ($templateKey === $weeklyKey) ? 'weekly_digest' : 'daily_digest',
             'status' => 'sent',
             'sent_at' => now(),
         ]);
@@ -220,6 +229,13 @@ class SubscriptionDigestMailer
         $sideHustles = $this->getSideHustles();
         $resources = $this->getLearningResources();
 
+        $weekRangeShort = $c->copy()->startOfWeek()->format('m-d').' ~ '.$c->copy()->endOfWeek()->format('m-d');
+        $weekRangeLong = $c->copy()->startOfWeek()->format('Y-m-d').' ~ '.$c->copy()->endOfWeek()->format('Y-m-d');
+
+        $projectsCount = (string) Project::query()->where('is_featured', true)->count();
+        $articlesCount = (string) Article::query()->where('is_published', true)->count();
+        $tipsCount = '3';
+
         $replacements = [
             '{{name}}' => $user->name ?? '用户',
             '{{user.name}}' => $user->name ?? '用户',
@@ -231,19 +247,41 @@ class SubscriptionDigestMailer
             '{time}' => $c->format('H:i'),
             '{{day}}' => $c->dayName,
             '{day}' => $c->dayName,
+            '{{week_range}}' => $weekRangeShort,
+            '{week_range}' => $weekRangeShort,
+            '{{week_range_long}}' => $weekRangeLong,
+            '{week_range_long}' => $weekRangeLong,
+            '{{projects_count}}' => $projectsCount,
+            '{projects_count}' => $projectsCount,
+            '{{articles_count}}' => $articlesCount,
+            '{articles_count}' => $articlesCount,
+            '{{tips_count}}' => $tipsCount,
+            '{tips_count}' => $tipsCount,
             '{{projects}}' => $projects,
             '{projects}' => $projects,
+            '{{top_projects}}' => $projects,
+            '{top_projects}' => $projects,
             '{{side_hustles}}' => $sideHustles,
             '{side_hustles}' => $sideHustles,
+            '{{articles}}' => $sideHustles,
+            '{articles}' => $sideHustles,
             '{{resources}}' => $resources,
             '{resources}' => $resources,
             '{{issue_number}}' => (string) $c->dayOfYear,
             '{issue_number}' => (string) $c->dayOfYear,
-            '{{unsubscribe_url}}' => url('/subscriptions/unsubscribe?token='.$subscription->unsubscribe_token),
-            '{unsubscribe_url}' => url('/subscriptions/unsubscribe?token='.$subscription->unsubscribe_token),
+            '{{unsubscribe_url}}' => $subscription->getUnsubscribeUrl(),
+            '{unsubscribe_url}' => $subscription->getUnsubscribeUrl(),
         ];
 
-        return str_replace(array_keys($replacements), array_values($replacements), $content);
+        $out = str_replace(array_keys($replacements), array_values($replacements), $content);
+
+        $out = preg_replace_callback('/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/', function (array $m) use ($replacements): string {
+            $key = '{{'.$m[1].'}}';
+
+            return $replacements[$key] ?? $m[0];
+        }, $out) ?? $out;
+
+        return $out;
     }
 
     private function getPopularProjects(): string

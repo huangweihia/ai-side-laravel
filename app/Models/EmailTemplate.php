@@ -28,13 +28,17 @@ class EmailTemplate extends Model
      */
     public function render(array $data = []): string
     {
-        $content = $this->content;
-        
+        $content = (string) $this->content;
+
         foreach ($data as $key => $value) {
-            $content = str_replace('{{' . $key . '}}', $value, $content);
+            $content = str_replace('{{'.$key.'}}', (string) $value, $content);
         }
-        
-        return $content;
+
+        return preg_replace_callback('/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/', function (array $m) use ($data): string {
+            $k = $m[1];
+
+            return array_key_exists($k, $data) ? (string) $data[$k] : $m[0];
+        }, $content) ?? $content;
     }
 
     /**

@@ -271,44 +271,40 @@ class EmailManager extends Page implements HasForms
                 $success = 0;
                 
                 foreach ($templates as $template) {
+                    $emailLog = null;
                     try {
                         $subscription = EmailSubscription::where('email', $email)->first();
-                        
-                        // 检查订阅状态
-                        if (!$this->canSendTemplate($template, $subscription)) {
+
+                        if (! $this->canSendTemplate($template, $subscription)) {
                             continue;
                         }
-                        
-                        // 准备邮件数据
+
                         $data = $this->prepareEmailData($email, $subscription, $hotProjects, $hotArticles, $newJobs);
-                        
-                        // 渲染模板内容（关键修复：正确替换变量）
+
                         $content = $this->renderTemplateContent($template, $data);
-                        
-                        // 记录日志
+                        $subject = $this->getSubject($template, $data);
+
                         $emailLog = EmailLog::create([
                             'recipient' => $email,
-                            'subject' => $this->getSubject($template, $data),
+                            'subject' => $subject,
                             'content' => $content,
                             'type' => $template->key,
                             'template_id' => $template->id,
                             'status' => 'pending',
                         ]);
-                        
-                        // 发送邮件
-                        Mail::raw($content, function ($message) use ($email, $template, $data) {
+
+                        Mail::html($content, function ($message) use ($email, $subject): void {
                             $message->to($email)
-                                    ->subject($this->getSubject($template, $data))
-                                    ->from(config('mail.from.address', '2801359160@qq.com'), 
-                                           config('mail.from.name', 'AI 副业情报局'));
+                                ->subject($subject)
+                                ->from(config('mail.from.address', '2801359160@qq.com'),
+                                    config('mail.from.name', 'AI 副业情报局'));
                         });
-                        
+
                         $emailLog->update(['status' => 'sent', 'sent_at' => now()]);
                         $success++;
-                        
                     } catch (\Exception $e) {
                         $totalFailed++;
-                        if (isset($emailLog)) {
+                        if ($emailLog !== null) {
                             $emailLog->update(['status' => 'failed', 'error_message' => $e->getMessage()]);
                         }
                     }
@@ -338,57 +334,80 @@ class EmailManager extends Page implements HasForms
     
     private function canSendTemplate($template, $subscription): bool
     {
+        // 邮件管理里手动维护的收件人：无订阅记录也允许发送（此前无记录会导致日报/周报全部被跳过）
         if (! $subscription) {
-            return match ($template->key) {
-                'daily_digest_classic', 'daily_digest_modern', 'weekly_summary', 'notification' => false,
-                default => true,
-            };
+            return true;
         }
 
-        return match ($template->key) {
-            'daily_digest_classic', 'daily_digest_modern' => $subscription->isSubscribedToDaily(),
-            'weekly_summary' => $subscription->isSubscribedToWeekly(),
-            'notification' => $subscription->isSubscribedToNotifications(),
-            default => true,
-        };
+        $k = (string) $template->key;
+        if ($k === 'weekly_summary' || str_contains($k, 'weekly')) {
+            return $subscription->isSubscribedToWeekly();
+        }
+        if ($k === 'notification') {
+            return $subscription->isSubscribedToNotifications();
+        }
+        if (str_contains($k, 'digest') || str_contains($k, 'daily')) {
+            return $subscription->isSubscribedToDaily();
+        }
+
+        return true;
     }
     
     private function prepareEmailData(string $email, $subscription, $projects, $articles, $jobs): array
     {
+        $rp = $this->renderProjects($projects);
+        $ra = $this->renderArticles($articles);
+
         return [
             'date' => now()->format('Y-m-d'),
-            'week_range' => now()->startOfWeek()->format('m-d') . ' ~ ' . now()->endOfWeek()->format('m-d'),
+            'week_range' => now()->startOfWeek()->format('m-d').' ~ '.now()->endOfWeek()->format('m-d'),
+            'week_range_long' => now()->startOfWeek()->format('Y-m-d').' ~ '.now()->endOfWeek()->format('Y-m-d'),
             'name' => $subscription?->user?->name ?? '朋友',
             'email' => $email,
-            'projects' => $this->renderProjects($projects),
-            'side_hustles' => $this->renderArticles($articles),
+            'projects' => $rp,
+            'side_hustles' => $ra,
             'resources' => $this->renderJobs($jobs),
-            'top_projects' => $this->renderProjects($projects),
-            'articles' => $this->renderArticles($articles),
-            'unsubscribe_url' => url('/unsubscribe/' . ($subscription?->unsubscribe_token ?? '')),
+            'top_projects' => $rp,
+            'articles' => $ra,
+            'projects_count' => (string) Project::query()->where('is_featured', true)->count(),
+            'articles_count' => (string) Article::query()->where('is_published', true)->count(),
+            'tips_count' => '3',
+            'issue_number' => (string) now()->dayOfYear,
+            'unsubscribe_url' => $subscription
+                ? url('/unsubscribe/'.$subscription->unsubscribe_token)
+                : rtrim((string) config('app.url'), '/'),
             'preferences_url' => url('/subscriptions/preferences'),
         ];
     }
     
     private function renderTemplateContent($template, array $data): string
     {
-        $content = $template->content;
-        
-        // 替换所有变量
+        $content = (string) $template->content;
+        $map = [];
         foreach ($data as $key => $value) {
-            $content = str_replace('{{' . $key . '}}', $value, $content);
+            $map['{{'.$key.'}}'] = (string) $value;
         }
-        
-        return $content;
+        $content = str_replace(array_keys($map), array_values($map), $content);
+
+        return preg_replace_callback('/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/', function (array $m) use ($map): string {
+            $key = '{{'.$m[1].'}}';
+
+            return $map[$key] ?? $m[0];
+        }, $content) ?? $content;
     }
-    
+
     private function getSubject($template, array $data): string
     {
-        $subject = $template->subject;
+        $subject = (string) $template->subject;
         foreach ($data as $key => $value) {
-            $subject = str_replace('{{' . $key . '}}', $value, $subject);
+            $subject = str_replace('{{'.$key.'}}', (string) $value, $subject);
         }
-        return $subject;
+
+        return preg_replace_callback('/\{\{\s*([a-zA-Z0-9_.]+)\s*\}\}/', function (array $m) use ($data): string {
+            $k = $m[1];
+
+            return isset($data[$k]) ? (string) $data[$k] : $m[0];
+        }, $subject) ?? $subject;
     }
     
     private function renderProjects($projects): string

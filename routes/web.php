@@ -213,6 +213,35 @@ Route::post('admin/settings/register-vip', function (\Illuminate\Http\Request $r
     return back()->with('success', '已保存注册赠送 VIP 设置');
 })->name('admin.settings.register-vip')->middleware('auth');
 
+// 后台：订阅邮件推送时间 + 日报/周报模板（与 schedule + emails:send-scheduled 一致）
+Route::post('admin/settings/email-schedule', function (\Illuminate\Http\Request $request) {
+    $user = auth()->user();
+    abort_unless($user && $user->isAdmin(), 403);
+
+    $data = $request->validate([
+        'email_send_time' => ['required', 'regex:/^([01]?\d|2[0-3]):[0-5]\d$/'],
+        'email_digest_template_key' => ['required', 'string', 'max:64'],
+        'email_weekly_template_key' => ['required', 'string', 'max:64'],
+    ], [
+        'email_send_time.regex' => '时间格式须为 HH:mm（24 小时制），例如 10:00',
+    ]);
+
+    $digestKey = trim($data['email_digest_template_key']);
+    $weeklyKey = trim($data['email_weekly_template_key']);
+
+    $existsDigest = \App\Models\EmailTemplate::query()->where('key', $digestKey)->exists();
+    $existsWeekly = \App\Models\EmailTemplate::query()->where('key', $weeklyKey)->exists();
+    if (! $existsDigest || ! $existsWeekly) {
+        return back()->withErrors(['template' => '所选模板 key 在「邮件模板」中不存在，请检查后再保存。']);
+    }
+
+    \App\Models\EmailSetting::set('email_send_time', $data['email_send_time'], '邮件发送时间（定时任务）');
+    \App\Models\EmailSetting::set('email_digest_template_key', $digestKey, '定时日报使用的模板 key');
+    \App\Models\EmailSetting::set('email_weekly_template_key', $weeklyKey, '定时周报（周一）使用的模板 key');
+
+    return back()->with('success', '已保存推送时间与模板配置');
+})->name('admin.settings.email-schedule')->middleware('auth');
+
 // 知识库路由
 Route::prefix('knowledge')->group(function () {
     Route::get('/', [KnowledgeController::class, 'index'])->name('knowledge.index');
